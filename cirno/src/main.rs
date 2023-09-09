@@ -1,3 +1,4 @@
+use cirno::parser;
 use std::io::{self, prelude::*, BufReader};
 use std::fs::File;
 use clap::Parser;
@@ -14,9 +15,11 @@ fn main() -> Result<(), io::Error> {
   let file = File::open(filename)?;
   let contents = BufReader::new(file);
 
-  for line in contents.lines() {
-    println!("{}", line.unwrap());
-  }
+  // for line in contents.lines() {
+    // println!("{}", line.unwrap());
+  // }
+
+  parser::parse(contents);
 
   Ok(())
 }
