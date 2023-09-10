@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::fmt::Debug;
 use strum_macros::Display;
 
 #[derive(Clone, Debug)]
@@ -14,33 +15,65 @@ pub struct Label {
   pub value: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Position {
   pub x: i32,
   pub y: i32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Type {
   pub t: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct YCoordinate {
   pub y: i32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Chip {
   t: String,
   position: Position,
 }
 
-#[derive(Clone, Display, Debug)]
+impl Chip {
+  pub fn apply_attribute(&mut self, attribute: Attribute) {
+    match attribute {
+      Attribute::Type(t) => self.t = t,
+      Attribute::Position(position) => self.position = position,
+      a => panic!("could not apply {} to chip", a),
+    }
+  }
+}
+
+#[derive(Debug)]
+pub struct Net {
+  t: String,
+  y: i32,
+}
+
+impl Net {
+  pub fn apply_attribute(&mut self, attribute: Attribute) {
+    match attribute {
+      Attribute::Type(t) => self.t = t,
+      Attribute::YCoordinate(y) => self.y = y,
+      a => panic!("could not apply {} to net", a),
+    }
+  }
+}
+
+impl Default for Net {
+  fn default() -> Net {
+    Net { t: String::new(), y: -1 }
+  }
+}
+
+#[derive(Display, Debug)]
 // an attribute that an object can have
 pub enum Attribute {
   Label(String),
-  Position(i32, i32),
+  Position(Position),
   Type(String),
   Value(Value),
   YCoordinate(i32),
@@ -53,16 +86,35 @@ pub enum Attribute {
 //   Pin,
 // }
 
-#[derive(Debug)]
+// #[derive(Debug)]
 // an object that cirno can render
 // pub struct Object {
-//   pub t: ObjectType,
+//   pub object: ObjectType,
 //   pub attributes: Vec<Attribute>,
 // }
 
 // an object that cirno can render
 pub enum Object {
-  Chip { t: Option<String>, position: Option<Position> },
-  Net { t: Option<String>, y: Option<i32> },
+  Chip(Chip),
+  Net(Net),
   // Pin(...)
+}
+
+impl Object {
+  pub fn apply_attribute(&mut self, attribute: Attribute) {
+    match self {
+      Object::Chip(chip) => chip.apply_attribute(attribute),
+      Object::Net(net) => net.apply_attribute(attribute),
+    }
+  }
+}
+
+impl Debug for Object {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+    f.write_str("Object::")?;
+    match self {
+      Object::Chip(chip) => chip.fmt(f),
+      Object::Net(net) => net.fmt(f),
+    }
+  }
 }

@@ -55,7 +55,7 @@ fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> crate::p
       let x: i32 = lexer.slice().parse().unwrap();
       lexer.next();
       let y: i32 = lexer.slice().parse().unwrap();
-      crate::project::Attribute::Position(x, y)
+      crate::project::Attribute::Position(crate::project::Position { x, y })
     },
     "type" => {
       let t: String = lexer.slice().to_string();
@@ -90,16 +90,11 @@ fn parse_attribute_value(lexer: &mut logos::Lexer<'_, Token>) -> crate::project:
 
 fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> crate::project::Object {
   // create uninitialized object
-  let mut object;
-  match token {
-    "chip" => {
-      object = crate::project::Object::Chip { t: None, position: None };
-    },
-    "net" => {
-      object = crate::project::Object::Net { t: None, y: None };
-    },
-    &_ => todo!(),
-  }
+  let mut object = match token {
+    "chip" => crate::project::Object::Chip(crate::project::Chip::default()),
+    "net" => crate::project::Object::Net(crate::project::Net::default()),
+    _ => todo!(), // do we need?
+  };
   // get attributes
   let mut attributes: Vec<crate::project::Attribute> = vec![];
   while let Some(_token) = lexer.next() {
@@ -109,36 +104,8 @@ fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> crate::proj
     attributes.push(parse_attribute(lexer.slice(), lexer));
   }
   // apply attributes to the object
-  for attribute in &attributes {
-    match attribute {
-      crate::project::Attribute::Position(new_x, new_y) => {
-        match object {
-          crate::project::Object::Chip { t, position } => {
-            object = crate::project::Object::Chip { t, position: Some(crate::project::Position { x: *new_x, y: *new_y }) };
-          },
-          _ => panic!("attempted to assign y-coordinate to object which does not take one"),
-        }
-      },
-      crate::project::Attribute::Type(new_t) => {
-        match object {
-          crate::project::Object::Chip { t, position } => {
-            object = crate::project::Object::Chip { t: Some(new_t.to_string()), position };
-          },
-          crate::project::Object::Net { t, y } => {
-            object = crate::project::Object::Net { t: Some(new_t.to_string()), y };
-          }
-        }
-      },
-      crate::project::Attribute::YCoordinate(new_y) => {
-        match object {
-          crate::project::Object::Net { t, y } => {
-            object = crate::project::Object::Net { t, y: Some(*new_y) }
-          },
-          _ => panic!("attempted to assign y-coordinate to object which does not take one"),
-        }
-      },
-      _ => todo!(),
-    }
+  for attribute in attributes {
+    object.apply_attribute(attribute);
   }
   // return the object
   object
