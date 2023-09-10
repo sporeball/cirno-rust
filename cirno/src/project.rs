@@ -3,20 +3,27 @@ enum NetType {
   Gnd,
 }
 
-// types
 #[derive(Debug)]
-pub struct YCoordinate(pub i32);
-#[derive(Debug)]
-pub struct Position(pub i32, pub i32);
-
-#[derive(Debug)]
-pub enum Attribute {
-  YCoordinate(i32),
-  Position(i32, i32),
+// a value that a pin can have
+pub enum Value {
+  And(Vec<String>),
+  Gnd,
+  Vcc,
 }
 
 #[derive(Debug)]
+// an attribute that an object can have
+pub enum Attribute {
+  Label(String),
+  Position(i32, i32),
+  Value(Value),
+  YCoordinate(i32),
+}
+
+#[derive(Debug)]
+// an object that cirno can render
 pub enum Object {
-  Chip(String, Position),
-  Net(String, YCoordinate),
+  Chip(String, Vec<Attribute>),
+  Net(String, Vec<Attribute>),
+  Pin(i32, Vec<Attribute>),
 }

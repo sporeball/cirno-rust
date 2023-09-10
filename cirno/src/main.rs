@@ -1,5 +1,5 @@
 use cirno::parser;
-use std::io::{self, prelude::*, BufReader};
+use std::io::{self, BufReader};
 use std::fs::File;
 use clap::Parser;
 
@@ -12,14 +12,8 @@ struct Cli {
 fn main() -> Result<(), io::Error> {
   let args = Cli::parse();
   let filename = args.filename.to_str().unwrap();
-  let file = File::open(filename)?;
-  let contents = BufReader::new(file);
 
-  // for line in contents.lines() {
-    // println!("{}", line.unwrap());
-  // }
-
-  parser::parse(contents);
+  parser::parse_cip(filename);
 
   Ok(())
 }
