@@ -7,3 +7,4 @@ edition = "2021"
 clap = { version = "4.4.2", features = ["derive"] }
 logos = "0.13.0"
 strum = { version = "0.25.0", features = ["derive", "strum_macros"] }
+strum_macros = "0.25.2"
