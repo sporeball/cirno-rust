@@ -45,6 +45,10 @@ fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> crate::p
       let y: i32 = lexer.slice().parse().unwrap();
       crate::project::Attribute::Position(x, y)
     },
+    "type" => {
+      let t: String = lexer.slice().to_string();
+      crate::project::Attribute::Type(t)
+    },
     "value" => crate::project::Attribute::Value(parse_attribute_value(lexer)),
     "y" => {
       let y: i32 = lexer.slice().parse().unwrap();
@@ -73,38 +77,16 @@ fn parse_attribute_value(lexer: &mut logos::Lexer<'_, Token>) -> crate::project:
 }
 
 fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> crate::project::Object {
+  let mut attributes: Vec<crate::project::Attribute> = vec![];
+  while let Some(_token) = lexer.next() {
+    if lexer.slice() == ":" {
+      break;
+    }
+    attributes.push(parse_attribute(lexer.slice(), lexer));
+  }
   match token {
-    "chip" => new_chip(lexer),
-    "net" => new_net(lexer),
+    "chip" => crate::project::Object::Chip(attributes),
+    "net" => crate::project::Object::Net(attributes),
     &_ => todo!(),
   }
-}
-
-fn new_chip(lexer: &mut logos::Lexer<'_, Token>) -> crate::project::Object {
-  // TODO: DRY
-  lexer.next();
-  let t = lexer.slice();
-  let mut attributes: Vec<crate::project::Attribute> = vec![];
-  while let Some(_token) = lexer.next() {
-    if lexer.slice() == ":" {
-      break;
-    }
-    attributes.push(parse_attribute(lexer.slice(), lexer));
-  }
-  // println!("{:?}", attributes);
-  crate::project::Object::Chip(t.to_string(), attributes)
-}
-
-fn new_net(lexer: &mut logos::Lexer<'_, Token>) -> crate::project::Object {
-  lexer.next();
-  let t = lexer.slice();
-  let mut attributes: Vec<crate::project::Attribute> = vec![];
-  while let Some(_token) = lexer.next() {
-    if lexer.slice() == ":" {
-      break;
-    }
-    attributes.push(parse_attribute(lexer.slice(), lexer));
-  }
-  // println!("{:?}", attributes);
-  crate::project::Object::Net(t.to_string(), attributes)
 }

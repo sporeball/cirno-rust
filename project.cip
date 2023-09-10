@@ -1,4 +1,4 @@
-: chip ls0xx/sn74ls08 pos 10 10
-: chip ls0xx/sn74ls08 pos 20 10
-: net vcc y 0
-: net gnd y 1
+: chip type ls0xx/sn74ls08 pos 10 10
+: chip type ls0xx/sn74ls08 pos 20 10
+: net type vcc y 0
+: net type gnd y 1
