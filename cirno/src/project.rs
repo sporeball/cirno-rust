@@ -2,14 +2,6 @@ use std::any::Any;
 use std::fmt::Debug;
 use strum_macros::Display;
 
-#[derive(Clone, Debug)]
-// a value that a pin can have
-pub enum Value {
-  And(Vec<String>),
-  Gnd,
-  Vcc,
-}
-
 #[derive(Debug)]
 pub struct Label {
   pub value: String,
@@ -26,15 +18,33 @@ pub struct Type {
   pub t: String,
 }
 
+#[derive(Debug)]
+// a value that a pin can have
+pub enum Value {
+  And(Vec<String>),
+  Gnd,
+  Vcc,
+}
+
 #[derive(Debug, Default)]
 pub struct YCoordinate {
   pub y: i32,
 }
 
+#[derive(Display, Debug)]
+// an attribute that an object can have
+pub enum Attribute {
+  Label(String),
+  Position(Position),
+  Type(String),
+  Value(Value),
+  YCoordinate(i32),
+}
+
 #[derive(Debug, Default)]
 pub struct Chip {
-  t: String,
-  position: Position,
+  pub t: String,
+  pub position: Position,
 }
 
 impl Chip {
@@ -49,8 +59,8 @@ impl Chip {
 
 #[derive(Debug)]
 pub struct Net {
-  t: String,
-  y: i32,
+  pub t: String,
+  pub y: i32,
 }
 
 impl Net {
@@ -68,30 +78,6 @@ impl Default for Net {
     Net { t: String::new(), y: -1 }
   }
 }
-
-#[derive(Display, Debug)]
-// an attribute that an object can have
-pub enum Attribute {
-  Label(String),
-  Position(Position),
-  Type(String),
-  Value(Value),
-  YCoordinate(i32),
-}
-
-// #[derive(Debug)]
-// pub enum ObjectType {
-//   Chip,
-//   Net,
-//   Pin,
-// }
-
-// #[derive(Debug)]
-// an object that cirno can render
-// pub struct Object {
-//   pub object: ObjectType,
-//   pub attributes: Vec<Attribute>,
-// }
 
 // an object that cirno can render
 pub enum Object {
@@ -115,6 +101,46 @@ impl Debug for Object {
     match self {
       Object::Chip(chip) => chip.fmt(f),
       Object::Net(net) => net.fmt(f),
+    }
+  }
+}
+
+#[derive(Debug, Default)]
+pub struct Cic {
+}
+
+#[derive(Debug, Default)]
+pub struct Cip {
+  objects: Vec<Object>,
+}
+
+// the result of parsing a .cic or .cip file
+pub enum ParseResult {
+  Cic(Cic),
+  Cip(Cip),
+}
+
+impl ParseResult {
+  pub fn apply(&mut self, ast: Vec<Object>) {
+    match self {
+      ParseResult::Cic(cic) => todo!(),
+      ParseResult::Cip(cip) => cip.objects = ast,
+    }
+  }
+  pub fn verify(&mut self) {
+    match self {
+      ParseResult::Cic(cic) => todo!(),
+      ParseResult::Cip(cip) => todo!(),
+    }
+  }
+}
+
+impl Debug for ParseResult {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+    f.write_str("ParseResult::")?;
+    match self {
+      ParseResult::Cic(cic) => cic.fmt(f),
+      ParseResult::Cip(cip) => cip.fmt(f),
     }
   }
 }

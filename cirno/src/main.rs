@@ -13,7 +13,7 @@ fn main() -> Result<(), io::Error> {
   let args = Cli::parse();
   let filename = args.filename.to_str().unwrap();
 
-  parser::parse_cip(filename);
+  parser::parse(filename);
 
   Ok(())
 }

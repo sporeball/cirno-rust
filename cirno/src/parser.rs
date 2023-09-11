@@ -18,11 +18,18 @@ enum Token {
   Separator
 }
 
-pub fn parse_cip(filename: &str) -> Result<Vec<crate::project::Object>, io::Error> {
+pub fn parse(filename: &str) -> Result<crate::project::ParseResult, io::Error> {
+  // create default result
+  let mut result = match &filename[filename.len()-4..] {
+    ".cic" => crate::project::ParseResult::Cic(crate::project::Cic::default()),
+    ".cip" => crate::project::ParseResult::Cip(crate::project::Cip::default()),
+    x => panic!("invalid filetype: {}", x),
+  };
+  // open file
   let file = File::open(filename)?;
   let contents = BufReader::new(file);
   let mut ast: Vec<crate::project::Object> = vec![];
-  // for each line
+  // for each line in the file
   for line in contents.lines() {
     // tokenize the line
     let line = &line.unwrap();
@@ -37,15 +44,17 @@ pub fn parse_cip(filename: &str) -> Result<Vec<crate::project::Object>, io::Erro
       ast.push(parse_object(lex.slice(), &mut lex));
     }
   }
-  println!("{:#?}", ast);
+  // apply the AST to the result
+  result.apply(ast);
+  println!("{:#?}", result);
   // match &ast[0] {
-  //   crate::project::Object::Chip { t, position } => println!("{}", t),
+  //   crate::project::Object::Chip(chip) => println!("{}", chip.t),
   //   _ => todo!(),
   // }
   // for attribute in &ast[0].attributes {
   //   println!("{:#?}", attribute);
   // }
-  Ok(ast)
+  Ok(result)
 }
 
 fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> crate::project::Attribute {
