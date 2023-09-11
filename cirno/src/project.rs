@@ -7,6 +7,11 @@ pub struct Label {
   pub value: String,
 }
 
+#[derive(Debug)]
+pub struct Num {
+  pub num: i32,
+}
+
 #[derive(Debug, Default)]
 pub struct Position {
   pub x: i32,
@@ -23,7 +28,14 @@ pub struct Type {
 pub enum Value {
   And(Vec<String>),
   Gnd,
+  None,
   Vcc,
+}
+
+impl Default for Value {
+  fn default() -> Value {
+    Value::None
+  }
 }
 
 #[derive(Debug, Default)]
@@ -35,6 +47,7 @@ pub struct YCoordinate {
 // an attribute that an object can have
 pub enum Attribute {
   Label(String),
+  Num(i32),
   Position(Position),
   Type(String),
   Value(Value),
@@ -79,11 +92,31 @@ impl Default for Net {
   }
 }
 
+#[derive(Debug, Default)]
+pub struct Pin {
+  pub label: String,
+  pub num: i32,
+  pub position: Position,
+  pub value: Value,
+}
+
+impl Pin {
+  pub fn apply_attribute(&mut self, attribute: Attribute) {
+    match attribute {
+      Attribute::Label(label) => self.label = label,
+      Attribute::Num(num) => self.num = num,
+      Attribute::Position(position) => self.position = position,
+      Attribute::Value(value) => self.value = value,
+      a => panic!("could not apply {} to chip", a),
+    }
+  }
+}
+
 // an object that cirno can render
 pub enum Object {
   Chip(Chip),
   Net(Net),
-  // Pin(...)
+  Pin(Pin),
 }
 
 impl Object {
@@ -91,6 +124,7 @@ impl Object {
     match self {
       Object::Chip(chip) => chip.apply_attribute(attribute),
       Object::Net(net) => net.apply_attribute(attribute),
+      Object::Pin(pin) => pin.apply_attribute(attribute),
     }
   }
 }
@@ -101,12 +135,14 @@ impl Debug for Object {
     match self {
       Object::Chip(chip) => chip.fmt(f),
       Object::Net(net) => net.fmt(f),
+      Object::Pin(pin) => pin.fmt(f),
     }
   }
 }
 
 #[derive(Debug, Default)]
 pub struct Cic {
+  pins: Vec<Object>,
 }
 
 #[derive(Debug, Default)]
@@ -123,7 +159,7 @@ pub enum ParseResult {
 impl ParseResult {
   pub fn apply(&mut self, ast: Vec<Object>) {
     match self {
-      ParseResult::Cic(cic) => todo!(),
+      ParseResult::Cic(cic) => cic.pins = ast,
       ParseResult::Cip(cip) => cip.objects = ast,
     }
   }

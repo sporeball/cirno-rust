@@ -20,7 +20,7 @@ enum Token {
 
 pub fn parse(filename: &str) -> Result<crate::project::ParseResult, io::Error> {
   // create default result
-  let mut result = match &filename[filename.len()-4..] {
+  let mut result = match &filename[filename.len()-4..] { // extension
     ".cic" => crate::project::ParseResult::Cic(crate::project::Cic::default()),
     ".cip" => crate::project::ParseResult::Cip(crate::project::Cip::default()),
     x => panic!("invalid filetype: {}", x),
@@ -60,6 +60,14 @@ pub fn parse(filename: &str) -> Result<crate::project::ParseResult, io::Error> {
 fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> crate::project::Attribute {
   lexer.next();
   match token {
+    "label" => {
+      let label: String = lexer.slice().to_string();
+      crate::project::Attribute::Label(label)
+    }
+    "num" => {
+      let num: i32 = lexer.slice().parse().unwrap();
+      crate::project::Attribute::Num(num)
+    },
     "pos" => {
       let x: i32 = lexer.slice().parse().unwrap();
       lexer.next();
@@ -102,6 +110,7 @@ fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> crate::proj
   let mut object = match token {
     "chip" => crate::project::Object::Chip(crate::project::Chip::default()),
     "net" => crate::project::Object::Net(crate::project::Net::default()),
+    "pin" => crate::project::Object::Pin(crate::project::Pin::default()),
     _ => todo!(), // do we need?
   };
   // get attributes
