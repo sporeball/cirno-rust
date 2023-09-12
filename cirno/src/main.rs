@@ -18,7 +18,17 @@ fn main() -> Result<(), io::Error> {
   // println!("{:#?}", project);
 
   cirno::terminal::enter();
+
+  let objects = match project {
+    cirno::project::ParseResult::Cic(cirno::project::Cic { pins }) => todo!(),
+    cirno::project::ParseResult::Cip(cirno::project::Cip { objects }) => objects,
+  };
+  for object in objects {
+    object.render();
+  }
+
   cirno::terminal::event_loop();
+
   cirno::terminal::exit();
 
   Ok(())

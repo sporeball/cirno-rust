@@ -25,6 +25,7 @@ pub fn exit() {
 pub fn event_loop() -> Result<(), io::Error> {
   loop {
     match crossterm::event::read()? {
+      // key event
       Event::Key(event) => {
         let res: KeyEventResult = handle_key_event(event);
         if matches!(res, KeyEventResult::Exit) {

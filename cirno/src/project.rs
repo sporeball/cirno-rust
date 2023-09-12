@@ -1,5 +1,11 @@
 use std::any::Any;
 use std::fmt::Debug;
+use std::io;
+use std::io::stdout;
+use crossterm::{ExecutableCommand, execute};
+use crossterm::cursor;
+use crossterm::style;
+
 
 #[derive(Debug)]
 pub struct Label {
@@ -73,6 +79,9 @@ impl Chip {
       a => panic!("could not apply {:?} to chip", a.to_string()),
     }
   }
+  pub fn render(self) -> Result<(), io::Error> {
+    Ok(())
+  }
 }
 
 #[derive(Debug)]
@@ -88,6 +97,20 @@ impl Net {
       Attribute::YCoordinate(y) => self.y = y,
       a => panic!("could not apply {:?} to net", a),
     }
+  }
+  // TODO: bounds check
+  pub fn render(self) -> Result<(), io::Error> {
+    let (cols, rows) = crossterm::terminal::size()?;
+    execute!(stdout(), crossterm::cursor::MoveTo(0, self.y as u16));
+    if self.t.eq("vcc") {
+      execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Red));
+      execute!(stdout(), crossterm::style::Print("+".repeat(cols.into())));
+    } else {
+      execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Blue));
+      execute!(stdout(), crossterm::style::Print("-".repeat(cols.into())));
+    }
+    execute!(stdout(), crossterm::style::ResetColor); // TODO: what happens if you don't do this?
+    Ok(())
   }
 }
 
@@ -115,6 +138,9 @@ impl Pin {
       a => panic!("could not apply {:?} to chip", a),
     }
   }
+  pub fn render(self) -> Result<(), io::Error> {
+    Ok(())
+  }
 }
 
 // an object that cirno can render
@@ -132,6 +158,13 @@ impl Object {
       Object::Pin(pin) => pin.apply_attribute(attribute),
     }
   }
+  pub fn render(self) -> Result<(), io::Error> {
+    match self {
+      Object::Chip(chip) => chip.render(),
+      Object::Net(net) => net.render(),
+      Object::Pin(pin) => pin.render(),
+    }
+  }
 }
 
 impl Debug for Object {
@@ -147,12 +180,12 @@ impl Debug for Object {
 
 #[derive(Debug, Default)]
 pub struct Cic {
-  pins: Vec<Object>,
+  pub pins: Vec<Object>,
 }
 
 #[derive(Debug, Default)]
 pub struct Cip {
-  objects: Vec<Object>,
+  pub objects: Vec<Object>,
 }
 
 // the result of parsing a .cic or .cip file
