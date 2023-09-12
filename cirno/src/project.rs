@@ -1,6 +1,5 @@
 use std::any::Any;
 use std::fmt::Debug;
-use strum_macros::Display;
 
 #[derive(Debug)]
 pub struct Label {
@@ -43,7 +42,7 @@ pub struct YCoordinate {
   pub y: i32,
 }
 
-#[derive(Display, Debug)]
+#[derive(Debug)]
 // an attribute that an object can have
 pub enum Attribute {
   Label(String),
@@ -52,6 +51,12 @@ pub enum Attribute {
   Type(String),
   Value(Value),
   YCoordinate(i32),
+}
+
+impl std::fmt::Display for Attribute {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+    write!(f, "{:?}", self)
+  }
 }
 
 #[derive(Debug, Default)]
@@ -65,7 +70,7 @@ impl Chip {
     match attribute {
       Attribute::Type(t) => self.t = t,
       Attribute::Position(position) => self.position = position,
-      a => panic!("could not apply {} to chip", a),
+      a => panic!("could not apply {:?} to chip", a.to_string()),
     }
   }
 }
@@ -81,7 +86,7 @@ impl Net {
     match attribute {
       Attribute::Type(t) => self.t = t,
       Attribute::YCoordinate(y) => self.y = y,
-      a => panic!("could not apply {} to net", a),
+      a => panic!("could not apply {:?} to net", a),
     }
   }
 }
@@ -107,7 +112,7 @@ impl Pin {
       Attribute::Num(num) => self.num = num,
       Attribute::Position(position) => self.position = position,
       Attribute::Value(value) => self.value = value,
-      a => panic!("could not apply {} to chip", a),
+      a => panic!("could not apply {:?} to chip", a),
     }
   }
 }
@@ -130,7 +135,7 @@ impl Object {
 }
 
 impl Debug for Object {
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
     f.write_str("Object::")?;
     match self {
       Object::Chip(chip) => chip.fmt(f),
