@@ -46,7 +46,6 @@ pub fn parse(filename: &str) -> Result<crate::project::ParseResult, io::Error> {
   }
   // apply the AST to the result
   result.apply(ast);
-  println!("{:#?}", result);
   // match &ast[0] {
   //   crate::project::Object::Chip(chip) => println!("{}", chip.t),
   //   _ => todo!(),
