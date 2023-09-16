@@ -3,6 +3,7 @@
 use cirno::parser;
 use std::io::{self, BufReader};
 use std::fs::File;
+use std::panic;
 use clap::Parser;
 
 /// Full-featured circuit design tool
@@ -12,6 +13,12 @@ struct Cli {
 }
 
 fn main() -> Result<(), io::Error> {
+  let default_panic = std::panic::take_hook();
+  std::panic::set_hook(Box::new(move |info| {
+    cirno::terminal::exit();
+    default_panic(info);
+  }));
+
   let args = Cli::parse();
   let filename = args.filename.to_str().unwrap();
   let project: cirno::project::ParseResult = parser::parse(filename).unwrap();
