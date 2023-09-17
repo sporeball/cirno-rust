@@ -1,9 +1,7 @@
 // need to use "cirno" in this file, not "crate"
 
 use cirno::parser;
-use std::io::{self, BufReader};
-use std::fs::File;
-use std::panic;
+use std::io::{self};
 use clap::Parser;
 
 /// Full-featured circuit design tool
@@ -27,9 +25,10 @@ fn main() -> Result<(), io::Error> {
   cirno::terminal::enter();
 
   let objects = match project {
-    cirno::project::ParseResult::Cic(cirno::project::Cic { pins }) => todo!(),
+    cirno::project::ParseResult::Cic(cirno::project::Cic { pins: _ }) => todo!(),
     cirno::project::ParseResult::Cip(cirno::project::Cip { objects }) => objects,
   };
+  cirno::logger::debug(&objects);
   for object in objects {
     object.render();
   }
@@ -37,6 +36,8 @@ fn main() -> Result<(), io::Error> {
   cirno::terminal::event_loop();
 
   cirno::terminal::exit();
+
+  // println!("{:#?}", cirno::logger::LOG_STATE.read().unwrap());
 
   Ok(())
 }

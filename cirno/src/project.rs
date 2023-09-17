@@ -1,11 +1,8 @@
-use std::any::Any;
+
 use std::fmt::Debug;
 use std::io;
 use std::io::stdout;
-use crossterm::{ExecutableCommand, execute};
-use crossterm::cursor;
-use crossterm::style;
-
+use crossterm::{execute};
 
 #[derive(Debug)]
 pub struct Label {
@@ -100,7 +97,7 @@ impl Net {
   }
   // TODO: bounds check
   pub fn render(self) -> Result<(), io::Error> {
-    let (cols, rows) = crossterm::terminal::size()?;
+    let (cols, _rows) = crossterm::terminal::size()?;
     execute!(stdout(), crossterm::cursor::MoveTo(0, self.y as u16));
     if self.t.eq("vcc") {
       execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Red));
@@ -203,8 +200,8 @@ impl ParseResult {
   }
   pub fn verify(&mut self) {
     match self {
-      ParseResult::Cic(cic) => todo!(),
-      ParseResult::Cip(cip) => todo!(),
+      ParseResult::Cic(_cic) => todo!(),
+      ParseResult::Cip(_cip) => todo!(),
     }
   }
 }
