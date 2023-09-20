@@ -95,10 +95,13 @@ impl Net {
       a => panic!("could not apply {:?} to net", a),
     }
   }
-  // TODO: bounds check
   pub fn render(self) -> Result<(), io::Error> {
-    let (cols, _rows) = crossterm::terminal::size()?;
-    execute!(stdout(), crossterm::cursor::MoveTo(0, self.y as u16));
+    let (cols, rows) = crossterm::terminal::size()?;
+    let y = self.y as u16;
+    if (y > rows) {
+      return Ok(());
+    }
+    execute!(stdout(), crossterm::cursor::MoveTo(0, y));
     if self.t.eq("vcc") {
       execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Red));
       execute!(stdout(), crossterm::style::Print("+".repeat(cols.into())));
