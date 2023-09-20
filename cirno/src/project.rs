@@ -77,6 +77,25 @@ impl Chip {
     }
   }
   pub fn render(self) -> Result<(), io::Error> {
+    let (cols, rows) = crossterm::terminal::size()?;
+    let x = self.position.x as u16;
+    let y = self.position.y as u16;
+    // bounds check
+    if (x > cols || y > rows) {
+      return Ok(());
+    }
+    // read .cic based on type field
+    let filename = format!("../stdlib/{}{}", self.t, ".cic"); // TODO: make this stronger, make sure this doesn't break
+    let cic: ParseResult = crate::parser::parse(&filename).unwrap();
+    let pins = match cic {
+      ParseResult::Cic(crate::project::Cic { pins }) => pins,
+      ParseResult::Cip(_) => todo!(),
+    };
+    // rendering
+    for pin in pins {
+      execute!(stdout(), crossterm::cursor::MoveTo(x, y));
+      pin.render();
+    }
     Ok(())
   }
 }
@@ -98,9 +117,11 @@ impl Net {
   pub fn render(self) -> Result<(), io::Error> {
     let (cols, rows) = crossterm::terminal::size()?;
     let y = self.y as u16;
+    // bounds check
     if (y > rows) {
       return Ok(());
     }
+    // rendering
     execute!(stdout(), crossterm::cursor::MoveTo(0, y));
     if self.t.eq("vcc") {
       execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Red));
@@ -139,6 +160,17 @@ impl Pin {
     }
   }
   pub fn render(self) -> Result<(), io::Error> {
+    let (cols, rows) = crossterm::terminal::size()?;
+    let (col, row) = crossterm::cursor::position()?;
+    let x = self.position.x as u16;
+    let y = self.position.y as u16;
+    // bounds check
+    if (col + x > cols || row + y > rows) {
+      return Ok(());
+    }
+    // rendering
+    execute!(stdout(), crossterm::cursor::MoveTo(col + x, row + y));
+    execute!(stdout(), crossterm::style::Print("."));
     Ok(())
   }
 }
