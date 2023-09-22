@@ -33,7 +33,8 @@ fn main() -> Result<(), io::Error> {
     object.render();
   }
 
-  cirno::terminal::event_loop();
+  // cirno::terminal::event_loop();
+  cirno::modes::switch_to_mode(cirno::modes::normal::get());
 
   cirno::terminal::exit();
 

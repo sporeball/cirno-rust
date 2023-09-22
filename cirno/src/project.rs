@@ -253,8 +253,7 @@ impl Debug for ParseResult {
   }
 }
 
+#[derive(Clone, Copy)]
 pub struct Mode {
-}
-
-pub enum Modes {
+  pub event_loop: fn() -> Result<(), io::Error>,
 }
