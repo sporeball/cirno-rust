@@ -1,6 +1,5 @@
 use std::io;
 use crossterm::execute;
-
 use crossterm::event::{Event, KeyEvent};
 
 enum KeyEventResult {

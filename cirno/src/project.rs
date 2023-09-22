@@ -1,4 +1,3 @@
-
 use std::fmt::Debug;
 use std::io;
 use std::io::stdout;
@@ -78,10 +77,12 @@ impl Chip {
   }
   pub fn render(self) -> Result<(), io::Error> {
     let (cols, rows) = crossterm::terminal::size()?;
-    let x = self.position.x as u16;
-    let y = self.position.y as u16;
+    let centerX = cols / 2;
+    let centerY = rows / 2;
+    let chipX = self.position.x as u16;
+    let chipY = self.position.y as u16;
     // bounds check
-    if (x > cols || y > rows) {
+    if (chipX + centerX > cols || chipY + centerY > rows) {
       return Ok(());
     }
     // read .cic based on type field
@@ -93,7 +94,7 @@ impl Chip {
     };
     // rendering
     for pin in pins {
-      execute!(stdout(), crossterm::cursor::MoveTo(x, y));
+      execute!(stdout(), crossterm::cursor::MoveTo(chipX + centerX, chipY + centerY));
       pin.render();
     }
     Ok(())
@@ -116,13 +117,14 @@ impl Net {
   }
   pub fn render(self) -> Result<(), io::Error> {
     let (cols, rows) = crossterm::terminal::size()?;
-    let y = self.y as u16;
+    let centerY = rows / 2;
+    let netY = self.y as u16;
     // bounds check
-    if (y > rows) {
+    if (netY + centerY > rows) {
       return Ok(());
     }
     // rendering
-    execute!(stdout(), crossterm::cursor::MoveTo(0, y));
+    execute!(stdout(), crossterm::cursor::MoveTo(0, netY + centerY));
     if self.t.eq("vcc") {
       execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Red));
       execute!(stdout(), crossterm::style::Print("+".repeat(cols.into())));
@@ -249,4 +251,10 @@ impl Debug for ParseResult {
       ParseResult::Cip(cip) => cip.fmt(f),
     }
   }
+}
+
+pub struct Mode {
+}
+
+pub enum Modes {
 }
