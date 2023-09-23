@@ -1,6 +1,6 @@
 // need to use "cirno" in this file, not "crate"
 
-use cirno::{parser, project::Modes, terminal::KeyEventResult};
+use cirno::{parser, project::Modes, terminal::KeyEventResult, modes::CirnoContext};
 use std::io::{self};
 use clap::Parser;
 use crossterm::event::Event;
@@ -13,6 +13,7 @@ struct Cli {
 
 pub struct CirnoState {
   mode: cirno::project::Modes,
+  context: cirno::modes::CirnoContext
 }
 
 impl CirnoState {
@@ -26,7 +27,7 @@ impl CirnoState {
       match crossterm::event::read()? {
         // key event
         Event::Key(event) => {
-          let res: KeyEventResult = (self.get_mode().key_event_cb)(event);
+          let res: KeyEventResult = (self.get_mode().key_event_cb)(event, &mut self.context);
           if matches!(res, KeyEventResult::Exit) {
             return Ok(())
           }
@@ -44,8 +45,12 @@ fn main() -> Result<(), io::Error> {
     default_panic(info);
   }));
 
-  let mut state: CirnoState = CirnoState {
-    mode: Modes::Normal
+  let mut state = CirnoState {
+    mode: Modes::Normal,
+    context: CirnoContext {
+      cursor_x: 0,
+      cursor_y: 0,
+    }
   };
 
   let args = Cli::parse();
@@ -65,12 +70,12 @@ fn main() -> Result<(), io::Error> {
   }
 
   state.event_loop()?;
-  // cirno::terminal::event_loop();
-  // cirno::modes::switch_to_mode(cirno::modes::normal::get());
 
   cirno::terminal::exit()?;
 
-  // println!("{:#?}", cirno::logger::LOG_STATE.read().unwrap());
+  cirno::logger::debug(&state.context.cursor_x);
+  cirno::logger::debug(&state.context.cursor_y);
+  println!("{:#?}", cirno::logger::LOG_STATE.read().unwrap());
 
   Ok(())
 }

@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io;
 use std::io::stdout;
@@ -253,9 +254,10 @@ impl Debug for ParseResult {
   }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Mode {
-  pub key_event_cb: fn(crossterm::event::KeyEvent) -> crate::terminal::KeyEventResult,
+  pub key_event_cb: fn(crossterm::event::KeyEvent, &mut crate::modes::CirnoContext) -> crate::terminal::KeyEventResult,
+  pub commands: HashMap<char, fn(&mut crate::modes::CirnoContext) -> crate::terminal::KeyEventResult>,
 }
 
 pub enum Modes {
