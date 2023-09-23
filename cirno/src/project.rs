@@ -1,7 +1,7 @@
 use std::fmt::Debug;
 use std::io;
 use std::io::stdout;
-use crossterm::{execute};
+use crossterm::execute;
 
 #[derive(Debug)]
 pub struct Label {
@@ -77,12 +77,12 @@ impl Chip {
   }
   pub fn render(self) -> Result<(), io::Error> {
     let (cols, rows) = crossterm::terminal::size()?;
-    let centerX = cols / 2;
-    let centerY = rows / 2;
-    let chipX = self.position.x as u16;
-    let chipY = self.position.y as u16;
+    let center_x = cols / 2;
+    let center_y = rows / 2;
+    let chip_x = self.position.x as u16;
+    let chip_y = self.position.y as u16;
     // bounds check
-    if (chipX + centerX > cols || chipY + centerY > rows) {
+    if chip_x + center_x > cols || chip_y + center_y > rows {
       return Ok(());
     }
     // read .cic based on type field
@@ -94,8 +94,8 @@ impl Chip {
     };
     // rendering
     for pin in pins {
-      execute!(stdout(), crossterm::cursor::MoveTo(chipX + centerX, chipY + centerY));
-      pin.render();
+      execute!(stdout(), crossterm::cursor::MoveTo(chip_x + center_x, chip_y + center_y))?;
+      pin.render()?;
     }
     Ok(())
   }
@@ -117,22 +117,22 @@ impl Net {
   }
   pub fn render(self) -> Result<(), io::Error> {
     let (cols, rows) = crossterm::terminal::size()?;
-    let centerY = rows / 2;
-    let netY = self.y as u16;
+    let center_y = rows / 2;
+    let net_y = self.y as u16;
     // bounds check
-    if (netY + centerY > rows) {
+    if net_y + center_y > rows {
       return Ok(());
     }
     // rendering
-    execute!(stdout(), crossterm::cursor::MoveTo(0, netY + centerY));
+    execute!(stdout(), crossterm::cursor::MoveTo(0, net_y + center_y))?;
     if self.t.eq("vcc") {
-      execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Red));
-      execute!(stdout(), crossterm::style::Print("+".repeat(cols.into())));
+      execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Red))?;
+      execute!(stdout(), crossterm::style::Print("+".repeat(cols.into())))?;
     } else {
-      execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Blue));
-      execute!(stdout(), crossterm::style::Print("-".repeat(cols.into())));
+      execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Blue))?;
+      execute!(stdout(), crossterm::style::Print("-".repeat(cols.into())))?;
     }
-    execute!(stdout(), crossterm::style::ResetColor); // TODO: what happens if you don't do this?
+    execute!(stdout(), crossterm::style::ResetColor)?; // TODO: what happens if you don't do this?
     Ok(())
   }
 }
@@ -167,12 +167,12 @@ impl Pin {
     let x = self.position.x as u16;
     let y = self.position.y as u16;
     // bounds check
-    if (col + x > cols || row + y > rows) {
+    if col + x > cols || row + y > rows {
       return Ok(());
     }
     // rendering
-    execute!(stdout(), crossterm::cursor::MoveTo(col + x, row + y));
-    execute!(stdout(), crossterm::style::Print("."));
+    execute!(stdout(), crossterm::cursor::MoveTo(col + x, row + y))?;
+    execute!(stdout(), crossterm::style::Print("."))?;
     Ok(())
   }
 }
@@ -255,5 +255,9 @@ impl Debug for ParseResult {
 
 #[derive(Clone, Copy)]
 pub struct Mode {
-  pub event_loop: fn() -> Result<(), io::Error>,
+  pub key_event_cb: fn(crossterm::event::KeyEvent) -> crate::terminal::KeyEventResult,
+}
+
+pub enum Modes {
+  Normal,
 }

@@ -1,6 +1,6 @@
 use std::io::{self, BufRead, BufReader};
 use std::fs::File;
-use logos::{Logos};
+use logos::Logos;
 
 #[derive(Logos, Debug, PartialEq)]
 #[logos(skip r"[ \t\n\f]+")]

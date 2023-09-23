@@ -1,28 +1,9 @@
-use std::io;
-use crossterm::event::{Event, KeyEvent};
+use crossterm::event::KeyEvent;
 use crate::terminal::KeyEventResult;
 
-static MODE_NORMAL: crate::project::Mode = crate::project::Mode {
-  event_loop,
-};
-
-pub fn get() -> crate::project::Mode {
-  MODE_NORMAL
-}
-
-// TODO: figure out how to avoid repeating this 50 times
-fn event_loop() -> Result<(), io::Error> {
-  loop {
-    match crossterm::event::read()? {
-      // key event
-      Event::Key(event) => {
-        let res: KeyEventResult = handle_key_event(event);
-        if matches!(res, KeyEventResult::Exit) {
-          return Ok(())
-        }
-      },
-      _ => (),
-    }
+pub const fn get() -> crate::project::Mode {
+  crate::project::Mode {
+    key_event_cb: handle_key_event,
   }
 }
 
