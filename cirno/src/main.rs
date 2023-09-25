@@ -21,6 +21,7 @@ fn main() -> Result<(), io::Error> {
     mode: Modes::Normal,
     cursor_x: 0,
     cursor_y: 0,
+    objects: vec![],
   };
 
   let args = Cli::parse();
@@ -35,9 +36,8 @@ fn main() -> Result<(), io::Error> {
     cirno::project::ParseResult::Cip(cirno::project::Cip { objects }) => objects,
   };
   cirno::logger::debug(&objects);
-  for object in objects {
-    object.render()?;
-  }
+  state.objects = objects;
+  state.render();
 
   state.event_loop()?;
 

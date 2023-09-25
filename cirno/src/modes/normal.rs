@@ -33,21 +33,29 @@ fn handle_key_event(event: KeyEvent, state: &mut CirnoState) -> KeyEventResult {
 }
 
 fn on_key_h(state: &mut CirnoState) -> KeyEventResult {
-  state.cursor_x -= 1;
+  if state.cursor_x > 0 {
+    state.cursor_x -= 1;
+    state.render();
+  }
   KeyEventResult::Ok
 }
 
 fn on_key_j(state: &mut CirnoState) -> KeyEventResult {
   state.cursor_y += 1;
+  state.render();
   KeyEventResult::Ok
 }
 
 fn on_key_k(state: &mut CirnoState) -> KeyEventResult {
-  state.cursor_y -= 1;
+  if state.cursor_y > 0 {
+    state.cursor_y -= 1;
+    state.render();
+  }
   KeyEventResult::Ok
 }
 
 fn on_key_l(state: &mut CirnoState) -> KeyEventResult {
   state.cursor_x += 1;
+  state.render();
   KeyEventResult::Ok
 }
