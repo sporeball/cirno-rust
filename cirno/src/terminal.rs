@@ -25,11 +25,11 @@ pub fn exit() -> Result<(), io::Error> {
   Ok(())
 }
 
-pub fn is_offscreen(x: u16, y: u16, state: &CirnoState) -> Result<bool, io::Error> {
-  let (cols, rows) = crossterm::terminal::size()?;
-  let visual_x = x - state.cursor_x;
-  let visual_y = y - state.cursor_y;
-  if visual_x > cols || visual_y > rows {
+pub fn is_y_offscreen_relative_to_center(y: u16, state: &CirnoState) -> Result<bool, io::Error> {
+  let (_cols, rows) = crossterm::terminal::size()?;
+  let center_y = rows / 2;
+  let visual_y = center_y + y - state.cursor_y;
+  if visual_y > rows {
     return Ok(true)
   }
   Ok(false)

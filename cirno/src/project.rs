@@ -118,10 +118,9 @@ impl Net {
   }
   pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
     let (cols, rows) = crossterm::terminal::size()?;
-    let center_y = rows / 2;
     let y = self.y as u16;
     // bounds check
-    if crate::terminal::is_offscreen(0, y + center_y, state).unwrap() == true {
+    if crate::terminal::is_y_offscreen_relative_to_center(y, state).unwrap() == true {
       return Ok(())
     }
     // rendering
