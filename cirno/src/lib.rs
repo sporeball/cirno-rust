@@ -1,4 +1,4 @@
-use crate::terminal::KeyEventResult;
+use crate::{project::{Mode, Modes}, terminal::KeyEventResult};
 use std::io::{self};
 use crossterm::event::Event;
 
@@ -9,15 +9,15 @@ pub mod project;
 pub mod terminal;
 
 pub struct CirnoState {
-  pub mode: crate::project::Modes,
+  pub mode: Modes,
   pub cursor_x: i32,
   pub cursor_y: i32,
 }
 
 impl CirnoState {
-  pub fn get_mode(&mut self) -> crate::project::Mode {
+  pub fn get_mode(&mut self) -> Mode {
     match self.mode {
-      crate::project::Modes::Normal => crate::modes::normal::get(),
+      Modes::Normal => crate::modes::normal::get(),
     }
   }
   pub fn event_loop(&mut self) -> Result<(), io::Error> {

@@ -1,3 +1,4 @@
+use crate::project::*;
 use std::io::{self, BufRead, BufReader};
 use std::fs::File;
 use logos::Logos;
@@ -18,17 +19,17 @@ enum Token {
   Separator
 }
 
-pub fn parse(filename: &str) -> Result<crate::project::ParseResult, io::Error> {
+pub fn parse(filename: &str) -> Result<ParseResult, io::Error> {
   // create default result
   let mut result = match &filename[filename.len()-4..] { // extension
-    ".cic" => crate::project::ParseResult::Cic(crate::project::Cic::default()),
-    ".cip" => crate::project::ParseResult::Cip(crate::project::Cip::default()),
+    ".cic" => ParseResult::Cic(Cic::default()),
+    ".cip" => ParseResult::Cip(Cip::default()),
     x => panic!("invalid filetype: {}", x),
   };
   // open file
   let file = File::open(filename)?;
   let contents = BufReader::new(file);
-  let mut ast: Vec<crate::project::Object> = vec![];
+  let mut ast: Vec<Object> = vec![];
   // for each line in the file
   for line in contents.lines() {
     // tokenize the line
@@ -56,37 +57,37 @@ pub fn parse(filename: &str) -> Result<crate::project::ParseResult, io::Error> {
   Ok(result)
 }
 
-fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> crate::project::Attribute {
+fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Attribute {
   lexer.next();
   match token {
     "label" => {
       let label: String = lexer.slice().to_string();
-      crate::project::Attribute::Label(label)
+      Attribute::Label(label)
     }
     "num" => {
       let num: i32 = lexer.slice().parse().unwrap();
-      crate::project::Attribute::Num(num)
+      Attribute::Num(num)
     },
     "pos" => {
       let x: i32 = lexer.slice().parse().unwrap();
       lexer.next();
       let y: i32 = lexer.slice().parse().unwrap();
-      crate::project::Attribute::Position(crate::project::Position { x, y })
+      Attribute::Position(Position { x, y })
     },
     "type" => {
       let t: String = lexer.slice().to_string();
-      crate::project::Attribute::Type(t)
+      Attribute::Type(t)
     },
-    "value" => crate::project::Attribute::Value(parse_attribute_value(lexer)),
+    "value" => Attribute::Value(parse_attribute_value(lexer)),
     "y" => {
       let y: i32 = lexer.slice().parse().unwrap();
-      crate::project::Attribute::YCoordinate(y)
+      Attribute::YCoordinate(y)
     },
     &_ => todo!(),
   }
 }
 
-fn parse_attribute_value(lexer: &mut logos::Lexer<'_, Token>) -> crate::project::Value {
+fn parse_attribute_value(lexer: &mut logos::Lexer<'_, Token>) -> Value {
   match lexer.slice() {
     "and" => {
       let mut values: Vec<String> = vec![];
@@ -96,24 +97,24 @@ fn parse_attribute_value(lexer: &mut logos::Lexer<'_, Token>) -> crate::project:
         }
         values.push(lexer.slice().to_string());
       }
-      crate::project::Value::And(values)
+      Value::And(values)
     },
-    "gnd" => crate::project::Value::Gnd,
-    "vcc" => crate::project::Value::Vcc,
+    "gnd" => Value::Gnd,
+    "vcc" => Value::Vcc,
     &_ => todo!(),
   }
 }
 
-fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> crate::project::Object {
+fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Object {
   // create uninitialized object
   let mut object = match token {
-    "chip" => crate::project::Object::Chip(crate::project::Chip::default()),
-    "net" => crate::project::Object::Net(crate::project::Net::default()),
-    "pin" => crate::project::Object::Pin(crate::project::Pin::default()),
+    "chip" => Object::Chip(Chip::default()),
+    "net" => Object::Net(Net::default()),
+    "pin" => Object::Pin(Pin::default()),
     _ => todo!(), // do we need?
   };
   // get attributes
-  let mut attributes: Vec<crate::project::Attribute> = vec![];
+  let mut attributes: Vec<Attribute> = vec![];
   while let Some(_token) = lexer.next() {
     if lexer.slice() == ":" {
       break;

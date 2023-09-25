@@ -1,3 +1,4 @@
+use crate::{CirnoState, parser::parse, terminal::KeyEventResult};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io;
@@ -88,9 +89,9 @@ impl Chip {
     }
     // read .cic based on type field
     let filename = format!("../stdlib/{}{}", self.t, ".cic"); // TODO: make this stronger, make sure this doesn't break
-    let cic: ParseResult = crate::parser::parse(&filename).unwrap();
+    let cic: ParseResult = parse(&filename).unwrap();
     let pins = match cic {
-      ParseResult::Cic(crate::project::Cic { pins }) => pins,
+      ParseResult::Cic(Cic { pins }) => pins,
       ParseResult::Cip(_) => todo!(),
     };
     // rendering
@@ -256,8 +257,8 @@ impl Debug for ParseResult {
 
 #[derive(Clone)]
 pub struct Mode {
-  pub key_event_cb: fn(crossterm::event::KeyEvent, &mut crate::CirnoState) -> crate::terminal::KeyEventResult,
-  pub commands: HashMap<char, fn(&mut crate::CirnoState) -> crate::terminal::KeyEventResult>,
+  pub key_event_cb: fn(crossterm::event::KeyEvent, &mut CirnoState) -> KeyEventResult,
+  pub commands: HashMap<char, fn(&mut CirnoState) -> KeyEventResult>,
 }
 
 pub enum Modes {
