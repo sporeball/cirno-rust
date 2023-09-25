@@ -1,41 +1,13 @@
 // need to use "cirno" in this file, not "crate"
 
-use cirno::{parser, project::Modes, terminal::KeyEventResult, modes::CirnoContext};
+use cirno::{CirnoState, parser, project::Modes};
 use std::io::{self};
 use clap::Parser;
-use crossterm::event::Event;
 
 /// Full-featured circuit design tool
 #[derive(Parser)]
 struct Cli {
   filename: std::path::PathBuf,
-}
-
-pub struct CirnoState {
-  mode: cirno::project::Modes,
-  context: cirno::modes::CirnoContext
-}
-
-impl CirnoState {
-  pub fn get_mode(&mut self) -> cirno::project::Mode {
-    match self.mode {
-      cirno::project::Modes::Normal => cirno::modes::normal::get(),
-    }
-  }
-  pub fn event_loop(&mut self) -> Result<(), io::Error> {
-    loop {
-      match crossterm::event::read()? {
-        // key event
-        Event::Key(event) => {
-          let res: KeyEventResult = (self.get_mode().key_event_cb)(event, &mut self.context);
-          if matches!(res, KeyEventResult::Exit) {
-            return Ok(())
-          }
-        },
-        _ => (),
-      }
-    }
-  }
 }
 
 fn main() -> Result<(), io::Error> {
@@ -47,10 +19,8 @@ fn main() -> Result<(), io::Error> {
 
   let mut state = CirnoState {
     mode: Modes::Normal,
-    context: CirnoContext {
-      cursor_x: 0,
-      cursor_y: 0,
-    }
+    cursor_x: 0,
+    cursor_y: 0,
   };
 
   let args = Cli::parse();
@@ -73,8 +43,8 @@ fn main() -> Result<(), io::Error> {
 
   cirno::terminal::exit()?;
 
-  cirno::logger::debug(&state.context.cursor_x);
-  cirno::logger::debug(&state.context.cursor_y);
+  cirno::logger::debug(&state.cursor_x);
+  cirno::logger::debug(&state.cursor_y);
   println!("{:#?}", cirno::logger::LOG_STATE.read().unwrap());
 
   Ok(())
