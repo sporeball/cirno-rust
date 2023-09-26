@@ -10,6 +10,8 @@ pub mod project;
 pub mod terminal;
 
 pub struct CirnoState {
+  pub columns: u16,
+  pub rows: u16,
   pub mode: Modes,
   pub cursor_x: u16,
   pub cursor_y: u16,

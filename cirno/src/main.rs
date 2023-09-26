@@ -17,7 +17,11 @@ fn main() -> Result<(), io::Error> {
     default_panic(info);
   }));
 
+  let (columns, rows) = crossterm::terminal::size()?;
+
   let mut state = CirnoState {
+    columns,
+    rows,
     mode: Modes::Normal,
     cursor_x: 0,
     cursor_y: 0,

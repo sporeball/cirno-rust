@@ -117,7 +117,6 @@ impl Net {
     }
   }
   pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
-    let (cols, rows) = crossterm::terminal::size()?;
     let y = self.y as u16;
     // bounds check
     if crate::terminal::is_y_offscreen_relative_to_center(y, state).unwrap() == true {
@@ -128,10 +127,10 @@ impl Net {
     crate::terminal::set_y_relative_to_center(y, state)?;
     if self.t.eq("vcc") {
       execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Red))?;
-      execute!(stdout(), crossterm::style::Print("+".repeat(cols.into())))?;
+      execute!(stdout(), crossterm::style::Print("+".repeat(state.columns.into())))?;
     } else {
       execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Blue))?;
-      execute!(stdout(), crossterm::style::Print("-".repeat(cols.into())))?;
+      execute!(stdout(), crossterm::style::Print("-".repeat(state.columns.into())))?;
     }
     execute!(stdout(), crossterm::style::ResetColor)?; // TODO: what happens if you don't do this?
     Ok(())
