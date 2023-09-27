@@ -158,7 +158,7 @@ impl Pin {
       Attribute::Num(num) => self.num = num,
       Attribute::Position(position) => self.position = position,
       Attribute::Value(value) => self.value = value,
-      a => panic!("could not apply {:?} to chip", a),
+      a => panic!("could not apply {:?} to pin", a),
     }
   }
   pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
