@@ -63,7 +63,7 @@ impl Chip {
     let y = self.position.y as u16;
     // bounds check
     // (entire chip is offscreen)
-    if crate::terminal::is_offscreen_relative_to_center(x, y, state).unwrap() == true {
+    if crate::terminal::is_out_of_bounds(x, y, state) == true {
       return Ok(())
     }
     // read .cic based on type field
@@ -117,18 +117,17 @@ impl Net {
   pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
     let y = self.y as u16;
     // bounds check
-    if crate::terminal::is_y_offscreen_relative_to_center(y, state).unwrap() == true {
+    if crate::terminal::is_out_of_bounds(0, y, state) == true {
       return Ok(())
     }
     // rendering
-    execute!(stdout(), crossterm::cursor::MoveToColumn(0))?;
-    crate::terminal::set_y_relative_to_center(y, state)?;
+    execute!(stdout(), crossterm::cursor::MoveTo(0, y))?;
     if self.t.eq("vcc") {
       execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Red))?;
-      execute!(stdout(), crossterm::style::Print("+".repeat(state.columns.into())))?;
+      execute!(stdout(), crossterm::style::Print("+".repeat(state.bound_x.into())))?;
     } else {
       execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Blue))?;
-      execute!(stdout(), crossterm::style::Print("-".repeat(state.columns.into())))?;
+      execute!(stdout(), crossterm::style::Print("-".repeat(state.bound_x.into())))?;
     }
     execute!(stdout(), crossterm::style::ResetColor)?; // TODO: what happens if you don't do this?
     Ok(())
@@ -160,14 +159,15 @@ impl Pin {
     }
   }
   pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
+    // this call returns the position of the top left corner of the parent chip
     let (col, row) = crossterm::cursor::position()?;
     let x = col as u16 + self.position.x as u16;
     let y = row as u16 + self.position.y as u16;
-    if crate::terminal::is_offscreen_relative_to_center(x, y, state).unwrap() == true {
+    if crate::terminal::is_out_of_bounds(x, y, state) == true {
       return Ok(())
     }
     // rendering
-    crate::terminal::move_relative_to_center(x, y, state)?;
+    execute!(stdout(), crossterm::cursor::MoveTo(x, y))?;
     execute!(stdout(), crossterm::style::Print("."))?;
     Ok(())
   }

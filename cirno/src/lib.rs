@@ -14,8 +14,8 @@ pub struct CirnoState {
   pub columns: u16,
   pub rows: u16,
   pub mode: Modes,
-  pub bound_x: i32,
-  pub bound_y: i32,
+  pub bound_x: u16,
+  pub bound_y: u16,
   pub cursor_x: u16,
   pub cursor_y: u16,
   pub objects: Vec<Object>,
@@ -59,8 +59,8 @@ impl CirnoState {
         })
       .unwrap();
     // apply attributes to self
-    self.bound_x = meta.bounds.x;
-    self.bound_y = meta.bounds.y;
+    self.bound_x = meta.bounds.x as u16;
+    self.bound_y = meta.bounds.y as u16;
     // crate::logger::debug(&self);
   }
 }
