@@ -76,7 +76,7 @@ impl Chip {
     // rendering
     for pin in pins {
       // just an offset; pin.render() will do the centering
-      execute!(stdout(), crossterm::cursor::MoveTo(x + 1, y + 1))?;
+      execute!(stdout(), crossterm::cursor::MoveTo(x, y))?;
       pin.render(&state)?;
     }
     Ok(())
@@ -96,19 +96,30 @@ impl Meta {
     }
   }
   pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
+    let center_x = state.columns / 2;
+    let center_y = state.rows / 2;
+    let min_x = center_x - (state.bound_x / 2) - 1;
+    let min_y = center_y - (state.bound_y / 2) - 1;
+    let max_x = center_x + (state.bound_x / 2);
+    let max_y = center_y + (state.bound_y / 2);
     execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::DarkGrey))?;
-    execute!(stdout(), crossterm::cursor::MoveTo(0, 0))?;
-    execute!(stdout(), crossterm::style::Print("~".repeat((state.bound_x + 1).into())))?;
+    // top border
+    execute!(stdout(), crossterm::cursor::MoveTo(min_x, min_y))?;
+    execute!(stdout(), crossterm::style::Print("~".repeat((state.bound_x + 2).into())))?;
+    // side borders
     let mut i = 1;
-    while i < state.bound_y {
-      execute!(stdout(), crossterm::cursor::MoveTo(0, i))?;
+    while i < state.bound_y + 1 {
+      // left border
+      execute!(stdout(), crossterm::cursor::MoveTo(min_x, min_y + i))?;
       execute!(stdout(), crossterm::style::Print("~"))?;
-      execute!(stdout(), crossterm::cursor::MoveTo(state.bound_x, i))?;
+      // right border
+      execute!(stdout(), crossterm::cursor::MoveTo(max_x, min_y + i))?;
       execute!(stdout(), crossterm::style::Print("~"))?;
       i = i + 1;
     }
-    execute!(stdout(), crossterm::cursor::MoveTo(0, state.bound_y))?;
-    execute!(stdout(), crossterm::style::Print("~".repeat((state.bound_x + 1).into())))?;
+    // bottom border
+    execute!(stdout(), crossterm::cursor::MoveTo(min_x, max_y))?;
+    execute!(stdout(), crossterm::style::Print("~".repeat((state.bound_x + 2).into())))?;
     execute!(stdout(), crossterm::style::ResetColor)?;
     Ok(())
   }
@@ -135,13 +146,13 @@ impl Net {
       return Ok(())
     }
     // rendering
-    execute!(stdout(), crossterm::cursor::MoveTo(1, y + 1))?;
+    crate::terminal::move_within_bounds(0, y, state);
     if self.t.eq("vcc") {
       execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Red))?;
-      execute!(stdout(), crossterm::style::Print("+".repeat((state.bound_x - 1).into())))?;
+      execute!(stdout(), crossterm::style::Print("+".repeat((state.bound_x).into())))?;
     } else {
       execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Blue))?;
-      execute!(stdout(), crossterm::style::Print("-".repeat(state.bound_x.into())))?;
+      execute!(stdout(), crossterm::style::Print("-".repeat((state.bound_x).into())))?;
     }
     execute!(stdout(), crossterm::style::ResetColor)?; // TODO: what happens if you don't do this?
     Ok(())
@@ -181,7 +192,7 @@ impl Pin {
       return Ok(())
     }
     // rendering
-    execute!(stdout(), crossterm::cursor::MoveTo(x, y))?;
+    crate::terminal::move_within_bounds(x, y, state);
     execute!(stdout(), crossterm::style::Print("."))?;
     Ok(())
   }

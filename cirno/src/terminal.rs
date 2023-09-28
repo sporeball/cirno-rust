@@ -25,6 +25,15 @@ pub fn exit() -> Result<(), io::Error> {
   Ok(())
 }
 
+pub fn move_within_bounds(x: u16, y: u16, state: &CirnoState) -> Result<(), io::Error> {
+  let center_x = state.columns / 2;
+  let center_y = state.rows / 2;
+  let min_x = center_x - (state.bound_x / 2);
+  let min_y = center_y - (state.bound_y / 2);
+  execute!(stdout(), crossterm::cursor::MoveTo(min_x + x, min_y + y))?;
+  Ok(())
+}
+
 pub fn is_out_of_bounds(x: u16, y: u16, state: &CirnoState) -> bool {
   if x > state.bound_x - 1 || y > state.bound_y - 1 { // zero
     return true

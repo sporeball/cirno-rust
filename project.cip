@@ -1,5 +1,5 @@
 : meta bounds 30 15
-: chip type ls0xx/sn74ls08 pos 10 10
-: chip type ls0xx/sn74ls08 pos 20 10
+: chip type ls0xx/sn74ls08 pos 0 2
+: chip type ls0xx/sn74ls08 pos 10 2
 : net type vcc y 0
 : net type gnd y 1
