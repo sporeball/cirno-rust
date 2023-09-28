@@ -60,6 +60,12 @@ pub fn parse(filename: &str) -> Result<ParseResult, io::Error> {
 fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Attribute {
   lexer.next();
   match token {
+    "bounds" => {
+      let x: i32 = lexer.slice().parse().unwrap();
+      lexer.next();
+      let y: i32 = lexer.slice().parse().unwrap();
+      Attribute::Bounds(Vector2 { x, y })
+    },
     "label" => {
       let label: String = lexer.slice().to_string();
       Attribute::Label(label)
@@ -109,6 +115,7 @@ fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Object {
   // create uninitialized object
   let mut object = match token {
     "chip" => Object::Chip(Chip::default()),
+    "meta" => Object::Meta(Meta::default()),
     "net" => Object::Net(Net::default()),
     "pin" => Object::Pin(Pin::default()),
     _ => todo!(), // do we need?

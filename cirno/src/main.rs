@@ -23,6 +23,8 @@ fn main() -> Result<(), io::Error> {
     columns,
     rows,
     mode: Modes::Normal,
+    bound_x: 0,
+    bound_y: 0,
     cursor_x: 0,
     cursor_y: 0,
     objects: vec![],
@@ -41,6 +43,7 @@ fn main() -> Result<(), io::Error> {
   };
   cirno::logger::debug(&objects);
   state.objects = objects;
+  state.apply_meta();
   state.render();
 
   state.event_loop()?;

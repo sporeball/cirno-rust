@@ -29,6 +29,7 @@ impl Default for Value {
 #[derive(Clone, Debug)]
 // an attribute that an object can have
 pub enum Attribute {
+  Bounds(Vector2),
   Label(String),
   Num(i32),
   Position(Vector2),
@@ -78,6 +79,23 @@ impl Chip {
       execute!(stdout(), crossterm::cursor::MoveTo(x, y))?;
       pin.render(&state)?;
     }
+    Ok(())
+  }
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct Meta {
+  pub bounds: Vector2,
+}
+
+impl Meta {
+  pub fn apply_attribute(&mut self, attribute: Attribute) {
+    match attribute {
+      Attribute::Bounds(vec2) => self.bounds = vec2,
+      a => panic!("could not apply {:?} to meta object", a),
+    }
+  }
+  pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
     Ok(())
   }
 }
@@ -159,6 +177,7 @@ impl Pin {
 #[derive(Clone)]
 pub enum Object {
   Chip(Chip),
+  Meta(Meta),
   Net(Net),
   Pin(Pin),
 }
@@ -167,6 +186,7 @@ impl Object {
   pub fn apply_attribute(&mut self, attribute: Attribute) {
     match self {
       Object::Chip(chip) => chip.apply_attribute(attribute),
+      Object::Meta(meta) => meta.apply_attribute(attribute),
       Object::Net(net) => net.apply_attribute(attribute),
       Object::Pin(pin) => pin.apply_attribute(attribute),
     }
@@ -174,6 +194,7 @@ impl Object {
   pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
     match self {
       Object::Chip(chip) => chip.render(state),
+      Object::Meta(meta) => meta.render(state),
       Object::Net(net) => net.render(state),
       Object::Pin(pin) => pin.render(state),
     }
@@ -185,6 +206,7 @@ impl Debug for Object {
     f.write_str("Object::")?;
     match self {
       Object::Chip(chip) => chip.fmt(f),
+      Object::Meta(meta) => meta.fmt(f),
       Object::Net(net) => net.fmt(f),
       Object::Pin(pin) => pin.fmt(f),
     }
@@ -238,7 +260,7 @@ pub struct Mode {
   pub commands: HashMap<char, fn(&mut CirnoState) -> KeyEventResult>,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Modes {
   Normal,
 }
