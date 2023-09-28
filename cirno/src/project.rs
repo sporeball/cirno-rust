@@ -76,7 +76,7 @@ impl Chip {
     // rendering
     for pin in pins {
       // just an offset; pin.render() will do the centering
-      execute!(stdout(), crossterm::cursor::MoveTo(x, y))?;
+      execute!(stdout(), crossterm::cursor::MoveTo(x + 1, y + 1))?;
       pin.render(&state)?;
     }
     Ok(())
@@ -96,6 +96,20 @@ impl Meta {
     }
   }
   pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
+    execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::DarkGrey))?;
+    execute!(stdout(), crossterm::cursor::MoveTo(0, 0))?;
+    execute!(stdout(), crossterm::style::Print("~".repeat((state.bound_x + 1).into())))?;
+    let mut i = 1;
+    while i < state.bound_y {
+      execute!(stdout(), crossterm::cursor::MoveTo(0, i))?;
+      execute!(stdout(), crossterm::style::Print("~"))?;
+      execute!(stdout(), crossterm::cursor::MoveTo(state.bound_x, i))?;
+      execute!(stdout(), crossterm::style::Print("~"))?;
+      i = i + 1;
+    }
+    execute!(stdout(), crossterm::cursor::MoveTo(0, state.bound_y))?;
+    execute!(stdout(), crossterm::style::Print("~".repeat((state.bound_x + 1).into())))?;
+    execute!(stdout(), crossterm::style::ResetColor)?;
     Ok(())
   }
 }
@@ -121,10 +135,10 @@ impl Net {
       return Ok(())
     }
     // rendering
-    execute!(stdout(), crossterm::cursor::MoveTo(0, y))?;
+    execute!(stdout(), crossterm::cursor::MoveTo(1, y + 1))?;
     if self.t.eq("vcc") {
       execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Red))?;
-      execute!(stdout(), crossterm::style::Print("+".repeat(state.bound_x.into())))?;
+      execute!(stdout(), crossterm::style::Print("+".repeat((state.bound_x - 1).into())))?;
     } else {
       execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Blue))?;
       execute!(stdout(), crossterm::style::Print("-".repeat(state.bound_x.into())))?;
