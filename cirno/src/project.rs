@@ -16,14 +16,14 @@ pub struct Num {
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct Position {
-  pub x: i32,
-  pub y: i32,
+pub struct Type {
+  pub t: String,
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct Type {
-  pub t: String,
+pub struct Vector2 {
+  pub x: i32,
+  pub y: i32,
 }
 
 #[derive(Clone, Debug)]
@@ -51,7 +51,7 @@ pub struct YCoordinate {
 pub enum Attribute {
   Label(String),
   Num(i32),
-  Position(Position),
+  Position(Vector2),
   Type(String),
   Value(Value),
   YCoordinate(i32),
@@ -66,14 +66,14 @@ impl std::fmt::Display for Attribute {
 #[derive(Clone, Debug, Default)]
 pub struct Chip {
   pub t: String,
-  pub position: Position,
+  pub position: Vector2,
 }
 
 impl Chip {
   pub fn apply_attribute(&mut self, attribute: Attribute) {
     match attribute {
       Attribute::Type(t) => self.t = t,
-      Attribute::Position(position) => self.position = position,
+      Attribute::Position(vec2) => self.position = vec2,
       a => panic!("could not apply {:?} to chip", a.to_string()),
     }
   }
@@ -147,7 +147,7 @@ impl Default for Net {
 pub struct Pin {
   pub label: String,
   pub num: i32,
-  pub position: Position,
+  pub position: Vector2,
   pub value: Value,
 }
 
@@ -156,7 +156,7 @@ impl Pin {
     match attribute {
       Attribute::Label(label) => self.label = label,
       Attribute::Num(num) => self.num = num,
-      Attribute::Position(position) => self.position = position,
+      Attribute::Position(vec2) => self.position = vec2,
       Attribute::Value(value) => self.value = value,
       a => panic!("could not apply {:?} to pin", a),
     }

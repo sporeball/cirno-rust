@@ -72,7 +72,7 @@ fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Attribut
       let x: i32 = lexer.slice().parse().unwrap();
       lexer.next();
       let y: i32 = lexer.slice().parse().unwrap();
-      Attribute::Position(Position { x, y })
+      Attribute::Position(Vector2 { x, y })
     },
     "type" => {
       let t: String = lexer.slice().to_string();
