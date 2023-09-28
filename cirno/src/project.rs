@@ -5,21 +5,6 @@ use std::io;
 use std::io::stdout;
 use crossterm::execute;
 
-#[derive(Clone, Debug)]
-pub struct Label {
-  pub value: String,
-}
-
-#[derive(Clone, Debug)]
-pub struct Num {
-  pub num: i32,
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct Type {
-  pub t: String,
-}
-
 #[derive(Clone, Debug, Default)]
 pub struct Vector2 {
   pub x: i32,
@@ -39,11 +24,6 @@ impl Default for Value {
   fn default() -> Value {
     Value::None
   }
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct YCoordinate {
-  pub y: i32,
 }
 
 #[derive(Clone, Debug)]
