@@ -1,7 +1,9 @@
-use std::collections::HashMap;
-
-use crossterm::event::KeyEvent;
 use crate::{CirnoState, project::Mode, terminal::KeyEventResult};
+use std::collections::HashMap;
+use std::io;
+use std::io::stdout;
+use crossterm::event::KeyEvent;
+use crossterm::execute;
 
 pub fn get() -> Mode {
   Mode {
@@ -11,6 +13,7 @@ pub fn get() -> Mode {
       ('j', on_key_j as _),
       ('k', on_key_k as _),
       ('l', on_key_l as _),
+      (':', on_key_colon as _),
     ])
   }
 }
@@ -57,5 +60,38 @@ fn on_key_k(state: &mut CirnoState) -> KeyEventResult {
 fn on_key_l(state: &mut CirnoState) -> KeyEventResult {
   state.cursor_x += 1;
   state.render();
+  KeyEventResult::Ok
+}
+
+fn on_key_colon(state: &mut CirnoState) -> KeyEventResult {
+  let mut command = String::new();
+  // prepare the bar
+  crate::bar::clear(state);
+  execute!(stdout(), crossterm::cursor::MoveTo(0, state.rows - 1));
+  execute!(stdout(), crossterm::style::Print(":"));
+  // read line
+  while let Ok(crossterm::event::Event::Key(KeyEvent { code, .. })) = crossterm::event::read() {
+    match code {
+      crossterm::event::KeyCode::Enter => { break; },
+      crossterm::event::KeyCode::Backspace => {
+        if command.eq("") {
+          execute!(stdout(), crossterm::cursor::MoveLeft(1));
+          execute!(stdout(), crossterm::style::Print(" "));
+          execute!(stdout(), crossterm::cursor::MoveLeft(1));
+          break;
+        }
+        command.pop();
+        execute!(stdout(), crossterm::cursor::MoveLeft(1));
+        execute!(stdout(), crossterm::style::Print(" "));
+        execute!(stdout(), crossterm::cursor::MoveLeft(1));
+      },
+      crossterm::event::KeyCode::Char(c) => {
+        command.push(c);
+        execute!(stdout(), crossterm::style::Print(c));
+      },
+      _ => {},
+    }
+  }
+  crate::logger::debug(&command);
   KeyEventResult::Ok
 }
