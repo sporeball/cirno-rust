@@ -1,6 +1,6 @@
 // need to use "cirno" in this file, not "crate"
 
-use cirno::{CirnoState, parser, project::Modes};
+use cirno::{CirnoState, bar, parser, project::Modes};
 use std::io::{self};
 use std::time::Instant;
 use clap::Parser;
@@ -47,11 +47,11 @@ fn main() -> Result<(), io::Error> {
   state.apply_meta();
 
   let now = Instant::now();
-  state.render();
+  state.render()?;
   let elapsed = now.elapsed();
-  cirno::logger::debug(&elapsed);
+  bar::message(format!("{:?} ({:?})", filename, elapsed), &state)?;
 
-  state.event_loop()?;
+  state.event_loop()?; // blocking
 
   cirno::terminal::exit()?;
 

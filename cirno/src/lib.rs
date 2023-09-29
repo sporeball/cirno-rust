@@ -1,8 +1,9 @@
 use crate::{project::{Mode, Modes, Object}, terminal::KeyEventResult};
 use std::io::{self};
 use std::io::stdout;
-use crossterm::{execute, event::Event, terminal::Clear};
+use crossterm::{execute, event::Event};
 
+pub mod bar;
 pub mod logger;
 pub mod modes;
 pub mod parser;
@@ -44,7 +45,7 @@ impl CirnoState {
   pub fn render(&mut self) -> Result<(), io::Error> {
     execute!(stdout(), crossterm::terminal::Clear(crossterm::terminal::ClearType::All))?;
     for object in self.objects.clone() {
-      object.render(self);
+      object.render(self)?;
     }
     Ok(())
   }

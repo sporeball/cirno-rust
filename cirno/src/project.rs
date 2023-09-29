@@ -80,10 +80,10 @@ impl Chip {
       }
     }
     // rendering
-    crate::terminal::move_within_bounds(x, y, state);
-    execute!(stdout(), crossterm::style::Print(".".repeat(width.into())));
-    crate::terminal::move_within_bounds(x, y + 2, state);
-    execute!(stdout(), crossterm::style::Print(".".repeat(width.into())));
+    crate::terminal::move_within_bounds(x, y, state)?;
+    execute!(stdout(), crossterm::style::Print(".".repeat(width.into())))?;
+    crate::terminal::move_within_bounds(x, y + 2, state)?;
+    execute!(stdout(), crossterm::style::Print(".".repeat(width.into())))?;
     Ok(())
   }
 }
@@ -152,7 +152,7 @@ impl Net {
       return Ok(())
     }
     // rendering
-    crate::terminal::move_within_bounds(0, y, state);
+    crate::terminal::move_within_bounds(0, y, state)?;
     if self.t.eq("vcc") {
       execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Red))?;
       execute!(stdout(), crossterm::style::Print("+".repeat((state.bound_x).into())))?;
@@ -199,7 +199,7 @@ impl Pin {
       return Ok(())
     }
     // rendering
-    crate::terminal::move_within_bounds(x, y, state);
+    crate::terminal::move_within_bounds(x, y, state)?;
     execute!(stdout(), crossterm::style::Print("."))?;
     Ok(())
   }
