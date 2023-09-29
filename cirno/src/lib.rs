@@ -59,8 +59,8 @@ impl CirnoState {
         })
       .unwrap();
     // apply attributes to self
-    self.bound_x = meta.bounds.x as u16;
-    self.bound_y = meta.bounds.y as u16;
+    self.bound_x = meta.bounds.x;
+    self.bound_y = meta.bounds.y;
     // crate::logger::debug(&self);
   }
 }

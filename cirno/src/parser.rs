@@ -61,9 +61,9 @@ fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Attribut
   lexer.next();
   match token {
     "bounds" => {
-      let x: i32 = lexer.slice().parse().unwrap();
+      let x: u16 = lexer.slice().parse().unwrap();
       lexer.next();
-      let y: i32 = lexer.slice().parse().unwrap();
+      let y: u16 = lexer.slice().parse().unwrap();
       Attribute::Bounds(Vector2 { x, y })
     },
     "label" => {
@@ -71,13 +71,13 @@ fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Attribut
       Attribute::Label(label)
     }
     "num" => {
-      let num: i32 = lexer.slice().parse().unwrap();
+      let num: u16 = lexer.slice().parse().unwrap();
       Attribute::Num(num)
     },
     "pos" => {
-      let x: i32 = lexer.slice().parse().unwrap();
+      let x: u16 = lexer.slice().parse().unwrap();
       lexer.next();
-      let y: i32 = lexer.slice().parse().unwrap();
+      let y: u16 = lexer.slice().parse().unwrap();
       Attribute::Position(Vector2 { x, y })
     },
     "type" => {
@@ -86,7 +86,7 @@ fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Attribut
     },
     "value" => Attribute::Value(parse_attribute_value(lexer)),
     "y" => {
-      let y: i32 = lexer.slice().parse().unwrap();
+      let y: u16 = lexer.slice().parse().unwrap();
       Attribute::YCoordinate(y)
     },
     &_ => todo!(),

@@ -7,8 +7,8 @@ use crossterm::execute;
 
 #[derive(Clone, Debug, Default)]
 pub struct Vector2 {
-  pub x: i32,
-  pub y: i32,
+  pub x: u16,
+  pub y: u16,
 }
 
 #[derive(Clone, Debug)]
@@ -31,11 +31,11 @@ impl Default for Value {
 pub enum Attribute {
   Bounds(Vector2),
   Label(String),
-  Num(i32),
+  Num(u16),
   Position(Vector2),
   Type(String),
   Value(Value),
-  YCoordinate(i32),
+  YCoordinate(u16),
 }
 
 impl std::fmt::Display for Attribute {
@@ -59,8 +59,8 @@ impl Chip {
     }
   }
   pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
-    let x = self.position.x as u16;
-    let y = self.position.y as u16;
+    let x = self.position.x;
+    let y = self.position.y;
     // read .cic based on type field
     let filename = format!("../stdlib/{}{}", self.t, ".cic"); // TODO: make this stronger, make sure this doesn't break
     let cic: ParseResult = parse(&filename).unwrap();
@@ -75,7 +75,7 @@ impl Chip {
         Object::Pin(pin) => pin.position,
         _ => todo!(),
       };
-      if crate::terminal::is_out_of_bounds(x + position.x as u16, y + position.y as u16, state) {
+      if crate::terminal::is_out_of_bounds(x + position.x, y + position.y, state) {
         return Ok(())
       }
     }
@@ -114,6 +114,7 @@ impl Meta {
     // side borders
     let mut i = 1;
     while i < state.bound_y + 1 {
+      // execute!(stdout(), crossterm::style::Print(format!("{}{}{}", "~", " ".repeat(state.bound_x.into()), "~")))?;
       // left border
       execute!(stdout(), crossterm::cursor::MoveTo(min_x, min_y + i))?;
       execute!(stdout(), crossterm::style::Print("~"))?;
@@ -130,10 +131,10 @@ impl Meta {
   }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Net {
   pub t: String,
-  pub y: i32,
+  pub y: u16,
 }
 
 impl Net {
@@ -145,7 +146,7 @@ impl Net {
     }
   }
   pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
-    let y = self.y as u16;
+    let y = self.y;
     // bounds check
     if crate::terminal::is_out_of_bounds(0, y, state) == true {
       return Ok(())
@@ -164,16 +165,16 @@ impl Net {
   }
 }
 
-impl Default for Net {
-  fn default() -> Net {
-    Net { t: String::new(), y: -1 }
-  }
-}
+// impl Default for Net {
+//   fn default() -> Net {
+//     Net { t: String::new(), y: -1 }
+//   }
+// }
 
 #[derive(Clone, Debug, Default)]
 pub struct Pin {
   pub label: String,
-  pub num: i32,
+  pub num: u16,
   pub position: Vector2,
   pub value: Value,
 }
@@ -192,8 +193,8 @@ impl Pin {
   pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
     // this call returns the position of the top left corner of the parent chip
     let (col, row) = crossterm::cursor::position()?;
-    let x = col as u16 + self.position.x as u16;
-    let y = row as u16 + self.position.y as u16;
+    let x = col + self.position.x;
+    let y = row + self.position.y;
     if crate::terminal::is_out_of_bounds(x, y, state) == true {
       return Ok(())
     }
