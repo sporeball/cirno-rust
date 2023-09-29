@@ -61,11 +61,6 @@ impl Chip {
   pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
     let x = self.position.x as u16;
     let y = self.position.y as u16;
-    // bounds check
-    // (entire chip is offscreen)
-    if crate::terminal::is_out_of_bounds(x, y, state) == true {
-      return Ok(())
-    }
     // read .cic based on type field
     let filename = format!("../stdlib/{}{}", self.t, ".cic"); // TODO: make this stronger, make sure this doesn't break
     let cic: ParseResult = parse(&filename).unwrap();
@@ -73,12 +68,22 @@ impl Chip {
       ParseResult::Cic(Cic { pins }) => pins,
       ParseResult::Cip(_) => todo!(),
     };
-    // rendering
+    let width = pins.len() / 2;
+    // bounds check
     for pin in pins {
-      // just an offset; pin.render() will do the centering
-      execute!(stdout(), crossterm::cursor::MoveTo(x, y))?;
-      pin.render(&state)?;
+      let position = match pin {
+        Object::Pin(pin) => pin.position,
+        _ => todo!(),
+      };
+      if crate::terminal::is_out_of_bounds(x + position.x as u16, y + position.y as u16, state) {
+        return Ok(())
+      }
     }
+    // rendering
+    crate::terminal::move_within_bounds(x, y, state);
+    execute!(stdout(), crossterm::style::Print(".".repeat(width.into())));
+    crate::terminal::move_within_bounds(x, y + 2, state);
+    execute!(stdout(), crossterm::style::Print(".".repeat(width.into())));
     Ok(())
   }
 }
@@ -183,6 +188,7 @@ impl Pin {
       a => panic!("could not apply {:?} to pin", a),
     }
   }
+  // TODO: dead code?
   pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
     // this call returns the position of the top left corner of the parent chip
     let (col, row) = crossterm::cursor::position()?;

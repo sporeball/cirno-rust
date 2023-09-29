@@ -2,6 +2,7 @@
 
 use cirno::{CirnoState, parser, project::Modes};
 use std::io::{self};
+use std::time::Instant;
 use clap::Parser;
 
 /// Full-featured circuit design tool
@@ -44,7 +45,11 @@ fn main() -> Result<(), io::Error> {
   cirno::logger::debug(&objects);
   state.objects = objects;
   state.apply_meta();
+
+  let now = Instant::now();
   state.render();
+  let elapsed = now.elapsed();
+  cirno::logger::debug(&elapsed);
 
   state.event_loop()?;
 
