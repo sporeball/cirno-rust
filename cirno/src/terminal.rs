@@ -1,4 +1,4 @@
-use crate::{CirnoState};
+use crate::CirnoState;
 use std::io;
 use std::io::stdout;
 use crossterm::execute;
@@ -11,16 +11,16 @@ pub enum KeyEventResult {
 
 pub fn enter() -> Result<(), io::Error> {
   crossterm::terminal::enable_raw_mode()?;
-  execute!(io::stdout(), crossterm::terminal::EnterAlternateScreen)?;
-  execute!(io::stdout(), crossterm::terminal::DisableLineWrap)?;
-  execute!(io::stdout(), crossterm::cursor::Hide)?;
+  execute!(stdout(), crossterm::terminal::EnterAlternateScreen)?;
+  execute!(stdout(), crossterm::terminal::DisableLineWrap)?;
+  execute!(stdout(), crossterm::cursor::Hide)?;
   Ok(())
 }
 
 pub fn exit() -> Result<(), io::Error> {
-  execute!(io::stdout(), crossterm::cursor::Show)?;
-  execute!(io::stdout(), crossterm::terminal::EnableLineWrap)?;
-  execute!(io::stdout(), crossterm::terminal::LeaveAlternateScreen)?;
+  execute!(stdout(), crossterm::cursor::Show)?;
+  execute!(stdout(), crossterm::terminal::EnableLineWrap)?;
+  execute!(stdout(), crossterm::terminal::LeaveAlternateScreen)?;
   crossterm::terminal::disable_raw_mode()?;
   Ok(())
 }

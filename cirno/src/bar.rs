@@ -1,4 +1,4 @@
-use crate::{CirnoState};
+use crate::CirnoState;
 use std::io;
 use std::io::stdout;
 use crossterm::execute;

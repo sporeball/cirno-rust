@@ -29,69 +29,69 @@ fn handle_key_event(event: KeyEvent, state: &mut CirnoState) -> KeyEventResult {
   }
   if let crossterm::event::KeyCode::Char(c) = code {
     if let Some(cmd) = get().commands.get(&c) {
-      return (cmd)(state);
+      return (cmd)(state).unwrap();
     }
   }
   KeyEventResult::Ok
 }
 
-fn on_key_h(state: &mut CirnoState) -> KeyEventResult {
+fn on_key_h(state: &mut CirnoState) -> Result<KeyEventResult, io::Error> {
   if state.cursor_x > 0 {
     state.cursor_x -= 1;
-    state.render();
+    state.render()?;
   }
-  KeyEventResult::Ok
+  Ok(KeyEventResult::Ok)
 }
 
-fn on_key_j(state: &mut CirnoState) -> KeyEventResult {
+fn on_key_j(state: &mut CirnoState) -> Result<KeyEventResult, io::Error> {
   state.cursor_y += 1;
-  state.render();
-  KeyEventResult::Ok
+  state.render()?;
+  Ok(KeyEventResult::Ok)
 }
 
-fn on_key_k(state: &mut CirnoState) -> KeyEventResult {
+fn on_key_k(state: &mut CirnoState) -> Result<KeyEventResult, io::Error> {
   if state.cursor_y > 0 {
     state.cursor_y -= 1;
-    state.render();
+    state.render()?;
   }
-  KeyEventResult::Ok
+  Ok(KeyEventResult::Ok)
 }
 
-fn on_key_l(state: &mut CirnoState) -> KeyEventResult {
+fn on_key_l(state: &mut CirnoState) -> Result<KeyEventResult, io::Error> {
   state.cursor_x += 1;
-  state.render();
-  KeyEventResult::Ok
+  state.render()?;
+  Ok(KeyEventResult::Ok)
 }
 
-fn on_key_colon(state: &mut CirnoState) -> KeyEventResult {
+fn on_key_colon(state: &mut CirnoState) -> Result<KeyEventResult, io::Error> {
   let mut command = String::new();
   // prepare the bar
-  crate::bar::clear(state);
-  execute!(stdout(), crossterm::cursor::MoveTo(0, state.rows - 1));
-  execute!(stdout(), crossterm::style::Print(":"));
+  crate::bar::clear(state)?;
+  execute!(stdout(), crossterm::cursor::MoveTo(0, state.rows - 1))?;
+  execute!(stdout(), crossterm::style::Print(":"))?;
   // read line
   while let Ok(crossterm::event::Event::Key(KeyEvent { code, .. })) = crossterm::event::read() {
     match code {
       crossterm::event::KeyCode::Enter => { break; },
       crossterm::event::KeyCode::Backspace => {
         if command.eq("") {
-          execute!(stdout(), crossterm::cursor::MoveLeft(1));
-          execute!(stdout(), crossterm::style::Print(" "));
-          execute!(stdout(), crossterm::cursor::MoveLeft(1));
+          execute!(stdout(), crossterm::cursor::MoveLeft(1))?;
+          execute!(stdout(), crossterm::style::Print(" "))?;
+          execute!(stdout(), crossterm::cursor::MoveLeft(1))?;
           break;
         }
         command.pop();
-        execute!(stdout(), crossterm::cursor::MoveLeft(1));
-        execute!(stdout(), crossterm::style::Print(" "));
-        execute!(stdout(), crossterm::cursor::MoveLeft(1));
+        execute!(stdout(), crossterm::cursor::MoveLeft(1))?;
+        execute!(stdout(), crossterm::style::Print(" "))?;
+        execute!(stdout(), crossterm::cursor::MoveLeft(1))?;
       },
       crossterm::event::KeyCode::Char(c) => {
         command.push(c);
-        execute!(stdout(), crossterm::style::Print(c));
+        execute!(stdout(), crossterm::style::Print(c))?;
       },
       _ => {},
     }
   }
   crate::logger::debug(&command);
-  KeyEventResult::Ok
+  Ok(KeyEventResult::Ok)
 }

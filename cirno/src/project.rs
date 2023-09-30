@@ -289,7 +289,7 @@ impl Debug for ParseResult {
 #[derive(Clone)]
 pub struct Mode {
   pub key_event_cb: fn(crossterm::event::KeyEvent, &mut CirnoState) -> KeyEventResult,
-  pub commands: HashMap<char, fn(&mut CirnoState) -> KeyEventResult>,
+  pub commands: HashMap<char, fn(&mut CirnoState) -> Result<KeyEventResult, io::Error>>,
 }
 
 #[derive(Clone, Copy, Debug)]
