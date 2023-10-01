@@ -33,7 +33,7 @@ impl CirnoState {
       match crossterm::event::read()? {
         // key event
         Event::Key(event) => {
-          let res: KeyEventResult = (self.get_mode().key_event_cb)(event, self);
+          let res = (self.get_mode().key_event_cb)(event, self).unwrap();
           if matches!(res, KeyEventResult::Exit) {
             return Ok(())
           }
