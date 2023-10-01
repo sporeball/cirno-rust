@@ -1,9 +1,11 @@
-use crate::{project::{Mode, Modes, Object}, terminal::KeyEventResult};
+use crate::{error::CirnoError, project::{Mode, Modes, Object}, terminal::KeyEventResult};
 use std::io::{self};
 use std::io::stdout;
 use crossterm::{execute, event::Event};
+use thiserror::Error;
 
 pub mod bar;
+pub mod error;
 pub mod logger;
 pub mod modes;
 pub mod parser;
@@ -20,6 +22,7 @@ pub struct CirnoState {
   pub cursor_x: u16,
   pub cursor_y: u16,
   pub objects: Vec<Object>,
+  pub errors: Vec<String>,
 }
 
 impl CirnoState {
@@ -42,14 +45,14 @@ impl CirnoState {
       }
     }
   }
-  pub fn render(&mut self) -> Result<(), io::Error> {
+  pub fn render(&mut self) -> Result<(), anyhow::Error> {
     execute!(stdout(), crossterm::terminal::Clear(crossterm::terminal::ClearType::All))?;
     for object in self.objects.clone() {
       object.render(self)?;
     }
     Ok(())
   }
-  pub fn apply_meta(&mut self) -> () {
+  pub fn apply_meta(&mut self) -> Result<(), CirnoError> {
     // get meta object
     let meta = self.objects
       .clone()
@@ -57,11 +60,15 @@ impl CirnoState {
       .find_map(|x| match x {
         Object::Meta(meta) => Some(meta),
         _ => None,
-      })
-      .unwrap();
+      });
+    if meta.is_none() {
+      return Err(CirnoError::MissingMetaObject)
+    }
+    let meta_unwrapped = meta.unwrap();
     // apply attributes to self
-    self.bound_x = meta.bounds.x;
-    self.bound_y = meta.bounds.y;
+    self.bound_x = meta_unwrapped.bounds.x;
+    self.bound_y = meta_unwrapped.bounds.y;
     // crate::logger::debug(&self);
+    Ok(())
   }
 }

@@ -19,7 +19,7 @@ pub fn get() -> Mode {
   }
 }
 
-fn handle_key_event(event: KeyEvent, state: &mut CirnoState) -> Result<KeyEventResult, io::Error> {
+fn handle_key_event(event: KeyEvent, state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
   let crossterm::event::KeyEvent { code, modifiers, kind, state: _ } = event;
   if !matches!(kind, crossterm::event::KeyEventKind::Press) {
     return Ok(KeyEventResult::Ok) // TODO: return the concept of none
@@ -37,7 +37,7 @@ fn handle_key_event(event: KeyEvent, state: &mut CirnoState) -> Result<KeyEventR
   Ok(KeyEventResult::Ok)
 }
 
-fn on_key_h(state: &mut CirnoState) -> Result<KeyEventResult, io::Error> {
+fn on_key_h(state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
   if state.cursor_x > 0 {
     state.cursor_x -= 1;
     state.render()?;
@@ -45,13 +45,13 @@ fn on_key_h(state: &mut CirnoState) -> Result<KeyEventResult, io::Error> {
   Ok(KeyEventResult::Ok)
 }
 
-fn on_key_j(state: &mut CirnoState) -> Result<KeyEventResult, io::Error> {
+fn on_key_j(state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
   state.cursor_y += 1;
   state.render()?;
   Ok(KeyEventResult::Ok)
 }
 
-fn on_key_k(state: &mut CirnoState) -> Result<KeyEventResult, io::Error> {
+fn on_key_k(state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
   if state.cursor_y > 0 {
     state.cursor_y -= 1;
     state.render()?;
@@ -59,13 +59,13 @@ fn on_key_k(state: &mut CirnoState) -> Result<KeyEventResult, io::Error> {
   Ok(KeyEventResult::Ok)
 }
 
-fn on_key_l(state: &mut CirnoState) -> Result<KeyEventResult, io::Error> {
+fn on_key_l(state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
   state.cursor_x += 1;
   state.render()?;
   Ok(KeyEventResult::Ok)
 }
 
-fn on_key_colon(state: &mut CirnoState) -> Result<KeyEventResult, io::Error> {
+fn on_key_colon(state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
   bar::message(":".to_string(), state)?;
   let command = read_line()?;
   // remove the colon if the command comes back empty
@@ -82,6 +82,6 @@ fn on_key_colon(state: &mut CirnoState) -> Result<KeyEventResult, io::Error> {
   }
 }
 
-fn command_q(_state: &mut CirnoState) -> Result<KeyEventResult, io::Error> {
+fn command_q(_state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
   Ok(KeyEventResult::Exit)
 }

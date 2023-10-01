@@ -58,7 +58,7 @@ impl Chip {
       a => panic!("could not apply {:?} to chip", a.to_string()),
     }
   }
-  pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
+  pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let x = self.position.x;
     let y = self.position.y;
     // read .cic based on type field
@@ -75,8 +75,10 @@ impl Chip {
         Object::Pin(pin) => pin.position,
         _ => todo!(),
       };
-      if crate::terminal::is_out_of_bounds(x + position.x, y + position.y, state) {
-        return Ok(())
+      match crate::terminal::is_out_of_bounds(x + position.x, y + position.y, state) {
+        Ok(true) => { return Ok(()) },
+        Ok(false) => {},
+        Err(e) => { return Err(e.into()) },
       }
     }
     // rendering
@@ -100,7 +102,7 @@ impl Meta {
       a => panic!("could not apply {:?} to meta object", a),
     }
   }
-  pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
+  pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let center_x = state.columns / 2;
     let center_y = state.rows / 2;
     let min_x = center_x - (state.bound_x / 2) - 1;
@@ -145,11 +147,13 @@ impl Net {
       a => panic!("could not apply {:?} to net", a),
     }
   }
-  pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
+  pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let y = self.y;
     // bounds check
-    if crate::terminal::is_out_of_bounds(0, y, state) == true {
-      return Ok(())
+    match crate::terminal::is_out_of_bounds(0, y, state) {
+      Ok(true) => { return Ok(()) },
+      Ok(false) => {},
+      Err(e) => { return Err(e.into()) },
     }
     // rendering
     crate::terminal::move_within_bounds(0, y, state)?;
@@ -190,13 +194,15 @@ impl Pin {
     }
   }
   // TODO: dead code?
-  pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
+  pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
     // this call returns the position of the top left corner of the parent chip
     let (col, row) = crossterm::cursor::position()?;
     let x = col + self.position.x;
     let y = row + self.position.y;
-    if crate::terminal::is_out_of_bounds(x, y, state) == true {
-      return Ok(())
+    match crate::terminal::is_out_of_bounds(x, y, state) {
+      Ok(true) => { return Ok(()) },
+      Ok(false) => {},
+      Err(e) => { return Err(e.into()) },
     }
     // rendering
     crate::terminal::move_within_bounds(x, y, state)?;
@@ -223,7 +229,7 @@ impl Object {
       Object::Pin(pin) => pin.apply_attribute(attribute),
     }
   }
-  pub fn render(self, state: &CirnoState) -> Result<(), io::Error> {
+  pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
     match self {
       Object::Chip(chip) => chip.render(state),
       Object::Meta(meta) => meta.render(state),
@@ -288,11 +294,11 @@ impl Debug for ParseResult {
 
 #[derive(Clone)]
 pub struct Mode {
-  pub key_event_cb: fn(crossterm::event::KeyEvent, &mut CirnoState) -> Result<KeyEventResult, io::Error>,
-  pub key_commands: HashMap<char, fn(&mut CirnoState) -> Result<KeyEventResult, io::Error>>,
+  pub key_event_cb: fn(crossterm::event::KeyEvent, &mut CirnoState) -> Result<KeyEventResult, anyhow::Error>,
+  pub key_commands: HashMap<char, fn(&mut CirnoState) -> Result<KeyEventResult, anyhow::Error>>,
   // TODO: new return type (not KeyEventResult)
   // TODO: state needed or not?
-  pub commands: HashMap<String, fn(&mut CirnoState) -> Result<KeyEventResult, io::Error>>,
+  pub commands: HashMap<String, fn(&mut CirnoState) -> Result<KeyEventResult, anyhow::Error>>,
 }
 
 #[derive(Clone, Copy, Debug)]

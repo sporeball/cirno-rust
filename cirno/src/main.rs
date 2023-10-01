@@ -1,9 +1,10 @@
 // need to use "cirno" in this file, not "crate"
 
-use cirno::{CirnoState, bar, parser, project::Modes};
+use cirno::{CirnoState, bar, error::try_to, parser, project::Modes};
 use std::io::{self};
 use std::time::Instant;
 use clap::Parser;
+use scopeguard;
 
 /// Full-featured circuit design tool
 #[derive(Parser)]
@@ -11,12 +12,14 @@ struct Cli {
   filename: std::path::PathBuf,
 }
 
-fn main() -> Result<(), io::Error> {
-  let default_panic = std::panic::take_hook();
-  std::panic::set_hook(Box::new(move |info| {
-    let _ = cirno::terminal::exit();
-    default_panic(info);
-  }));
+fn main() -> Result<(), anyhow::Error> {
+  // call the exit function on drop
+  let _guard = scopeguard::guard((), |_| {
+    // don't try to exit if already exited (ok)
+    if crossterm::terminal::is_raw_mode_enabled().ok() == Some(true) {
+      let _ = cirno::terminal::exit();
+    }
+  });
 
   let (columns, rows) = crossterm::terminal::size()?;
 
@@ -29,6 +32,7 @@ fn main() -> Result<(), io::Error> {
     cursor_x: 0,
     cursor_y: 0,
     objects: vec![],
+    errors: vec![],
   };
 
   let args = Cli::parse();
@@ -44,12 +48,12 @@ fn main() -> Result<(), io::Error> {
   };
   cirno::logger::debug(&objects);
   state.objects = objects;
-  state.apply_meta();
+  try_to(state.apply_meta(), &mut state)?;
 
   let now = Instant::now();
-  state.render()?;
+  try_to(state.render(), &mut state)?;
   let elapsed = now.elapsed();
-  bar::message(format!("{:?} ({:?})", filename, elapsed), &state)?;
+  // bar::message(format!("{:?} ({:?})", filename, elapsed), &state)?;
 
   state.event_loop()?; // blocking
 
@@ -57,6 +61,7 @@ fn main() -> Result<(), io::Error> {
 
   cirno::logger::debug(&state.cursor_x);
   cirno::logger::debug(&state.cursor_y);
+  // cirno::logger::debug(&state.errors);
   println!("{:#?}", cirno::logger::LOG_STATE.read().unwrap());
 
   Ok(())

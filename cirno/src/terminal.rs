@@ -1,4 +1,4 @@
-use crate::CirnoState;
+use crate::{CirnoState, error::CirnoError};
 use std::io;
 use std::io::stdout;
 use crossterm::execute;
@@ -42,11 +42,14 @@ pub fn move_within_bounds(x: u16, y: u16, state: &CirnoState) -> Result<(), io::
   Ok(())
 }
 
-pub fn is_out_of_bounds(x: u16, y: u16, state: &CirnoState) -> bool {
-  if x > state.bound_x - 1 || y > state.bound_y - 1 { // zero
-    return true
+pub fn is_out_of_bounds(x: u16, y: u16, state: &CirnoState) -> Result<bool, CirnoError> {
+  if state.bound_x == 0 {
+    return Err(CirnoError::BoundsNotSet)
   }
-  false
+  if x > state.bound_x - 1 || y > state.bound_y - 1 { // zero
+    return Ok(true)
+  }
+  Ok(false)
 }
 
 pub fn read_line() -> Result<String, io::Error> {
