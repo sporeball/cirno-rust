@@ -1,9 +1,7 @@
-use crate::{CirnoState, project::Mode, terminal::KeyEventResult};
+use crate::{CirnoState, bar, logger, project::Mode, terminal::{KeyEventResult, backspace, read_line}};
 use std::collections::HashMap;
 use std::io;
-use std::io::stdout;
 use crossterm::event::KeyEvent;
-use crossterm::execute;
 
 pub fn get() -> Mode {
   Mode {
@@ -64,34 +62,13 @@ fn on_key_l(state: &mut CirnoState) -> Result<KeyEventResult, io::Error> {
 }
 
 fn on_key_colon(state: &mut CirnoState) -> Result<KeyEventResult, io::Error> {
-  let mut command = String::new();
-  // prepare the bar
-  crate::bar::clear(state)?;
-  execute!(stdout(), crossterm::cursor::MoveTo(0, state.rows - 1))?;
-  execute!(stdout(), crossterm::style::Print(":"))?;
-  // read line
-  while let Ok(crossterm::event::Event::Key(KeyEvent { code, .. })) = crossterm::event::read() {
-    match code {
-      crossterm::event::KeyCode::Enter => { break; },
-      crossterm::event::KeyCode::Backspace => {
-        if command.eq("") {
-          execute!(stdout(), crossterm::cursor::MoveLeft(1))?;
-          execute!(stdout(), crossterm::style::Print(" "))?;
-          execute!(stdout(), crossterm::cursor::MoveLeft(1))?;
-          break;
-        }
-        command.pop();
-        execute!(stdout(), crossterm::cursor::MoveLeft(1))?;
-        execute!(stdout(), crossterm::style::Print(" "))?;
-        execute!(stdout(), crossterm::cursor::MoveLeft(1))?;
-      },
-      crossterm::event::KeyCode::Char(c) => {
-        command.push(c);
-        execute!(stdout(), crossterm::style::Print(c))?;
-      },
-      _ => {},
-    }
+  bar::message(":".to_string(), state)?;
+  let command = read_line()?;
+  // remove the colon if the command comes back empty
+  // TODO: removed if Enter is pressed, but should be kept as in vim
+  if command.eq("") {
+    backspace()?;
   }
-  crate::logger::debug(&command);
+  logger::debug(&command);
   Ok(KeyEventResult::Ok)
 }

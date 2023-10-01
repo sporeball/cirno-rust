@@ -10,7 +10,6 @@ pub fn clear(state: &CirnoState) -> Result<(), io::Error> {
 }
 
 pub fn message(msg: String, state: &CirnoState) -> Result<(), io::Error> {
-  execute!(stdout(), crossterm::cursor::MoveTo(0, state.rows - 1))?;
   clear(state)?;
   execute!(stdout(), crossterm::style::Print(msg.to_string()))?;
   Ok(())

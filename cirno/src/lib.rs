@@ -56,8 +56,8 @@ impl CirnoState {
       .into_iter()
       .find_map(|x| match x {
         Object::Meta(meta) => Some(meta),
-          _ => None,
-        })
+        _ => None,
+      })
       .unwrap();
     // apply attributes to self
     self.bound_x = meta.bounds.x;
