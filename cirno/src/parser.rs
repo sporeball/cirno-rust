@@ -1,5 +1,5 @@
 use crate::project::*;
-use std::io::{self, BufRead, BufReader};
+use std::io::{BufRead, BufReader};
 use std::fs::File;
 use logos::Logos;
 
@@ -19,7 +19,7 @@ enum Token {
   Separator
 }
 
-pub fn parse(filename: &str) -> Result<ParseResult, io::Error> {
+pub fn parse(filename: &str) -> Result<ParseResult, anyhow::Error> {
   // create default result
   let mut result = match &filename[filename.len()-4..] { // extension
     ".cic" => ParseResult::Cic(Cic::default()),
@@ -42,18 +42,14 @@ pub fn parse(filename: &str) -> Result<ParseResult, io::Error> {
         lex.next();
       }
       // parse an object into the AST
-      ast.push(parse_object(lex.slice(), &mut lex));
+      match parse_object(lex.slice(), &mut lex) {
+        Ok(object) => ast.push(object),
+        Err(e) => return Err(e.into()),
+      }
     }
   }
   // apply the AST to the result
   result.apply(ast);
-  // match &ast[0] {
-  //   crate::project::Object::Chip(chip) => println!("{}", chip.t),
-  //   _ => todo!(),
-  // }
-  // for attribute in &ast[0].attributes {
-  //   println!("{:#?}", attribute);
-  // }
   Ok(result)
 }
 
@@ -111,7 +107,7 @@ fn parse_attribute_value(lexer: &mut logos::Lexer<'_, Token>) -> Value {
   }
 }
 
-fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Object {
+fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<Object, anyhow::Error> {
   // create uninitialized object
   let mut object = match token {
     "chip" => Object::Chip(Chip::default()),
@@ -130,8 +126,11 @@ fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Object {
   }
   // apply attributes to the object
   for attribute in attributes {
-    object.apply_attribute(attribute);
+    match object.apply_attribute(attribute) {
+      Ok(()) => {},
+      Err(e) => return Err(e.into()),
+    }
   }
   // return the object
-  object
+  Ok(object)
 }

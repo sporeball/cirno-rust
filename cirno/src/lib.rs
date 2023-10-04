@@ -1,8 +1,6 @@
 use crate::{error::CirnoError, project::{Mode, Modes, Object}, terminal::KeyEventResult};
 use std::io::{self};
-use std::io::stdout;
-use crossterm::{execute, event::Event};
-use thiserror::Error;
+use crossterm::event::Event;
 
 pub mod bar;
 pub mod error;
@@ -46,7 +44,6 @@ impl CirnoState {
     }
   }
   pub fn render(&mut self) -> Result<(), anyhow::Error> {
-    execute!(stdout(), crossterm::terminal::Clear(crossterm::terminal::ClearType::All))?;
     for object in self.objects.clone() {
       object.render(self)?;
     }

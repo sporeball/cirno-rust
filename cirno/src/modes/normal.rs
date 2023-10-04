@@ -1,6 +1,5 @@
 use crate::{CirnoState, bar, project::Mode, terminal::{KeyEventResult, backspace, read_line}};
 use std::collections::HashMap;
-use std::io;
 use crossterm::event::KeyEvent;
 
 pub fn get() -> Mode {

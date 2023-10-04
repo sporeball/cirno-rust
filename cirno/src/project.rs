@@ -1,7 +1,6 @@
-use crate::{CirnoState, parser::parse, terminal::KeyEventResult};
+use crate::{CirnoState, error::CirnoError, parser::parse, terminal::KeyEventResult};
 use std::collections::HashMap;
 use std::fmt::Debug;
-use std::io;
 use std::io::stdout;
 use crossterm::execute;
 
@@ -51,12 +50,13 @@ pub struct Chip {
 }
 
 impl Chip {
-  pub fn apply_attribute(&mut self, attribute: Attribute) {
+  pub fn apply_attribute(&mut self, attribute: Attribute) -> Result<(), CirnoError> {
     match attribute {
       Attribute::Type(t) => self.t = t,
       Attribute::Position(vec2) => self.position = vec2,
-      a => panic!("could not apply {:?} to chip", a.to_string()),
+      a => return Err(CirnoError::InvalidChipAttribute(a.to_string())),
     }
+    Ok(())
   }
   pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let x = self.position.x;
@@ -96,11 +96,12 @@ pub struct Meta {
 }
 
 impl Meta {
-  pub fn apply_attribute(&mut self, attribute: Attribute) {
+  pub fn apply_attribute(&mut self, attribute: Attribute) -> Result<(), CirnoError> {
     match attribute {
       Attribute::Bounds(vec2) => self.bounds = vec2,
-      a => panic!("could not apply {:?} to meta object", a),
+      a => return Err(CirnoError::InvalidMetaAttribute(a.to_string())),
     }
+    Ok(())
   }
   pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let center_x = state.columns / 2;
@@ -140,12 +141,13 @@ pub struct Net {
 }
 
 impl Net {
-  pub fn apply_attribute(&mut self, attribute: Attribute) {
+  pub fn apply_attribute(&mut self, attribute: Attribute) -> Result<(), CirnoError> {
     match attribute {
       Attribute::Type(t) => self.t = t,
       Attribute::YCoordinate(y) => self.y = y,
-      a => panic!("could not apply {:?} to net", a),
+      a => return Err(CirnoError::InvalidNetAttribute(a.to_string())),
     }
+    Ok(())
   }
   pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let y = self.y;
@@ -184,14 +186,15 @@ pub struct Pin {
 }
 
 impl Pin {
-  pub fn apply_attribute(&mut self, attribute: Attribute) {
+  pub fn apply_attribute(&mut self, attribute: Attribute) -> Result<(), CirnoError> {
     match attribute {
       Attribute::Label(label) => self.label = label,
       Attribute::Num(num) => self.num = num,
       Attribute::Position(vec2) => self.position = vec2,
       Attribute::Value(value) => self.value = value,
-      a => panic!("could not apply {:?} to pin", a),
+      a => return Err(CirnoError::InvalidPinAttribute(a.to_string())),
     }
+    Ok(())
   }
   // TODO: dead code?
   pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
@@ -221,7 +224,7 @@ pub enum Object {
 }
 
 impl Object {
-  pub fn apply_attribute(&mut self, attribute: Attribute) {
+  pub fn apply_attribute(&mut self, attribute: Attribute) -> Result<(), CirnoError> {
     match self {
       Object::Chip(chip) => chip.apply_attribute(attribute),
       Object::Meta(meta) => meta.apply_attribute(attribute),

@@ -1,10 +1,8 @@
 // need to use "cirno" in this file, not "crate"
 
-use cirno::{CirnoState, bar, error::try_to, parser, project::Modes};
-use std::io::{self};
-use std::time::Instant;
+use cirno::{CirnoState, error::{CirnoError, try_to}, parser, project::{Cic, Cip, Modes, ParseResult}};
+// use std::time::Instant;
 use clap::Parser;
-use scopeguard;
 
 /// Full-featured circuit design tool
 #[derive(Parser)]
@@ -12,14 +10,39 @@ struct Cli {
   filename: std::path::PathBuf,
 }
 
+fn open(filename: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
+  let project = try_to(parser::parse(filename), state)?;
+  if project.is_none() {
+    return Err(CirnoError::CouldNotOpenProject.into());
+  }
+
+  state.objects = match project {
+    Some(ParseResult::Cic(Cic { pins: _ })) => todo!(),
+    Some(ParseResult::Cip(Cip { objects })) => objects,
+    None => unreachable!(),
+  };
+
+  cirno::logger::debug(&state.objects);
+  try_to(state.apply_meta(), state)?;
+
+  // let now = Instant::now();
+  try_to(state.render(), state)?;
+  // let elapsed = now.elapsed();
+  // bar::message(format!("{:?} ({:?})", filename, elapsed), &state)?;
+
+  if state.errors.len() > 0 {
+    return Err(CirnoError::CouldNotOpenProject.into());
+  }
+
+  Ok(())
+}
+
 fn main() -> Result<(), anyhow::Error> {
-  // call the exit function on drop
-  let _guard = scopeguard::guard((), |_| {
-    // don't try to exit if already exited (ok)
-    if crossterm::terminal::is_raw_mode_enabled().ok() == Some(true) {
-      let _ = cirno::terminal::exit();
-    }
-  });
+  let default_panic = std::panic::take_hook();
+  std::panic::set_hook(Box::new(move |info| {
+    let _ = cirno::terminal::exit();
+    default_panic(info);
+  }));
 
   let (columns, rows) = crossterm::terminal::size()?;
 
@@ -35,25 +58,12 @@ fn main() -> Result<(), anyhow::Error> {
     errors: vec![],
   };
 
-  let args = Cli::parse();
-  let filename = args.filename.to_str().unwrap();
-  let project: cirno::project::ParseResult = parser::parse(filename).unwrap();
-  // println!("{:#?}", project);
-
   cirno::terminal::enter()?;
 
-  let objects = match project {
-    cirno::project::ParseResult::Cic(cirno::project::Cic { pins: _ }) => todo!(),
-    cirno::project::ParseResult::Cip(cirno::project::Cip { objects }) => objects,
-  };
-  cirno::logger::debug(&objects);
-  state.objects = objects;
-  try_to(state.apply_meta(), &mut state)?;
-
-  let now = Instant::now();
-  try_to(state.render(), &mut state)?;
-  let elapsed = now.elapsed();
-  // bar::message(format!("{:?} ({:?})", filename, elapsed), &state)?;
+  let args = Cli::parse();
+  let filename = args.filename.to_str().unwrap();
+  // TODO: i wish we didn't have to pass &mut state two times
+  try_to(open(filename, &mut state), &mut state)?;
 
   state.event_loop()?; // blocking
 
