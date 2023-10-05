@@ -11,6 +11,8 @@ pub enum CirnoError {
   CouldNotOpenProject,
   #[error("could not apply {0} to chip")]
   InvalidChipAttribute(String),
+  #[error("invalid filetype: {0}")]
+  InvalidFiletype(String),
   #[error("could not apply {0} to meta object")]
   InvalidMetaAttribute(String),
   #[error("could not apply {0} to net")]
@@ -19,6 +21,8 @@ pub enum CirnoError {
   InvalidPinAttribute(String),
   #[error("missing meta object")]
   MissingMetaObject,
+  #[error("object out of bounds")]
+  OutOfBounds,
 }
 
 /// Call a function, possibly producing a recoverable error message as a side effect.

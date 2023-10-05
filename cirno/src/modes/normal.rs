@@ -23,7 +23,7 @@ fn handle_key_event(event: KeyEvent, state: &mut CirnoState) -> Result<KeyEventR
   if !matches!(kind, crossterm::event::KeyEventKind::Press) {
     return Ok(KeyEventResult::Ok) // TODO: return the concept of none
   }
-  // exit on Ctrl+C
+  // Ctrl+C
   if matches!(code, crossterm::event::KeyCode::Char('c')) && modifiers.contains(crossterm::event::KeyModifiers::CONTROL) {
     bar::message("type  :q  and press <Enter> to exit cirno".to_string(), state)?;
     return Ok(KeyEventResult::Ok)
@@ -68,7 +68,6 @@ fn on_key_colon(state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error>
   bar::message(":".to_string(), state)?;
   let command = read_line()?;
   // remove the colon if the command comes back empty
-  // TODO: removed if Enter is pressed, but should be kept as in vim
   if command.eq("") {
     backspace()?;
     return Ok(KeyEventResult::Ok)

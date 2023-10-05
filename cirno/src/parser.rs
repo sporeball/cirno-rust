@@ -1,4 +1,4 @@
-use crate::project::*;
+use crate::{CirnoError, project::*};
 use std::io::{BufRead, BufReader};
 use std::fs::File;
 use logos::Logos;
@@ -21,11 +21,7 @@ enum Token {
 
 pub fn parse(filename: &str) -> Result<ParseResult, anyhow::Error> {
   // create default result
-  let mut result = match &filename[filename.len()-4..] { // extension
-    ".cic" => ParseResult::Cic(Cic::default()),
-    ".cip" => ParseResult::Cip(Cip::default()),
-    x => panic!("invalid filetype: {}", x),
-  };
+  let mut result = parseresult_default(filename)?;
   // open file
   let file = File::open(filename)?;
   let contents = BufReader::new(file);
@@ -51,6 +47,15 @@ pub fn parse(filename: &str) -> Result<ParseResult, anyhow::Error> {
   // apply the AST to the result
   result.apply(ast);
   Ok(result)
+}
+
+// TODO: is there any other way to do this?
+fn parseresult_default(filename: &str) -> Result<ParseResult, CirnoError> {
+  match &filename[filename.len()-4..] { // extension
+    ".cic" => Ok(ParseResult::Cic(Cic::default())),
+    ".cip" => Ok(ParseResult::Cip(Cip::default())),
+    x => Err(CirnoError::InvalidFiletype(x.to_string())),
+  }
 }
 
 fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Attribute {
