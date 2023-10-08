@@ -37,29 +37,29 @@ fn handle_key_event(event: KeyEvent, state: &mut CirnoState) -> Result<KeyEventR
 }
 
 fn on_key_h(state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
-  if state.cursor_x > 0 {
-    state.cursor_x -= 1;
+  if state.cursor.x > 0 {
+    state.cursor.x -= 1;
     state.render()?;
   }
   Ok(KeyEventResult::Ok)
 }
 
 fn on_key_j(state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
-  state.cursor_y += 1;
+  state.cursor.y += 1;
   state.render()?;
   Ok(KeyEventResult::Ok)
 }
 
 fn on_key_k(state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
-  if state.cursor_y > 0 {
-    state.cursor_y -= 1;
+  if state.cursor.y > 0 {
+    state.cursor.y -= 1;
     state.render()?;
   }
   Ok(KeyEventResult::Ok)
 }
 
 fn on_key_l(state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
-  state.cursor_x += 1;
+  state.cursor.x += 1;
   state.render()?;
   Ok(KeyEventResult::Ok)
 }

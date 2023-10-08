@@ -104,19 +104,21 @@ impl Meta {
     Ok(())
   }
   pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
+    let bound_x = state.meta.bounds.x;
+    let bound_y = state.meta.bounds.y;
     let center_x = state.columns / 2;
     let center_y = state.rows / 2;
-    let min_x = center_x - (state.bound_x / 2) - 1;
-    let min_y = center_y - (state.bound_y / 2) - 1;
-    let max_x = center_x + (state.bound_x / 2);
-    let max_y = center_y + (state.bound_y / 2);
+    let min_x = center_x - (bound_x / 2) - 1;
+    let min_y = center_y - (bound_y / 2) - 1;
+    let max_x = center_x + (bound_x / 2);
+    let max_y = center_y + (bound_y / 2);
     execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::DarkGrey))?;
     // top border
     execute!(stdout(), crossterm::cursor::MoveTo(min_x, min_y))?;
-    execute!(stdout(), crossterm::style::Print("~".repeat((state.bound_x + 2).into())))?;
+    execute!(stdout(), crossterm::style::Print("~".repeat((bound_x + 2).into())))?;
     // side borders
     let mut i = 1;
-    while i < state.bound_y + 1 {
+    while i < bound_y + 1 {
       // execute!(stdout(), crossterm::style::Print(format!("{}{}{}", "~", " ".repeat(state.bound_x.into()), "~")))?;
       // left border
       execute!(stdout(), crossterm::cursor::MoveTo(min_x, min_y + i))?;
@@ -128,7 +130,7 @@ impl Meta {
     }
     // bottom border
     execute!(stdout(), crossterm::cursor::MoveTo(min_x, max_y))?;
-    execute!(stdout(), crossterm::style::Print("~".repeat((state.bound_x + 2).into())))?;
+    execute!(stdout(), crossterm::style::Print("~".repeat((bound_x + 2).into())))?;
     execute!(stdout(), crossterm::style::ResetColor)?;
     Ok(())
   }
@@ -151,6 +153,7 @@ impl Net {
   }
   pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let y = self.y;
+    let bound_x = state.meta.bounds.x;
     // bounds check
     match crate::terminal::is_out_of_bounds(0, y, state) {
       Ok(true) => { return Ok(()) },
@@ -161,10 +164,10 @@ impl Net {
     crate::terminal::move_within_bounds(0, y, state)?;
     if self.t.eq("vcc") {
       execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Red))?;
-      execute!(stdout(), crossterm::style::Print("+".repeat((state.bound_x).into())))?;
+      execute!(stdout(), crossterm::style::Print("+".repeat(bound_x.into())))?;
     } else {
       execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Blue))?;
-      execute!(stdout(), crossterm::style::Print("-".repeat((state.bound_x).into())))?;
+      execute!(stdout(), crossterm::style::Print("-".repeat(bound_x.into())))?;
     }
     execute!(stdout(), crossterm::style::ResetColor)?; // TODO: what happens if you don't do this?
     Ok(())

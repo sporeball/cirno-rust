@@ -1,4 +1,4 @@
-use crate::{error::CirnoError, project::{Mode, Modes, Object}, terminal::KeyEventResult};
+use crate::{error::CirnoError, project::{Meta, Mode, Modes, Object, Vector2}, terminal::KeyEventResult};
 use std::io::{self};
 use crossterm::event::Event;
 
@@ -15,11 +15,9 @@ pub struct CirnoState {
   pub columns: u16,
   pub rows: u16,
   pub mode: Modes,
-  pub bound_x: u16,
-  pub bound_y: u16,
-  pub cursor_x: u16,
-  pub cursor_y: u16,
+  pub cursor: Vector2,
   pub objects: Vec<Object>,
+  pub meta: Meta,
   pub errors: Vec<String>,
 }
 
@@ -61,10 +59,7 @@ impl CirnoState {
     if meta.is_none() {
       return Err(CirnoError::MissingMetaObject)
     }
-    let meta_unwrapped = meta.unwrap();
-    // apply attributes to self
-    self.bound_x = meta_unwrapped.bounds.x;
-    self.bound_y = meta_unwrapped.bounds.y;
+    self.meta = meta.unwrap();
     // crate::logger::debug(&self);
     Ok(())
   }

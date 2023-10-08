@@ -34,19 +34,23 @@ pub fn backspace() -> Result<(), io::Error> {
 }
 
 pub fn move_within_bounds(x: u16, y: u16, state: &CirnoState) -> Result<(), io::Error> {
+  let bound_x = state.meta.bounds.x;
+  let bound_y = state.meta.bounds.y;
   let center_x = state.columns / 2;
   let center_y = state.rows / 2;
-  let min_x = center_x - (state.bound_x / 2);
-  let min_y = center_y - (state.bound_y / 2);
+  let min_x = center_x - (bound_x / 2);
+  let min_y = center_y - (bound_y / 2);
   execute!(stdout(), crossterm::cursor::MoveTo(min_x + x, min_y + y))?;
   Ok(())
 }
 
 pub fn is_out_of_bounds(x: u16, y: u16, state: &CirnoState) -> Result<bool, CirnoError> {
-  if state.bound_x == 0 {
+  let bound_x = state.meta.bounds.x;
+  let bound_y = state.meta.bounds.y;
+  if bound_x == 0 {
     return Err(CirnoError::BoundsNotSet)
   }
-  if x > state.bound_x - 1 || y > state.bound_y - 1 { // zero
+  if x > bound_x - 1 || y > bound_y - 1 { // zero
     return Ok(true)
   }
   Ok(false)

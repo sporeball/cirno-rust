@@ -1,6 +1,6 @@
 // need to use "cirno" in this file, not "crate"
 
-use cirno::{CirnoState, error::{CirnoError, try_to}, parser, project::{Cic, Cip, Modes, ParseResult}};
+use cirno::{CirnoState, error::{CirnoError, try_to}, parser, project::{Cic, Cip, Meta, Modes, ParseResult, Vector2}};
 // use std::time::Instant;
 use clap::Parser;
 
@@ -50,11 +50,9 @@ fn main() -> Result<(), anyhow::Error> {
     columns,
     rows,
     mode: Modes::Normal,
-    bound_x: 0,
-    bound_y: 0,
-    cursor_x: 0,
-    cursor_y: 0,
+    cursor: Vector2::default(),
     objects: vec![],
+    meta: Meta::default(),
     errors: vec![],
   };
 
@@ -69,8 +67,7 @@ fn main() -> Result<(), anyhow::Error> {
 
   cirno::terminal::exit()?;
 
-  cirno::logger::debug(&state.cursor_x);
-  cirno::logger::debug(&state.cursor_y);
+  cirno::logger::debug(&state.cursor);
   // cirno::logger::debug(&state.errors);
   println!("{:#?}", cirno::logger::LOG_STATE.read().unwrap());
 
