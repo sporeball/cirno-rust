@@ -23,6 +23,8 @@ pub enum CirnoError {
   MissingMetaObject,
   #[error("object out of bounds")]
   OutOfBounds,
+  #[error("terminal too small")]
+  TerminalTooSmall,
 }
 
 /// Call a function, possibly producing a recoverable error message as a side effect.

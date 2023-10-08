@@ -169,7 +169,7 @@ impl Net {
       execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Blue))?;
       execute!(stdout(), crossterm::style::Print("-".repeat(bound_x.into())))?;
     }
-    execute!(stdout(), crossterm::style::ResetColor)?; // TODO: what happens if you don't do this?
+    execute!(stdout(), crossterm::style::ResetColor)?;
     Ok(())
   }
 }
@@ -279,12 +279,6 @@ impl ParseResult {
     match self {
       ParseResult::Cic(cic) => cic.pins = ast,
       ParseResult::Cip(cip) => cip.objects = ast,
-    }
-  }
-  pub fn verify(&mut self) {
-    match self {
-      ParseResult::Cic(_cic) => todo!(),
-      ParseResult::Cip(_cip) => todo!(),
     }
   }
 }

@@ -10,6 +10,8 @@ struct Cli {
   filename: std::path::PathBuf,
 }
 
+// TODO: this returns CirnoError::CouldNotOpenProject so many times. ask somebody about using a
+// trait or something
 fn open(filename: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   let project = try_to(parser::parse(filename), state)?;
   if project.is_none() {
@@ -23,7 +25,12 @@ fn open(filename: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   };
 
   cirno::logger::debug(&state.objects);
-  try_to(state.apply_meta(), state)?;
+  if try_to(state.apply_meta(), state)?.is_none() {
+    return Err(CirnoError::CouldNotOpenProject.into());
+  }
+  if try_to(state.verify(), state)?.is_none() {
+    return Err(CirnoError::CouldNotOpenProject.into());
+  }
 
   // let now = Instant::now();
   try_to(state.render(), state)?;

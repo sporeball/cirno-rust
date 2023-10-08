@@ -72,7 +72,6 @@ fn on_key_colon(state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error>
     backspace()?;
     return Ok(KeyEventResult::Ok)
   }
-  // logger::debug(&command);
   if let Some(cmd) = get().commands.get(&command) {
     return (cmd)(state);
   } else {
