@@ -21,6 +21,8 @@ pub enum CirnoError {
   InvalidPinAttribute(String),
   #[error("missing meta object")]
   MissingMetaObject,
+  #[error("opening .cic files is not yet implemented")]
+  OpenCicNotImplemented,
   #[error("object out of bounds")]
   OutOfBounds,
   #[error("terminal too small")]

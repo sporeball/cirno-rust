@@ -13,15 +13,17 @@ struct Cli {
 // TODO: this returns CirnoError::CouldNotOpenProject so many times. ask somebody about using a
 // trait or something
 fn open(filename: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
-  let project = try_to(parser::parse(filename), state)?;
-  if project.is_none() {
-    return Err(CirnoError::CouldNotOpenProject.into());
-  }
-
-  state.objects = match project {
-    Some(ParseResult::Cic(Cic { pins: _ })) => todo!(),
-    Some(ParseResult::Cip(Cip { objects })) => objects,
-    None => unreachable!(),
+  // parse file
+  match try_to(parser::parse(filename), state)? {
+    Some(ParseResult::Cic(Cic { pins: _ })) => {
+      return Err(CirnoError::OpenCicNotImplemented.into());
+    },
+    Some(ParseResult::Cip(Cip { objects })) => {
+      state.objects = objects;
+    },
+    None => {
+      return Err(CirnoError::CouldNotOpenProject.into());
+    }
   };
 
   cirno::logger::debug(&state.objects);
