@@ -58,39 +58,41 @@ fn parseresult_default(filename: &str) -> Result<ParseResult, CirnoError> {
   }
 }
 
-fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Attribute {
+// TODO: make sure all the unwraps in this function don't do stupid things
+// TODO: immediately returning Ok in the value arm is probably a bad idea
+fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<Attribute, CirnoError> {
   lexer.next();
   match token {
     "bounds" => {
       let x: u16 = lexer.slice().parse().unwrap();
       lexer.next();
       let y: u16 = lexer.slice().parse().unwrap();
-      Attribute::Bounds(Vector2 { x, y })
+      Ok(Attribute::Bounds(Vector2 { x, y }))
     },
     "label" => {
       let label: String = lexer.slice().to_string();
-      Attribute::Label(label)
+      Ok(Attribute::Label(label))
     }
     "num" => {
       let num: u16 = lexer.slice().parse().unwrap();
-      Attribute::Num(num)
+      Ok(Attribute::Num(num))
     },
     "pos" => {
       let x: u16 = lexer.slice().parse().unwrap();
       lexer.next();
       let y: u16 = lexer.slice().parse().unwrap();
-      Attribute::Position(Vector2 { x, y })
+      Ok(Attribute::Position(Vector2 { x, y }))
     },
     "type" => {
       let t: String = lexer.slice().to_string();
-      Attribute::Type(t)
+      Ok(Attribute::Type(t))
     },
-    "value" => Attribute::Value(parse_attribute_value(lexer)),
+    "value" => Ok(Attribute::Value(parse_attribute_value(lexer))),
     "y" => {
       let y: u16 = lexer.slice().parse().unwrap();
-      Attribute::YCoordinate(y)
+      Ok(Attribute::YCoordinate(y))
     },
-    &_ => todo!(),
+    a => Err(CirnoError::InvalidAttribute(a.to_string())),
   }
 }
 
@@ -127,7 +129,10 @@ fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<Obje
     if lexer.slice() == ":" {
       break;
     }
-    attributes.push(parse_attribute(lexer.slice(), lexer));
+    match parse_attribute(lexer.slice(), lexer) {
+      Ok(attribute) => attributes.push(attribute),
+      Err(e) => return Err(e.into()),
+    }
   }
   // apply attributes to the object
   for attribute in attributes {

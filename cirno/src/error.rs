@@ -9,12 +9,16 @@ pub enum CirnoError {
   BoundsNotSet,
   #[error("could not open project")]
   CouldNotOpenProject,
+  #[error("invalid attribute: {0}")]
+  InvalidAttribute(String),
   #[error("could not apply {0} to chip")]
   InvalidChipAttribute(String),
   #[error("invalid filetype: {0}")]
   InvalidFiletype(String),
   #[error("could not apply {0} to meta object")]
   InvalidMetaAttribute(String),
+  #[error("invalid object type: {0}")]
+  InvalidObjectType(String),
   #[error("could not apply {0} to net")]
   InvalidNetAttribute(String),
   #[error("could not apply {0} to pin")]

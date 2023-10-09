@@ -23,7 +23,7 @@ fn open(filename: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
     },
     None => {
       return Err(CirnoError::CouldNotOpenProject.into());
-    }
+    },
   };
 
   cirno::logger::debug(&state.objects);
