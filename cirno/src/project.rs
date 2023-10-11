@@ -66,7 +66,7 @@ impl Chip {
     let cic: ParseResult = parse(&filename).unwrap();
     let pins = match cic {
       ParseResult::Cic(Cic { pins }) => pins,
-      ParseResult::Cip(_) => todo!(),
+      ParseResult::Cip(_) => unreachable!(),
     };
     let width = pins.len() / 2;
     // bounds check
