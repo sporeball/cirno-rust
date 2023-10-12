@@ -25,50 +25,6 @@ impl std::fmt::Display for Token {
   }
 }
 
-pub fn parse(filename: &str) -> Result<ParseResult, anyhow::Error> {
-  // create default result
-  let mut result = parseresult_default(filename)?;
-  // open file
-  let file = File::open(filename)?;
-  let contents = BufReader::new(file);
-  let mut ast: Vec<Object> = vec![];
-  // for each line in the file
-  for line in contents.lines() {
-    // tokenize the line
-    let line = &line.unwrap();
-    let mut lex = Token::lexer(line);
-    // while there are still tokens
-    while let Some(token) = lex.next() {
-      if let Err(_) = token {
-        return Err(CirnoError::UnrecognizedToken.into())
-      }
-      // skip colons
-      if lex.slice().eq(":") {
-        lex.next();
-      }
-      // parse an object into the AST
-      match parse_object(lex.slice(), &mut lex) {
-        Ok(object) => ast.push(object),
-        Err(e) => return Err(e.into()),
-      }
-    }
-  }
-  // apply the AST to the result
-  result.apply(ast);
-  Ok(result)
-}
-
-fn parseresult_default(filename: &str) -> Result<ParseResult, CirnoError> {
-  match &filename[filename.len()-4..] { // extension
-    ".cic" => Ok(ParseResult::Cic(Cic::default())),
-    ".cip" => Ok(ParseResult::Cip(Cip::default())),
-    x => Err(CirnoError::InvalidFiletype(x.to_string())),
-  }
-}
-
-// TODO: since parse() creates a new Token::lexer for each line,
-// the phrasing of the None arms in the below macros is a bit weird
-
 /// expect_number!(lexer)
 macro_rules! expect_number {
   ($x:expr) => {{
@@ -92,6 +48,44 @@ macro_rules! expect_token {
     }
   }}
 }
+
+pub fn parse(filename: &str) -> Result<ParseResult, anyhow::Error> {
+  // create default result
+  let mut result = parseresult_default(filename)?;
+  // open file
+  let file = File::open(filename)?;
+  let contents = BufReader::new(file);
+  let mut ast: Vec<Object> = vec![];
+  // for each line in the file
+  for line in contents.lines() {
+    // tokenize the line if it is not blank
+    let line = &line.unwrap();
+    if line.eq("") {
+      continue;
+    }
+    let mut lex = Token::lexer(line);
+    // move to the first token, which should be a Token::Separator
+    expect_token!(lex, Token::Separator)?;
+    lex.next();
+    // parse an object into the AST
+    let object = parse_object(lex.slice(), &mut lex)?;
+    ast.push(object);
+  }
+  // apply the AST to the result
+  result.apply(ast);
+  Ok(result)
+}
+
+fn parseresult_default(filename: &str) -> Result<ParseResult, CirnoError> {
+  match &filename[filename.len()-4..] { // extension
+    ".cic" => Ok(ParseResult::Cic(Cic::default())),
+    ".cip" => Ok(ParseResult::Cip(Cip::default())),
+    x => Err(CirnoError::InvalidFiletype(x.to_string())),
+  }
+}
+
+// TODO: since parse() creates a new Token::lexer for each line,
+// the phrasing of the None arms in the below macros is a bit weird
 
 fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<Attribute, CirnoError> {
   match token {
