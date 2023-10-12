@@ -63,7 +63,7 @@ impl Chip {
     let y = self.position.y;
     // read .cic based on type field
     let filename = format!("../stdlib/{}{}", self.t, ".cic"); // TODO: make this stronger, make sure this doesn't break
-    let cic: ParseResult = parse(&filename).unwrap();
+    let cic: ParseResult = parse(&filename)?;
     let pins = match cic {
       ParseResult::Cic(Cic { pins }) => pins,
       ParseResult::Cip(_) => unreachable!(),

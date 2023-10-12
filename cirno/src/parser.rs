@@ -6,7 +6,7 @@ use logos::Logos;
 #[derive(Logos, Debug, PartialEq)]
 #[logos(skip r"[ \t\n\f]+")]
 // token types
-enum Token {
+pub enum Token {
   #[regex("'[a-z0-9]+")]
   Identifier,
   #[regex("[a-z][a-z0-9/]*")]
@@ -17,6 +17,12 @@ enum Token {
   Ender,
   #[token(":")]
   Separator
+}
+
+impl std::fmt::Display for Token {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+    write!(f, "{:?}", self)
+  }
 }
 
 pub fn parse(filename: &str) -> Result<ParseResult, anyhow::Error> {
@@ -32,7 +38,10 @@ pub fn parse(filename: &str) -> Result<ParseResult, anyhow::Error> {
     let line = &line.unwrap();
     let mut lex = Token::lexer(line);
     // while there are still tokens
-    while let Some(_token) = lex.next() {
+    while let Some(token) = lex.next() {
+      if let Err(_) = token {
+        return Err(CirnoError::UnrecognizedToken.into())
+      }
       // skip colons
       if lex.slice().eq(":") {
         lex.next();
@@ -49,7 +58,6 @@ pub fn parse(filename: &str) -> Result<ParseResult, anyhow::Error> {
   Ok(result)
 }
 
-// TODO: is there any other way to do this?
 fn parseresult_default(filename: &str) -> Result<ParseResult, CirnoError> {
   match &filename[filename.len()-4..] { // extension
     ".cic" => Ok(ParseResult::Cic(Cic::default())),
@@ -58,45 +66,71 @@ fn parseresult_default(filename: &str) -> Result<ParseResult, CirnoError> {
   }
 }
 
-// TODO: make sure all the unwraps in this function don't do stupid things
-// TODO: immediately returning Ok in the value arm is probably a bad idea
+// TODO: since parse() creates a new Token::lexer for each line,
+// the phrasing of the None arms in the below macros is a bit weird
+
+/// expect_number!(lexer)
+macro_rules! expect_number {
+  ($x:expr) => {{
+    match $x.next() {
+      Some(Ok(Token::Number)) => Ok($x.slice().parse().unwrap()),
+      Some(Ok(u)) => Err(CirnoError::UnexpectedTokenExpectedNumber(u)),
+      Some(Err(_e)) => Err(CirnoError::UnrecognizedToken),
+      None => Err(CirnoError::OutOfTokensExpectedNumber),
+    }
+  }}
+}
+
+/// expect_token!(lexer, Token::[...])
+macro_rules! expect_token {
+  ($x:expr, $p:path) => {{
+    match $x.next() {
+      Some(Ok($p)) => Ok($x.slice().to_string()),
+      Some(Ok(u)) => Err(CirnoError::UnexpectedToken($p, u)),
+      Some(Err(_e)) => Err(CirnoError::UnrecognizedToken),
+      None => Err(CirnoError::OutOfTokens($p)),
+    }
+  }}
+}
+
 fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<Attribute, CirnoError> {
-  lexer.next();
   match token {
     "bounds" => {
-      let x: u16 = lexer.slice().parse().unwrap();
-      lexer.next();
-      let y: u16 = lexer.slice().parse().unwrap();
+      let x: u16 = expect_number!(lexer)?;
+      let y: u16 = expect_number!(lexer)?;
       Ok(Attribute::Bounds(Vector2 { x, y }))
     },
     "label" => {
-      let label: String = lexer.slice().to_string();
+      let label = expect_token!(lexer, Token::Identifier)?;
       Ok(Attribute::Label(label))
     }
     "num" => {
-      let num: u16 = lexer.slice().parse().unwrap();
+      let num: u16 = expect_number!(lexer)?;
       Ok(Attribute::Num(num))
     },
     "pos" => {
-      let x: u16 = lexer.slice().parse().unwrap();
-      lexer.next();
-      let y: u16 = lexer.slice().parse().unwrap();
+      let x: u16 = expect_number!(lexer)?;
+      let y: u16 = expect_number!(lexer)?;
       Ok(Attribute::Position(Vector2 { x, y }))
     },
     "type" => {
-      let t: String = lexer.slice().to_string();
+      let t = expect_token!(lexer, Token::Keyword)?;
       Ok(Attribute::Type(t))
     },
-    "value" => Ok(Attribute::Value(parse_attribute_value(lexer))),
+    "value" => {
+      let v = parse_attribute_value(lexer)?;
+      Ok(Attribute::Value(v))
+    },
     "y" => {
-      let y: u16 = lexer.slice().parse().unwrap();
+      let y: u16 = expect_number!(lexer)?;
       Ok(Attribute::YCoordinate(y))
     },
     a => Err(CirnoError::InvalidAttribute(a.to_string())),
   }
 }
 
-fn parse_attribute_value(lexer: &mut logos::Lexer<'_, Token>) -> Value {
+fn parse_attribute_value(lexer: &mut logos::Lexer<'_, Token>) -> Result<Value, CirnoError> {
+  lexer.next();
   match lexer.slice() {
     "and" => {
       let mut values: Vec<String> = vec![];
@@ -106,40 +140,39 @@ fn parse_attribute_value(lexer: &mut logos::Lexer<'_, Token>) -> Value {
         }
         values.push(lexer.slice().to_string());
       }
-      Value::And(values)
+      Ok(Value::And(values))
     },
-    "gnd" => Value::Gnd,
-    "vcc" => Value::Vcc,
-    &_ => todo!(),
+    "gnd" => Ok(Value::Gnd),
+    "vcc" => Ok(Value::Vcc),
+    v => Err(CirnoError::InvalidValueAttribute(v.to_string())),
+  }
+}
+
+fn object_default(token: &str) -> Result<Object, CirnoError> {
+  match token {
+    "chip" => Ok(Object::Chip(Chip::default())),
+    "meta" => Ok(Object::Meta(Meta::default())),
+    "net" => Ok(Object::Net(Net::default())),
+    "pin" => Ok(Object::Pin(Pin::default())),
+    t => Err(CirnoError::InvalidObjectType(t.to_string())),
   }
 }
 
 fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<Object, anyhow::Error> {
   // create uninitialized object
-  let mut object = match token {
-    "chip" => Object::Chip(Chip::default()),
-    "meta" => Object::Meta(Meta::default()),
-    "net" => Object::Net(Net::default()),
-    "pin" => Object::Pin(Pin::default()),
-    _ => todo!(), // do we need?
-  };
+  let mut object = object_default(token)?;
   // get attributes
   let mut attributes: Vec<Attribute> = vec![];
   while let Some(_token) = lexer.next() {
     if lexer.slice() == ":" {
       break;
     }
-    match parse_attribute(lexer.slice(), lexer) {
-      Ok(attribute) => attributes.push(attribute),
-      Err(e) => return Err(e.into()),
-    }
+    let attribute = parse_attribute(lexer.slice(), lexer)?;
+    attributes.push(attribute);
   }
   // apply attributes to the object
   for attribute in attributes {
-    match object.apply_attribute(attribute) {
-      Ok(()) => {},
-      Err(e) => return Err(e.into()),
-    }
+    object.apply_attribute(attribute)?;
   }
   // return the object
   Ok(object)

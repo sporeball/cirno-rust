@@ -1,4 +1,4 @@
-use crate::CirnoState;
+use crate::{CirnoState, parser::Token};
 use std::io::stdout;
 use std::fmt::Display;
 use crossterm::execute;
@@ -23,14 +23,26 @@ pub enum CirnoError {
   InvalidNetAttribute(String),
   #[error("could not apply {0} to pin")]
   InvalidPinAttribute(String),
+  #[error("invalid value attribute: {0}")]
+  InvalidValueAttribute(String),
   #[error("missing meta object")]
   MissingMetaObject,
   #[error("opening .cic files is not yet implemented")]
   OpenCicNotImplemented,
   #[error("object out of bounds")]
   OutOfBounds,
+  #[error("expected {0}, got None")]
+  OutOfTokens(Token),
+  #[error("expected Number, got None")]
+  OutOfTokensExpectedNumber,
   #[error("terminal too small")]
   TerminalTooSmall,
+  #[error("expected {0}, got {1}")]
+  UnexpectedToken(Token, Token),
+  #[error("expected Number, got {0}")]
+  UnexpectedTokenExpectedNumber(Token),
+  #[error("unrecognized token")] // TODO: add a field
+  UnrecognizedToken,
 }
 
 /// Call a function, possibly producing a recoverable error message as a side effect.
