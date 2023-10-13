@@ -44,16 +44,15 @@ pub fn move_within_bounds(x: u16, y: u16, state: &CirnoState) -> Result<(), io::
   Ok(())
 }
 
-pub fn is_out_of_bounds(x: u16, y: u16, state: &CirnoState) -> Result<bool, CirnoError> {
+/// Assert that a position (x, y) is within the bounds on state without
+/// checking that the bounds have already been set.
+pub fn assert_is_within_bounds_unchecked(x: u16, y: u16, state: &CirnoState) -> Result<(), CirnoError> {
   let bound_x = state.meta.bounds.x;
   let bound_y = state.meta.bounds.y;
-  if bound_x == 0 {
-    return Err(CirnoError::BoundsNotSet)
-  }
   if x > bound_x - 1 || y > bound_y - 1 { // zero
-    return Ok(true)
+    return Err(CirnoError::OutOfBounds)
   }
-  Ok(false)
+  Ok(())
 }
 
 pub fn read_line() -> Result<String, io::Error> {

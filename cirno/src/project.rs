@@ -1,4 +1,4 @@
-use crate::{CirnoState, error::CirnoError, parser::parse, terminal::KeyEventResult};
+use crate::{CirnoState, error::CirnoError, parser::parse, terminal::{KeyEventResult, assert_is_within_bounds_unchecked, move_within_bounds}};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io::stdout;
@@ -75,16 +75,12 @@ impl Chip {
         Object::Pin(pin) => pin.position,
         _ => todo!(),
       };
-      match crate::terminal::is_out_of_bounds(x + position.x, y + position.y, state) {
-        Ok(true) => { return Ok(()) },
-        Ok(false) => {},
-        Err(e) => { return Err(e.into()) },
-      }
+      assert_is_within_bounds_unchecked(x + position.x, y + position.y, state)?;
     }
     // rendering
-    crate::terminal::move_within_bounds(x, y, state)?;
+    move_within_bounds(x, y, state)?;
     execute!(stdout(), crossterm::style::Print(".".repeat(width.into())))?;
-    crate::terminal::move_within_bounds(x, y + 2, state)?;
+    move_within_bounds(x, y + 2, state)?;
     execute!(stdout(), crossterm::style::Print(".".repeat(width.into())))?;
     Ok(())
   }
@@ -155,13 +151,9 @@ impl Net {
     let y = self.y;
     let bound_x = state.meta.bounds.x;
     // bounds check
-    match crate::terminal::is_out_of_bounds(0, y, state) {
-      Ok(true) => { return Ok(()) },
-      Ok(false) => {},
-      Err(e) => { return Err(e.into()) },
-    }
+    assert_is_within_bounds_unchecked(0, y, state)?;
     // rendering
-    crate::terminal::move_within_bounds(0, y, state)?;
+    move_within_bounds(0, y, state)?;
     if self.t.eq("vcc") {
       execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Red))?;
       execute!(stdout(), crossterm::style::Print("+".repeat(bound_x.into())))?;
@@ -205,13 +197,10 @@ impl Pin {
     let (col, row) = crossterm::cursor::position()?;
     let x = col + self.position.x;
     let y = row + self.position.y;
-    match crate::terminal::is_out_of_bounds(x, y, state) {
-      Ok(true) => { return Ok(()) },
-      Ok(false) => {},
-      Err(e) => { return Err(e.into()) },
-    }
+    // bounds check
+    assert_is_within_bounds_unchecked(x, y, state)?;
     // rendering
-    crate::terminal::move_within_bounds(x, y, state)?;
+    move_within_bounds(x, y, state)?;
     execute!(stdout(), crossterm::style::Print("."))?;
     Ok(())
   }

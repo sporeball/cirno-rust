@@ -25,6 +25,9 @@ impl std::fmt::Display for Token {
   }
 }
 
+// TODO: since parse() creates a new Token::lexer for each line,
+// the phrasing of the None arms in the below macros is a bit weird
+
 /// expect_number!(lexer)
 macro_rules! expect_number {
   ($x:expr) => {{
@@ -83,9 +86,6 @@ fn parseresult_default(filename: &str) -> Result<ParseResult, CirnoError> {
     x => Err(CirnoError::InvalidFiletype(x.to_string())),
   }
 }
-
-// TODO: since parse() creates a new Token::lexer for each line,
-// the phrasing of the None arms in the below macros is a bit weird
 
 fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<Attribute, CirnoError> {
   match token {
@@ -152,6 +152,7 @@ fn object_default(token: &str) -> Result<Object, CirnoError> {
   }
 }
 
+// TODO: see if this can be cleaned up
 fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<Object, anyhow::Error> {
   // create uninitialized object
   let mut object = object_default(token)?;
