@@ -69,9 +69,9 @@ pub fn parse(filename: &str) -> Result<ParseResult, anyhow::Error> {
     let mut lex = Token::lexer(line);
     // move to the first token, which should be a Token::Separator
     expect_token!(lex, Token::Separator)?;
-    lex.next();
     // parse an object into the AST
-    let object = parse_object(lex.slice(), &mut lex)?;
+    let object_type = expect_token!(lex, Token::Keyword)?;
+    let object = parse_object(&object_type, &mut lex)?;
     ast.push(object);
   }
   // apply the AST to the result
@@ -112,7 +112,8 @@ fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<A
       Ok(Attribute::Type(t))
     },
     "value" => {
-      let v = parse_attribute_value(lexer)?;
+      let v_type = expect_token!(lexer, Token::Keyword)?;
+      let v = parse_attribute_value(&v_type, lexer)?;
       Ok(Attribute::Value(v))
     },
     "y" => {
@@ -123,9 +124,8 @@ fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<A
   }
 }
 
-fn parse_attribute_value(lexer: &mut logos::Lexer<'_, Token>) -> Result<Value, CirnoError> {
-  lexer.next();
-  match lexer.slice() {
+fn parse_attribute_value(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<Value, CirnoError> {
+  match token {
     "and" => {
       let mut values: Vec<String> = vec![];
       while let Some(_token) = lexer.next() {
@@ -159,9 +159,6 @@ fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<Obje
   // get attributes
   let mut attributes: Vec<Attribute> = vec![];
   while let Some(_token) = lexer.next() {
-    if lexer.slice() == ":" {
-      break;
-    }
     let attribute = parse_attribute(lexer.slice(), lexer)?;
     attributes.push(attribute);
   }
