@@ -152,18 +152,12 @@ fn object_default(token: &str) -> Result<Object, CirnoError> {
   }
 }
 
-// TODO: see if this can be cleaned up
 fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<Object, anyhow::Error> {
   // create uninitialized object
   let mut object = object_default(token)?;
-  // get attributes
-  let mut attributes: Vec<Attribute> = vec![];
+  // parse tokens into attributes
   while let Some(_token) = lexer.next() {
     let attribute = parse_attribute(lexer.slice(), lexer)?;
-    attributes.push(attribute);
-  }
-  // apply attributes to the object
-  for attribute in attributes {
     object.apply_attribute(attribute)?;
   }
   // return the object

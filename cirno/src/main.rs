@@ -77,7 +77,6 @@ fn main() -> Result<(), anyhow::Error> {
   cirno::terminal::exit()?;
 
   cirno::logger::debug(&state.cursor);
-  // cirno::logger::debug(&state.errors);
   println!("{:#?}", cirno::logger::LOG_STATE.read().unwrap());
 
   Ok(())
