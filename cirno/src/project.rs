@@ -54,7 +54,7 @@ impl Chip {
     match attribute {
       Attribute::Type(t) => self.t = t,
       Attribute::Position(vec2) => self.position = vec2,
-      a => return Err(CirnoError::InvalidChipAttribute(a.to_string())),
+      a => return Err(CirnoError::InvalidAttributeForObject(a.to_string(), "chip".to_string())),
     }
     Ok(())
   }
@@ -102,7 +102,7 @@ impl Meta {
   pub fn apply_attribute(&mut self, attribute: Attribute) -> Result<(), CirnoError> {
     match attribute {
       Attribute::Bounds(vec2) => self.bounds = vec2,
-      a => return Err(CirnoError::InvalidMetaAttribute(a.to_string())),
+      a => return Err(CirnoError::InvalidAttributeForObject(a.to_string(), "meta".to_string())),
     }
     Ok(())
   }
@@ -111,7 +111,7 @@ impl Meta {
       return Err(CirnoError::MissingAttribute("bounds".to_string()))
     }
     if self.bounds.x == 0 || self.bounds.y == 0 {
-      return Err(CirnoError::InvalidValueForAttribute("bounds".to_string()))
+      return Err(CirnoError::NamelessInvalidValueForAttribute("bounds".to_string()))
     }
     Ok(())
   }
@@ -159,7 +159,7 @@ impl Net {
     match attribute {
       Attribute::Type(t) => self.t = t,
       Attribute::YCoordinate(y) => self.y = y,
-      a => return Err(CirnoError::InvalidNetAttribute(a.to_string())),
+      a => return Err(CirnoError::InvalidAttributeForObject(a.to_string(), "net".to_string())),
     }
     Ok(())
   }
@@ -167,7 +167,7 @@ impl Net {
     match self.t.as_str() {
       "vcc" | "gnd" => {},
       "" => return Err(CirnoError::MissingAttribute("net type".to_string())),
-      _t => return Err(CirnoError::InvalidValueForAttribute("net type".to_string())),
+      t => return Err(CirnoError::InvalidValueForAttribute(t.to_string(), "net type".to_string())),
     };
     // TODO: net y
     Ok(())
@@ -216,7 +216,7 @@ impl Pin {
       Attribute::Num(num) => self.num = num,
       Attribute::Position(vec2) => self.position = vec2,
       Attribute::Value(value) => self.value = value,
-      a => return Err(CirnoError::InvalidPinAttribute(a.to_string())),
+      a => return Err(CirnoError::InvalidAttributeForObject(a.to_string(), "pin".to_string())),
     }
     Ok(())
   }

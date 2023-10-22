@@ -7,28 +7,24 @@ use crossterm::execute;
 pub enum CirnoError {
   #[error("could not open project")]
   CouldNotOpenProject,
-  #[error("invalid attribute: {0}")]
+  #[error("invalid attribute '{0}'")]
   InvalidAttribute(String),
-  #[error("could not apply {0} to chip")]
-  InvalidChipAttribute(String),
-  #[error("invalid filetype: {0}")]
+  #[error("attribute '{0}' is invalid for {1} objects")]
+  InvalidAttributeForObject(String, String),
+  #[error("invalid filetype '{0}'")]
   InvalidFiletype(String),
-  #[error("could not apply {0} to meta object")]
-  InvalidMetaAttribute(String),
-  #[error("invalid object type: {0}")]
+  #[error("invalid object type '{0}'")]
   InvalidObjectType(String),
-  #[error("could not apply {0} to net")]
-  InvalidNetAttribute(String),
-  #[error("could not apply {0} to pin")]
-  InvalidPinAttribute(String),
   #[error("invalid value attribute: {0}")]
   InvalidValueAttribute(String),
-  #[error("invalid value for attribute: {0}")]
-  InvalidValueForAttribute(String),
+  #[error("invalid value '{0}' for attribute '{1}'")]
+  InvalidValueForAttribute(String, String),
   #[error("missing attribute: {0}")]
   MissingAttribute(String),
   #[error("missing meta object")]
   MissingMetaObject,
+  #[error("invalid value for attribute '{0}'")]
+  NamelessInvalidValueForAttribute(String),
   #[error("opening .cic files is not yet implemented")]
   OpenCicNotImplemented,
   #[error("object out of bounds")]
