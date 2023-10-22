@@ -69,10 +69,6 @@ impl CirnoState {
   pub fn verify(&mut self) -> Result<(), CirnoError> {
     let bound_x = self.meta.bounds.x;
     let bound_y = self.meta.bounds.y;
-    // the bounds should be set
-    if bound_x == 0 {
-      return Err(CirnoError::BoundsNotSet)
-    }
     // the terminal should be large enough to render the entire bounds
     if bound_x > self.columns || bound_y > self.rows {
       return Err(CirnoError::TerminalTooSmall)

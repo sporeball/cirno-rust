@@ -160,6 +160,8 @@ fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<Obje
     let attribute = parse_attribute(lexer.slice(), lexer)?;
     object.apply_attribute(attribute)?;
   }
+  // verify the object
+  object.verify()?;
   // return the object
   Ok(object)
 }

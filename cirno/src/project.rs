@@ -58,6 +58,13 @@ impl Chip {
     }
     Ok(())
   }
+  pub fn verify(&mut self) -> Result<(), CirnoError> {
+    if self.t.eq("") {
+      return Err(CirnoError::MissingAttribute("chip type".to_string()))
+    }
+    // TODO: chip position
+    Ok(())
+  }
   pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let x = self.position.x;
     let y = self.position.y;
@@ -96,6 +103,15 @@ impl Meta {
     match attribute {
       Attribute::Bounds(vec2) => self.bounds = vec2,
       a => return Err(CirnoError::InvalidMetaAttribute(a.to_string())),
+    }
+    Ok(())
+  }
+  pub fn verify(&mut self) -> Result<(), CirnoError> {
+    if self.bounds.x == 0 && self.bounds.y == 0 {
+      return Err(CirnoError::MissingAttribute("bounds".to_string()))
+    }
+    if self.bounds.x == 0 || self.bounds.y == 0 {
+      return Err(CirnoError::InvalidValueForAttribute("bounds".to_string()))
     }
     Ok(())
   }
@@ -147,6 +163,15 @@ impl Net {
     }
     Ok(())
   }
+  pub fn verify(&mut self) -> Result<(), CirnoError> {
+    match self.t.as_str() {
+      "vcc" | "gnd" => {},
+      "" => return Err(CirnoError::MissingAttribute("net type".to_string())),
+      _t => return Err(CirnoError::InvalidValueForAttribute("net type".to_string())),
+    };
+    // TODO: net y
+    Ok(())
+  }
   pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let y = self.y;
     let bound_x = state.meta.bounds.x;
@@ -154,12 +179,16 @@ impl Net {
     assert_is_within_bounds_unchecked(0, y, state)?;
     // rendering
     move_within_bounds(0, y, state)?;
-    if self.t.eq("vcc") {
-      execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Red))?;
-      execute!(stdout(), crossterm::style::Print("+".repeat(bound_x.into())))?;
-    } else {
-      execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Blue))?;
-      execute!(stdout(), crossterm::style::Print("-".repeat(bound_x.into())))?;
+    match self.t.as_str() {
+      "vcc" => {
+        execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Red))?;
+        execute!(stdout(), crossterm::style::Print("+".repeat(bound_x.into())))?;
+      },
+      "gnd" => {
+        execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Blue))?;
+        execute!(stdout(), crossterm::style::Print("-".repeat(bound_x.into())))?;
+      },
+      _t => unreachable!(),
     }
     execute!(stdout(), crossterm::style::ResetColor)?;
     Ok(())
@@ -189,6 +218,10 @@ impl Pin {
       Attribute::Value(value) => self.value = value,
       a => return Err(CirnoError::InvalidPinAttribute(a.to_string())),
     }
+    Ok(())
+  }
+  pub fn verify(&mut self) -> Result<(), CirnoError> {
+    // TODO: pin num, pin position
     Ok(())
   }
   // TODO: dead code?
@@ -222,6 +255,14 @@ impl Object {
       Object::Meta(meta) => meta.apply_attribute(attribute),
       Object::Net(net) => net.apply_attribute(attribute),
       Object::Pin(pin) => pin.apply_attribute(attribute),
+    }
+  }
+  pub fn verify(&mut self) -> Result<(), CirnoError> {
+    match self {
+      Object::Chip(chip) => chip.verify(),
+      Object::Meta(meta) => meta.verify(),
+      Object::Net(net) => net.verify(),
+      Object::Pin(pin) => pin.verify(),
     }
   }
   pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {

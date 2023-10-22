@@ -5,8 +5,6 @@ use crossterm::execute;
 
 #[derive(thiserror::Error, Debug)]
 pub enum CirnoError {
-  #[error("bounds not set")]
-  BoundsNotSet,
   #[error("could not open project")]
   CouldNotOpenProject,
   #[error("invalid attribute: {0}")]
@@ -25,6 +23,10 @@ pub enum CirnoError {
   InvalidPinAttribute(String),
   #[error("invalid value attribute: {0}")]
   InvalidValueAttribute(String),
+  #[error("invalid value for attribute: {0}")]
+  InvalidValueForAttribute(String),
+  #[error("missing attribute: {0}")]
+  MissingAttribute(String),
   #[error("missing meta object")]
   MissingMetaObject,
   #[error("opening .cic files is not yet implemented")]
