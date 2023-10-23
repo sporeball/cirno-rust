@@ -77,7 +77,8 @@ impl CirnoState {
     let bound_x = self.meta.bounds.x;
     let bound_y = self.meta.bounds.y;
     // the terminal should be large enough to render the entire bounds
-    if bound_x > self.columns || bound_y > self.rows {
+    // 2 extra columns and rows are added to account for the border
+    if bound_x + 2 > self.columns || bound_y + 2 > self.rows {
       return Err(CirnoError::TerminalTooSmall)
     }
     Ok(())
