@@ -61,7 +61,10 @@ pub fn assert_is_within_bounds_unchecked(x: u16, y: u16, state: &CirnoState) -> 
 
 pub fn read_line() -> Result<String, io::Error> {
   let mut line = String::new();
-  while let Ok(crossterm::event::Event::Key(KeyEvent { code, .. })) = crossterm::event::read() {
+  while let Ok(crossterm::event::Event::Key(KeyEvent { code, modifiers: _, kind, state: _ })) = crossterm::event::read() {
+    if !matches!(kind, crossterm::event::KeyEventKind::Press) {
+      continue;
+    }
     match code {
       crossterm::event::KeyCode::Enter => { break; },
       crossterm::event::KeyCode::Backspace => {
