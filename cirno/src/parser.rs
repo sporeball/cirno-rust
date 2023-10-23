@@ -27,6 +27,7 @@ impl std::fmt::Display for Token {
 
 // TODO: since parse() creates a new Token::lexer for each line,
 // the phrasing of the None arms in the below macros is a bit weird
+// TODO: wish these two macros could be combined into one
 
 /// expect_number!(lexer)
 macro_rules! expect_number {

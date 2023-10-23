@@ -1,6 +1,5 @@
-use crate::{error::CirnoError, project::{Meta, Mode, Modes, Object, Vector2}, terminal::KeyEventResult};
-use std::io::{self};
-use crossterm::event::Event;
+use crate::{error::{CirnoError, try_to}, project::{Meta, Mode, Modes, Object, Vector2}, terminal::KeyEventResult};
+use crossterm::{event::Event};
 
 pub mod bar;
 pub mod error;
@@ -27,15 +26,23 @@ impl CirnoState {
       Modes::Normal => crate::modes::normal::get(),
     }
   }
-  pub fn event_loop(&mut self) -> Result<(), io::Error> {
+  pub fn event_loop(&mut self) -> Result<(), anyhow::Error> {
     loop {
       match crossterm::event::read()? {
-        // key event
         Event::Key(event) => {
           let res = (self.get_mode().key_event_cb)(event, self).unwrap();
           if matches!(res, KeyEventResult::Exit) {
             return Ok(())
           }
+        },
+        Event::Resize(columns, rows) => {
+          self.columns = columns;
+          self.rows = rows;
+          terminal::clear_all()?;
+          if try_to(self.verify(), self)?.is_none() {
+            continue; // drop
+          }
+          try_to(self.render(), self)?;
         },
         _ => (),
       }

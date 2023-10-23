@@ -1,13 +1,17 @@
 use crate::{CirnoState, error::CirnoError};
 use std::io;
 use std::io::stdout;
-use crossterm::execute;
-use crossterm::event::KeyEvent;
+use crossterm::{event::KeyEvent, execute, terminal::ClearType};
 
 pub enum KeyEventResult {
   Ok,
   Err,
   Exit,
+}
+
+pub fn clear_all() -> Result<(), io::Error> {
+  execute!(stdout(), crossterm::terminal::Clear(ClearType::All))?;
+  Ok(())
 }
 
 pub fn enter() -> Result<(), io::Error> {
