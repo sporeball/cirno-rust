@@ -1,6 +1,4 @@
 use crate::{CirnoError, project::*};
-use std::io::{BufRead, BufReader};
-use std::fs::File;
 use logos::Logos;
 
 #[derive(Logos, Debug, PartialEq)]
@@ -53,17 +51,12 @@ macro_rules! expect_token {
   }}
 }
 
-pub fn parse(filename: &str) -> Result<ParseResult, anyhow::Error> {
-  // create default result
-  let mut result = parseresult_default(filename)?;
+pub fn parse(contents: &str) -> Result<Vec<Object>, anyhow::Error> {
   // open file
-  let file = File::open(filename)?;
-  let contents = BufReader::new(file);
   let mut ast: Vec<Object> = vec![];
   // for each line in the file
   for line in contents.lines() {
     // tokenize the line if it is not blank
-    let line = &line.unwrap();
     if line.eq("") {
       continue;
     }
@@ -75,17 +68,7 @@ pub fn parse(filename: &str) -> Result<ParseResult, anyhow::Error> {
     let object = parse_object(&object_type, &mut lex)?;
     ast.push(object);
   }
-  // apply the AST to the result
-  result.apply(ast);
-  Ok(result)
-}
-
-fn parseresult_default(filename: &str) -> Result<ParseResult, CirnoError> {
-  match &filename[filename.len()-4..] { // extension
-    ".cic" => Ok(ParseResult::Cic(Cic::default())),
-    ".cip" => Ok(ParseResult::Cip(Cip::default())),
-    x => Err(CirnoError::InvalidFiletype(x.to_string())),
-  }
+  Ok(ast)
 }
 
 fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<Attribute, CirnoError> {

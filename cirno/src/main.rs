@@ -1,7 +1,8 @@
 // need to use "cirno" in this file, not "crate"
 
-use cirno::{CirnoState, error::{CirnoError, try_to}, parser, project::{Cic, Cip, Meta, Modes, ParseResult, Vector2}};
-// use std::time::Instant;
+use cirno::{CirnoState, read, bar, error::try_to, parser, project::{Meta, Modes, Vector2}};
+use std::rc::Rc;
+use std::time::Instant;
 use clap::Parser;
 
 /// Full-featured circuit design tool
@@ -10,38 +11,18 @@ struct Cli {
   filename: std::path::PathBuf,
 }
 
-// TODO: this returns CirnoError::CouldNotOpenProject so many times. ask somebody about using a
-// trait or something
-fn open(filename: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
-  // parse file
-  match try_to(parser::parse(filename), state)? {
-    Some(ParseResult::Cic(Cic { pins: _ })) => {
-      return Err(CirnoError::OpenCicNotImplemented.into());
-    },
-    Some(ParseResult::Cip(Cip { objects })) => {
-      state.objects = objects;
-    },
-    None => {
-      return Err(CirnoError::CouldNotOpenProject.into());
-    },
-  };
-
+/// Open a cirno project given its contents.
+fn open(contents: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
+  state.objects = Rc::new(parser::parse(contents)?);
   cirno::logger::debug(&state.objects);
-  if try_to(state.apply_meta(), state)?.is_none() {
-    return Err(CirnoError::CouldNotOpenProject.into());
-  }
-  if try_to(state.verify(), state)?.is_none() {
-    return Err(CirnoError::CouldNotOpenProject.into());
-  }
 
-  // let now = Instant::now();
-  try_to(state.render(), state)?;
-  // let elapsed = now.elapsed();
-  // bar::message(format!("{:?} ({:?})", filename, elapsed), &state)?;
+  state.apply_meta()?;
+  state.verify()?;
 
-  if state.errors.len() > 0 {
-    return Err(CirnoError::CouldNotOpenProject.into());
-  }
+  let now = Instant::now();
+  state.render()?;
+  let elapsed = now.elapsed();
+  bar::message(format!("{:?}", elapsed), &state)?;
 
   Ok(())
 }
@@ -60,7 +41,7 @@ fn main() -> Result<(), anyhow::Error> {
     rows,
     mode: Modes::Normal,
     cursor: Vector2::default(),
-    objects: vec![],
+    objects: Rc::new(vec![]),
     meta: Meta::default(),
     errors: vec![],
   };
@@ -69,8 +50,10 @@ fn main() -> Result<(), anyhow::Error> {
 
   let args = Cli::parse();
   let filename = args.filename.to_str().unwrap();
+  let contents = try_to(read(filename), &mut state)?;
+  let contents_binding = contents.unwrap_or(String::new());
   // TODO: i wish we didn't have to pass &mut state two times
-  try_to(open(filename, &mut state), &mut state)?;
+  try_to(open(&contents_binding, &mut state), &mut state)?;
 
   state.event_loop()?; // blocking
 

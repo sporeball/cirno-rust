@@ -1,4 +1,6 @@
 use crate::{error::{CirnoError, try_to}, project::{Meta, Mode, Modes, Object, Vector2}, terminal::KeyEventResult};
+use std::path::Path;
+use std::rc::Rc;
 use crossterm::{event::Event};
 
 pub mod bar;
@@ -15,7 +17,7 @@ pub struct CirnoState {
   pub rows: u16,
   pub mode: Modes,
   pub cursor: Vector2,
-  pub objects: Vec<Object>,
+  pub objects: Rc<Vec<Object>>,
   pub meta: Meta,
   pub errors: Vec<String>,
 }
@@ -49,7 +51,7 @@ impl CirnoState {
     }
   }
   pub fn render(&mut self) -> Result<(), anyhow::Error> {
-    for object in self.objects.clone() {
+    for object in self.objects.iter() {
       object.render(self)?;
     }
     Ok(())
@@ -57,8 +59,7 @@ impl CirnoState {
   pub fn apply_meta(&mut self) -> Result<(), CirnoError> {
     // get meta object
     let meta = self.objects
-      .clone()
-      .into_iter()
+      .iter()
       .find_map(|x| match x {
         Object::Meta(meta) => Some(meta),
         _ => None,
@@ -66,7 +67,7 @@ impl CirnoState {
     if meta.is_none() {
       return Err(CirnoError::MissingMetaObject)
     }
-    self.meta = meta.unwrap();
+    self.meta = meta.unwrap().to_owned();
     // crate::logger::debug(&self);
     Ok(())
   }
@@ -82,5 +83,22 @@ impl CirnoState {
       return Err(CirnoError::TerminalTooSmall)
     }
     Ok(())
+  }
+}
+
+/// Read a file and return its contents.
+/// Only .cic and .cip files are accepted.
+pub fn read(filename: &str) -> Result<String, anyhow::Error> {
+  let path = Path::new(filename);
+  let extension = path.extension();
+  if extension.is_none() {
+    return Err(CirnoError::InvalidFile(filename.to_string()).into());
+  }
+  match extension.unwrap().to_str().unwrap() { // converts from Option<&OsStr> to &str
+    "cic" | "cip" => {
+      let contents = std::fs::read_to_string(path)?;
+      Ok(contents)
+    },
+    x => Err(CirnoError::InvalidFiletype(x.to_string()).into()),
   }
 }

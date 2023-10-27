@@ -1,4 +1,4 @@
-use crate::{CirnoState, error::CirnoError, parser::parse, terminal::{KeyEventResult, assert_is_within_bounds_unchecked, move_within_bounds}};
+use crate::{CirnoState, read, error::CirnoError, parser::parse, terminal::{KeyEventResult, assert_is_within_bounds_unchecked, move_within_bounds}};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io::stdout;
@@ -65,16 +65,13 @@ impl Chip {
     // TODO: chip position
     Ok(())
   }
-  pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
+  pub fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let x = self.position.x;
     let y = self.position.y;
     // read .cic based on type field
     let filename = format!("../stdlib/{}{}", self.t, ".cic"); // TODO: make this stronger, make sure this doesn't break
-    let cic: ParseResult = parse(&filename)?;
-    let pins = match cic {
-      ParseResult::Cic(Cic { pins }) => pins,
-      ParseResult::Cip(_) => unreachable!(),
-    };
+    let contents = read(filename.as_str())?;
+    let pins: Vec<Object> = parse(&contents)?;
     let width = pins.len() / 2;
     // bounds check
     for pin in pins {
@@ -115,7 +112,7 @@ impl Meta {
     }
     Ok(())
   }
-  pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
+  pub fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let bound_x = state.meta.bounds.x;
     let bound_y = state.meta.bounds.y;
     let center_x = state.columns / 2;
@@ -172,7 +169,7 @@ impl Net {
     // TODO: net y
     Ok(())
   }
-  pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
+  pub fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let y = self.y;
     let bound_x = state.meta.bounds.x;
     // bounds check
@@ -225,7 +222,7 @@ impl Pin {
     Ok(())
   }
   // TODO: dead code?
-  pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
+  pub fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
     // this call returns the position of the top left corner of the parent chip
     let (col, row) = crossterm::cursor::position()?;
     let x = col + self.position.x;
@@ -265,7 +262,7 @@ impl Object {
       Object::Pin(pin) => pin.verify(),
     }
   }
-  pub fn render(self, state: &CirnoState) -> Result<(), anyhow::Error> {
+  pub fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
     match self {
       Object::Chip(chip) => chip.render(state),
       Object::Meta(meta) => meta.render(state),
@@ -283,42 +280,6 @@ impl Debug for Object {
       Object::Meta(meta) => meta.fmt(f),
       Object::Net(net) => net.fmt(f),
       Object::Pin(pin) => pin.fmt(f),
-    }
-  }
-}
-
-#[derive(Debug, Default)]
-pub struct Cic {
-  pub pins: Vec<Object>,
-}
-
-#[derive(Debug, Default)]
-pub struct Cip {
-  pub objects: Vec<Object>,
-}
-
-// the result of parsing a .cic or .cip file
-pub enum ParseResult {
-  Cic(Cic),
-  Cip(Cip),
-  // Invalid(String),
-}
-
-impl ParseResult {
-  pub fn apply(&mut self, ast: Vec<Object>) {
-    match self {
-      ParseResult::Cic(cic) => cic.pins = ast,
-      ParseResult::Cip(cip) => cip.objects = ast,
-    }
-  }
-}
-
-impl Debug for ParseResult {
-  fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
-    f.write_str("ParseResult::")?;
-    match self {
-      ParseResult::Cic(cic) => cic.fmt(f),
-      ParseResult::Cip(cip) => cip.fmt(f),
     }
   }
 }

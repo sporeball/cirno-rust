@@ -5,12 +5,12 @@ use crossterm::execute;
 
 #[derive(thiserror::Error, Debug)]
 pub enum CirnoError {
-  #[error("could not open project")]
-  CouldNotOpenProject,
   #[error("invalid attribute '{0}'")]
   InvalidAttribute(String),
   #[error("attribute '{0}' is invalid for {1} objects")]
   InvalidAttributeForObject(String, String),
+  #[error("invalid file '{0}'")]
+  InvalidFile(String),
   #[error("invalid filetype '{0}'")]
   InvalidFiletype(String),
   #[error("invalid object type '{0}'")]
