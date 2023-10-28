@@ -1,6 +1,7 @@
 // need to use "cirno" in this file, not "crate"
 
 use cirno::{CirnoState, read, bar, error::try_to, parser, project::{Meta, Modes, Vector2}};
+// use std::collections::HashMap;
 use std::rc::Rc;
 use std::time::Instant;
 use clap::Parser;
@@ -44,6 +45,7 @@ fn main() -> Result<(), anyhow::Error> {
     objects: Rc::new(vec![]),
     meta: Meta::default(),
     errors: vec![],
+    // cic_data: HashMap::new(),
   };
 
   cirno::terminal::enter()?;
@@ -51,9 +53,13 @@ fn main() -> Result<(), anyhow::Error> {
   let args = Cli::parse();
   let filename = args.filename.to_str().unwrap();
   let contents = try_to(read(filename), &mut state)?;
+  // unwrap contents, yielding an empty string if the read failed
   let contents_binding = contents.unwrap_or(String::new());
-  // TODO: i wish we didn't have to pass &mut state two times
-  try_to(open(&contents_binding, &mut state), &mut state)?;
+  // only open project if the read succeeded
+  if contents_binding.ne("") {
+    // TODO: i wish we didn't have to pass &mut state two times
+    try_to(open(&contents_binding, &mut state), &mut state)?;
+  }
 
   state.event_loop()?; // blocking
 

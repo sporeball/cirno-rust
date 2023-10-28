@@ -1,4 +1,5 @@
 use crate::{error::{CirnoError, try_to}, project::{Meta, Mode, Modes, Object, Vector2}, terminal::KeyEventResult};
+// use std::collections::HashMap;
 use std::path::Path;
 use std::rc::Rc;
 use crossterm::{event::Event};
@@ -20,14 +21,18 @@ pub struct CirnoState {
   pub objects: Rc<Vec<Object>>,
   pub meta: Meta,
   pub errors: Vec<String>,
+  // pub cic_data: HashMap<String, Vec<Object>>,
 }
 
 impl CirnoState {
+  /// Get the current mode.
   pub fn get_mode(&mut self) -> Mode {
     match self.mode {
       Modes::Normal => crate::modes::normal::get(),
     }
   }
+  /// cirno's event loop.
+  /// This function blocks until cirno is explicitly quit.
   pub fn event_loop(&mut self) -> Result<(), anyhow::Error> {
     loop {
       match crossterm::event::read()? {
@@ -50,12 +55,14 @@ impl CirnoState {
       }
     }
   }
+  /// Render all objects.
   pub fn render(&mut self) -> Result<(), anyhow::Error> {
     for object in self.objects.iter() {
       object.render(self)?;
     }
     Ok(())
   }
+  /// Set the meta object, returning CirnoError::MissingMetaObject if it cannot be found.
   pub fn apply_meta(&mut self) -> Result<(), CirnoError> {
     // get meta object
     let meta = self.objects
