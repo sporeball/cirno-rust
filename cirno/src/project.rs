@@ -286,6 +286,7 @@ impl Debug for Object {
 
 #[derive(Clone)]
 pub struct Mode {
+  pub mode_set_cb: fn(&mut CirnoState) -> Result<(), anyhow::Error>,
   pub key_event_cb: fn(crossterm::event::KeyEvent, &mut CirnoState) -> Result<KeyEventResult, anyhow::Error>,
   pub key_commands: HashMap<char, fn(&mut CirnoState) -> Result<KeyEventResult, anyhow::Error>>,
   // TODO: new return type (not KeyEventResult)

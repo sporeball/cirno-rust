@@ -66,14 +66,5 @@ fn main() -> Result<(), anyhow::Error> {
 
   cirno::terminal::exit()?;
 
-  cirno::logger::debug(format!("cursor position: {:?}", &state.cursor));
-  // println!("{:#?}", cirno::logger::LOG_STATE.read().unwrap());
-  let log = cirno::logger::LOG_STATE.read().unwrap();
-  for item in log.iter() {
-    for line in &item.lines {
-      println!("{}", line);
-    }
-  }
-
   Ok(())
 }

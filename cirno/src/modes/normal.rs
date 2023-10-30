@@ -1,9 +1,10 @@
-use crate::{CirnoState, bar, modes::switch_to_mode, project::{Mode, Modes}, terminal::{KeyEventResult, backspace, read_line}};
+use crate::{CirnoState, bar, project::{Mode, Modes}, terminal::{KeyEventResult, backspace, clear_all, read_line}};
 use std::collections::HashMap;
 use crossterm::event::KeyEvent;
 
 pub fn get() -> Mode {
   Mode {
+    mode_set_cb: on_mode_set,
     key_event_cb: handle_key_event,
     key_commands: HashMap::from([
       ('h', on_key_h as _),
@@ -17,6 +18,12 @@ pub fn get() -> Mode {
       ("q".to_string(), command_q as _),
     ]),
   }
+}
+
+fn on_mode_set(state: &mut CirnoState) -> Result<(), anyhow::Error> {
+  clear_all()?;
+  state.render()?;
+  Ok(())
 }
 
 fn handle_key_event(event: KeyEvent, state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
@@ -66,7 +73,7 @@ fn on_key_l(state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
 }
 
 fn on_key_cap_c(state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
-  switch_to_mode(Modes::Console, state);
+  state.set_mode(Modes::Console)?;
   Ok(KeyEventResult::Ok)
 }
 

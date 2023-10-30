@@ -9,6 +9,12 @@ pub enum KeyEventResult {
   Exit,
 }
 
+pub fn println(s: &str) -> Result<(), io::Error> {
+  execute!(stdout(), crossterm::style::Print(s))?;
+  execute!(stdout(), crossterm::cursor::MoveToNextLine(1))?;
+  Ok(())
+}
+
 pub fn clear_all() -> Result<(), io::Error> {
   execute!(stdout(), crossterm::terminal::Clear(ClearType::All))?;
   Ok(())
@@ -34,6 +40,11 @@ pub fn backspace() -> Result<(), io::Error> {
   execute!(stdout(), crossterm::cursor::MoveLeft(1))?;
   execute!(stdout(), crossterm::style::Print(" "))?;
   execute!(stdout(), crossterm::cursor::MoveLeft(1))?;
+  Ok(())
+}
+
+pub fn move_to(x: u16, y: u16) -> Result<(), io::Error> {
+  execute!(stdout(), crossterm::cursor::MoveTo(x, y))?;
   Ok(())
 }
 

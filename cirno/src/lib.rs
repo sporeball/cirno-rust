@@ -32,6 +32,12 @@ impl CirnoState {
       Modes::Normal => crate::modes::normal::get(),
     }
   }
+  /// Set the current mode.
+  pub fn set_mode(&mut self, mode: Modes) -> Result<(), anyhow::Error> {
+    self.mode = mode;
+    (self.get_mode().mode_set_cb)(self)?;
+    Ok(())
+  }
   /// cirno's event loop.
   /// This function blocks until cirno is explicitly quit.
   pub fn event_loop(&mut self) -> Result<(), anyhow::Error> {
