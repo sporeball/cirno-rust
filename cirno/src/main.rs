@@ -15,7 +15,7 @@ struct Cli {
 /// Open a cirno project given its contents.
 fn open(contents: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   state.objects = Rc::new(parser::parse(contents)?);
-  cirno::logger::debug(&state.objects);
+  cirno::logger::debug(format!("objects: {:#?}", &state.objects));
 
   state.apply_meta()?;
   state.verify()?;
@@ -24,6 +24,7 @@ fn open(contents: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   state.render()?;
   let elapsed = now.elapsed();
   bar::message(format!("{:?}", elapsed), &state)?;
+  cirno::logger::info(format!("finished rendering in {:?}", elapsed));
 
   Ok(())
 }
@@ -65,8 +66,14 @@ fn main() -> Result<(), anyhow::Error> {
 
   cirno::terminal::exit()?;
 
-  cirno::logger::debug(&state.cursor);
-  println!("{:#?}", cirno::logger::LOG_STATE.read().unwrap());
+  cirno::logger::debug(format!("cursor position: {:?}", &state.cursor));
+  // println!("{:#?}", cirno::logger::LOG_STATE.read().unwrap());
+  let log = cirno::logger::LOG_STATE.read().unwrap();
+  for item in log.iter() {
+    for line in &item.lines {
+      println!("{}", line);
+    }
+  }
 
   Ok(())
 }
