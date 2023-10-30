@@ -35,7 +35,7 @@ impl CirnoState {
   /// Set the current mode.
   pub fn set_mode(&mut self, mode: Modes) -> Result<(), anyhow::Error> {
     self.mode = mode;
-    (self.get_mode().mode_set_cb)(self)?;
+    try_to((self.get_mode().mode_set_cb)(self), self)?;
     Ok(())
   }
   /// cirno's event loop.

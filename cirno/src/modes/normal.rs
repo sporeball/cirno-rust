@@ -22,6 +22,7 @@ pub fn get() -> Mode {
 
 fn on_mode_set(state: &mut CirnoState) -> Result<(), anyhow::Error> {
   clear_all()?;
+  state.verify()?;
   state.render()?;
   Ok(())
 }
