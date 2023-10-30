@@ -1,4 +1,4 @@
-use crate::{CirnoState, parser::Token};
+use crate::{CirnoState, logger, parser::Token};
 use std::io::stdout;
 use std::fmt::Display;
 use crossterm::execute;
@@ -55,7 +55,8 @@ pub fn try_to<T, E: Display>(f: Result<T, E>, state: &mut CirnoState) -> Result<
 }
 
 pub fn throw(e: String, state: &mut CirnoState) -> Result<(), anyhow::Error> {
-  state.errors.push(e);
+  state.errors.push(e.clone());
+  logger::error(e);
   display(state)?;
   Ok(())
 }
