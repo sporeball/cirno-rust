@@ -295,5 +295,6 @@ pub struct Mode {
 
 #[derive(Clone, Copy, Debug)]
 pub enum Modes {
+  Console,
   Normal,
 }

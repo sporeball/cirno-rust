@@ -28,6 +28,7 @@ impl CirnoState {
   /// Get the current mode.
   pub fn get_mode(&mut self) -> Mode {
     match self.mode {
+      Modes::Console => crate::modes::console::get(),
       Modes::Normal => crate::modes::normal::get(),
     }
   }
