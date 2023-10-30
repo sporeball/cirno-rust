@@ -15,15 +15,14 @@ pub fn get() -> Mode {
   }
 }
 
-fn on_mode_set(_state: &mut CirnoState) -> Result<(), anyhow::Error> {
+fn on_mode_set(state: &mut CirnoState) -> Result<(), anyhow::Error> {
   clear_all()?;
   move_to(0, 0)?;
   // log all items in LOG_STATE
-  // TODO: safety
   let log = crate::logger::LOG_STATE.read().unwrap();
   for item in log.iter() {
     for line in &item.lines {
-      println(line)?;
+      println(line, state)?;
     }
   }
   Ok(())

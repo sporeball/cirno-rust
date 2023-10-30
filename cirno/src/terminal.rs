@@ -9,7 +9,11 @@ pub enum KeyEventResult {
   Exit,
 }
 
-pub fn println(s: &str) -> Result<(), io::Error> {
+pub fn println(s: &str, state: &CirnoState) -> Result<(), io::Error> {
+  let (_, row) = crossterm::cursor::position()?;
+  if row == state.rows - 1 {
+    execute!(stdout(), crossterm::terminal::ScrollUp(1))?;
+  }
   execute!(stdout(), crossterm::style::Print(s))?;
   execute!(stdout(), crossterm::cursor::MoveToNextLine(1))?;
   Ok(())
@@ -23,14 +27,14 @@ pub fn clear_all() -> Result<(), io::Error> {
 pub fn enter() -> Result<(), io::Error> {
   crossterm::terminal::enable_raw_mode()?;
   execute!(stdout(), crossterm::terminal::EnterAlternateScreen)?;
-  execute!(stdout(), crossterm::terminal::DisableLineWrap)?;
+  // execute!(stdout(), crossterm::terminal::DisableLineWrap)?;
   execute!(stdout(), crossterm::cursor::Hide)?;
   Ok(())
 }
 
 pub fn exit() -> Result<(), io::Error> {
   execute!(stdout(), crossterm::cursor::Show)?;
-  execute!(stdout(), crossterm::terminal::EnableLineWrap)?;
+  // execute!(stdout(), crossterm::terminal::EnableLineWrap)?;
   execute!(stdout(), crossterm::terminal::LeaveAlternateScreen)?;
   crossterm::terminal::disable_raw_mode()?;
   Ok(())
