@@ -3,10 +3,11 @@ use std::io;
 use std::io::stdout;
 use crossterm::{event::KeyEvent, execute, terminal::ClearType};
 
-pub enum KeyEventResult {
-  Ok,
+pub enum EventResult {
+  Drop,
   Err,
   Exit,
+  Ok
 }
 
 pub fn println(s: &str, state: &CirnoState) -> Result<(), io::Error> {

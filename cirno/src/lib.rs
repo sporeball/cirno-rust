@@ -1,4 +1,4 @@
-use crate::{error::{CirnoError, try_to}, project::{Meta, Mode, Modes, Object, Vector2}, terminal::KeyEventResult};
+use crate::{error::{CirnoError, try_to}, project::{Meta, Mode, Modes, Object, Vector2}, terminal::EventResult};
 // use std::collections::HashMap;
 use std::path::Path;
 use std::rc::Rc;
@@ -45,18 +45,14 @@ impl CirnoState {
       match crossterm::event::read()? {
         Event::Key(event) => {
           let res = (self.get_mode().key_event_cb)(event, self).unwrap();
-          if matches!(res, KeyEventResult::Exit) {
+          if matches!(res, EventResult::Exit) {
             return Ok(())
           }
         },
         Event::Resize(columns, rows) => {
           self.columns = columns;
           self.rows = rows;
-          terminal::clear_all()?;
-          if try_to(self.verify(), self)?.is_none() {
-            continue; // drop
-          }
-          try_to(self.render(), self)?;
+          try_to((self.get_mode().resize_event_cb)(self), self)?;
         },
         _ => (),
       }

@@ -1,4 +1,4 @@
-use crate::{CirnoState, read, error::CirnoError, parser::parse, terminal::{KeyEventResult, assert_is_within_bounds_unchecked, move_within_bounds}};
+use crate::{CirnoState, read, error::CirnoError, parser::parse, terminal::{EventResult, assert_is_within_bounds_unchecked, move_within_bounds}};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io::stdout;
@@ -287,11 +287,11 @@ impl Debug for Object {
 #[derive(Clone)]
 pub struct Mode {
   pub mode_set_cb: fn(&mut CirnoState) -> Result<(), anyhow::Error>,
-  pub key_event_cb: fn(crossterm::event::KeyEvent, &mut CirnoState) -> Result<KeyEventResult, anyhow::Error>,
-  pub key_commands: HashMap<char, fn(&mut CirnoState) -> Result<KeyEventResult, anyhow::Error>>,
-  // TODO: new return type (not KeyEventResult)
+  pub key_event_cb: fn(crossterm::event::KeyEvent, &mut CirnoState) -> Result<EventResult, anyhow::Error>,
+  pub resize_event_cb: fn(&mut CirnoState) -> Result<EventResult, anyhow::Error>,
+  pub key_commands: HashMap<char, fn(&mut CirnoState) -> Result<EventResult, anyhow::Error>>,
   // TODO: state needed or not?
-  pub commands: HashMap<String, fn(&mut CirnoState) -> Result<KeyEventResult, anyhow::Error>>,
+  pub commands: HashMap<String, fn(&mut CirnoState) -> Result<EventResult, anyhow::Error>>,
 }
 
 #[derive(Clone, Copy, Debug)]

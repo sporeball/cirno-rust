@@ -1,4 +1,4 @@
-use crate::{CirnoState, project::{Mode, Modes}, terminal::{KeyEventResult, clear_all, move_to, println}};
+use crate::{CirnoState, project::{Mode, Modes}, terminal::{EventResult, clear_all, move_to, println}};
 use std::collections::HashMap;
 use crossterm::event::KeyEvent;
 
@@ -6,6 +6,7 @@ pub fn get() -> Mode {
   Mode {
     mode_set_cb: on_mode_set,
     key_event_cb: handle_key_event,
+    resize_event_cb: handle_resize_event,
     key_commands: HashMap::from([
       ('j', on_key_j as _),
       ('k', on_key_k as _),
@@ -21,35 +22,39 @@ fn on_mode_set(state: &mut CirnoState) -> Result<(), anyhow::Error> {
   // log all items in LOG_STATE
   let log = crate::logger::LOG_STATE.read().unwrap();
   for item in log.iter() {
-    println(item.lines.join("\r\n").as_str(), state);
+    println(item.lines.join("\r\n").as_str(), state)?;
   }
   Ok(())
 }
 
-fn handle_key_event(event: KeyEvent, state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
+fn handle_key_event(event: KeyEvent, state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
   let crossterm::event::KeyEvent { code, modifiers: _, kind, state: _ } = event;
   if !matches!(kind, crossterm::event::KeyEventKind::Press) {
-    return Ok(KeyEventResult::Ok) // TODO: return the concept of none
+    return Ok(EventResult::Drop)
   }
   if let crossterm::event::KeyCode::Char(c) = code {
     if let Some(cmd) = get().key_commands.get(&c) {
       return (cmd)(state);
     }
   }
-  Ok(KeyEventResult::Ok)
+  Ok(EventResult::Drop)
 }
 
-fn on_key_j(_state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
+fn handle_resize_event(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
+  Ok(EventResult::Ok)
+}
+
+fn on_key_j(_state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
   // TODO
-  Ok(KeyEventResult::Ok)
+  Ok(EventResult::Ok)
 }
 
-fn on_key_k(_state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
+fn on_key_k(_state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
   // TODO
-  Ok(KeyEventResult::Ok)
+  Ok(EventResult::Ok)
 }
 
-fn on_key_cap_c(state: &mut CirnoState) -> Result<KeyEventResult, anyhow::Error> {
+fn on_key_cap_c(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
   state.set_mode(Modes::Normal)?;
-  Ok(KeyEventResult::Ok)
+  Ok(EventResult::Ok)
 }
