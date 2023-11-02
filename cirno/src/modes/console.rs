@@ -21,9 +21,7 @@ fn on_mode_set(state: &mut CirnoState) -> Result<(), anyhow::Error> {
   // log all items in LOG_STATE
   let log = crate::logger::LOG_STATE.read().unwrap();
   for item in log.iter() {
-    for line in &item.lines {
-      println(line, state)?;
-    }
+    println(item.lines.join("\r\n").as_str(), state);
   }
   Ok(())
 }
