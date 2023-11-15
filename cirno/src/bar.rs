@@ -11,6 +11,6 @@ pub fn clear(state: &CirnoState) -> Result<(), io::Error> {
 
 pub fn message(msg: String, state: &CirnoState) -> Result<(), io::Error> {
   clear(state)?;
-  execute!(stdout(), crossterm::style::Print(msg.to_string()))?;
+  execute!(stdout(), crossterm::style::Print(msg))?;
   Ok(())
 }
