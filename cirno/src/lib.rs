@@ -2,7 +2,7 @@ use crate::{error::{CirnoError, try_to}, project::{Meta, Mode, Modes, Object, Ve
 // use std::collections::HashMap;
 use std::path::Path;
 use std::rc::Rc;
-use crossterm::{event::Event};
+use crossterm::event::Event;
 
 pub mod bar;
 pub mod error;

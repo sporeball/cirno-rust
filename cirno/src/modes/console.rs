@@ -40,7 +40,7 @@ fn handle_key_event(event: KeyEvent, state: &mut CirnoState) -> Result<EventResu
   Ok(EventResult::Drop)
 }
 
-fn handle_resize_event(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
+fn handle_resize_event(_state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
   Ok(EventResult::Ok)
 }
 

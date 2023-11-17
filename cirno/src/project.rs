@@ -10,19 +10,14 @@ pub struct Vector2 {
   pub y: u16,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 // a value that a pin can have
 pub enum Value {
   And(Vec<String>),
   Gnd,
+  #[default]
   None,
   Vcc,
-}
-
-impl Default for Value {
-  fn default() -> Value {
-    Value::None
-  }
 }
 
 #[derive(Clone, Debug)]
