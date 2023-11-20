@@ -1,4 +1,4 @@
-use crate::{CirnoState, logger, parser::Token};
+use crate::{CirnoState, logger, parser::Token, project::Attribute};
 use std::io::stdout;
 use std::fmt::Display;
 use crossterm::execute;
@@ -8,7 +8,7 @@ pub enum CirnoError {
   #[error("invalid attribute '{0}'")]
   InvalidAttribute(String),
   #[error("attribute '{0}' is invalid for {1} objects")]
-  InvalidAttributeForObject(String, String),
+  InvalidAttributeForObject(Attribute, String),
   #[error("invalid file '{0}'")]
   InvalidFile(String),
   #[error("invalid filetype '{0}'")]

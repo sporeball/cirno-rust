@@ -49,7 +49,7 @@ impl Chip {
     match attribute {
       Attribute::Type(t) => self.t = t,
       Attribute::Position(vec2) => self.position = vec2,
-      a => return Err(CirnoError::InvalidAttributeForObject(a.to_string(), "chip".to_string())),
+      a => return Err(CirnoError::InvalidAttributeForObject(a, "chip".to_string())),
     }
     Ok(())
   }
@@ -94,7 +94,7 @@ impl Meta {
   pub fn apply_attribute(&mut self, attribute: Attribute) -> Result<(), CirnoError> {
     match attribute {
       Attribute::Bounds(vec2) => self.bounds = vec2,
-      a => return Err(CirnoError::InvalidAttributeForObject(a.to_string(), "meta".to_string())),
+      a => return Err(CirnoError::InvalidAttributeForObject(a, "meta".to_string())),
     }
     Ok(())
   }
@@ -151,7 +151,7 @@ impl Net {
     match attribute {
       Attribute::Type(t) => self.t = t,
       Attribute::YCoordinate(y) => self.y = y,
-      a => return Err(CirnoError::InvalidAttributeForObject(a.to_string(), "net".to_string())),
+      a => return Err(CirnoError::InvalidAttributeForObject(a, "net".to_string())),
     }
     Ok(())
   }
@@ -208,7 +208,7 @@ impl Pin {
       Attribute::Num(num) => self.num = num,
       Attribute::Position(vec2) => self.position = vec2,
       Attribute::Value(value) => self.value = value,
-      a => return Err(CirnoError::InvalidAttributeForObject(a.to_string(), "pin".to_string())),
+      a => return Err(CirnoError::InvalidAttributeForObject(a, "pin".to_string())),
     }
     Ok(())
   }

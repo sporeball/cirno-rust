@@ -3,7 +3,7 @@
 use cirno::{CirnoState, read, bar, error::try_to, parser, project::{Meta, Modes, Vector2}};
 // use std::collections::HashMap;
 use std::rc::Rc;
-use std::time::Instant;
+use std::time::{Duration, Instant};
 use clap::Parser;
 
 /// Full-featured circuit design tool
@@ -60,6 +60,12 @@ fn main() -> Result<(), anyhow::Error> {
   if contents_binding.ne("") {
     // TODO: i wish we didn't have to pass &mut state two times
     try_to(open(&contents_binding, &mut state), &mut state)?;
+  }
+
+  // Windows 11 spits out a resize event as soon as cirno starts, which
+  // is unneeded and should be dropped
+  if crossterm::event::poll(Duration::from_secs(0))? == true {
+    crossterm::event::read()?; // drop
   }
 
   state.event_loop()?; // blocking
