@@ -1,9 +1,10 @@
 use crate::{error::{CirnoError, try_to}, project::{Meta, Mode, Modes, Object, Vector2}, terminal::EventResult};
-// use std::collections::HashMap;
+use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use std::rc::Rc;
 use crossterm::event::Event;
+use parser::parse;
 
 pub mod bar;
 pub mod error;
@@ -22,7 +23,7 @@ pub struct CirnoState {
   pub objects: Rc<Vec<Object>>,
   pub meta: Meta,
   pub errors: Vec<String>,
-  // pub cic_data: HashMap<String, Vec<Object>>,
+  pub cic_data: HashMap<String, Vec<Object>>,
 }
 
 impl CirnoState {
@@ -37,6 +38,27 @@ impl CirnoState {
   pub fn set_mode(&mut self, mode: Modes) -> Result<(), anyhow::Error> {
     self.mode = mode;
     try_to((self.get_mode().mode_set_cb)(self), self)?;
+    Ok(())
+  }
+  /// Populate `cic_data` based on the chip types in `objects`.
+  pub fn set_cic_data(&mut self) -> Result<(), anyhow::Error> {
+    let mut types: Vec<String> = self.objects
+      .iter()
+      .filter_map(|x| match x {
+        Object::Chip(chip) => Some(chip.to_owned().t),
+        _ => None,
+      })
+      .collect();
+    types.sort();
+    types.dedup();
+    for t in types {
+      if !self.cic_data.contains_key(&t) {
+        let contents = stdlib(&t)?;
+        let v = parse(&contents)?;
+        self.cic_data.insert(t, v);
+      }
+    }
+    // logger::debug(format!("{:?}", self.cic_data));
     Ok(())
   }
   /// cirno's event loop.

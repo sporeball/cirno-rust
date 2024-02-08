@@ -1,4 +1,4 @@
-use crate::{CirnoState, stdlib, error::CirnoError, parser::parse, terminal::{EventResult, assert_is_within_bounds_unchecked, move_within_bounds}};
+use crate::{CirnoState, error::CirnoError, terminal::{EventResult, assert_is_within_bounds_unchecked, move_within_bounds}};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io::stdout;
@@ -63,9 +63,7 @@ impl Chip {
   pub fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let x = self.position.x;
     let y = self.position.y;
-    // read .cic based on type field
-    let contents = stdlib(self.t.as_str())?;
-    let pins: Vec<Object> = parse(&contents)?;
+    let pins = state.cic_data.get(&self.t).unwrap().to_owned();
     let width = pins.len() / 2;
     // bounds check
     for pin in pins {

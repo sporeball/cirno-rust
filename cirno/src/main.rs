@@ -1,7 +1,7 @@
 // need to use "cirno" in this file, not "crate"
 
 use cirno::{CirnoState, read, bar, error::try_to, parser, project::{Meta, Modes, Vector2}};
-// use std::collections::HashMap;
+use std::collections::HashMap;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 use clap::Parser;
@@ -19,6 +19,7 @@ fn open(contents: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
 
   state.apply_meta()?;
   state.verify()?;
+  state.set_cic_data()?;
 
   let now = Instant::now();
   state.render()?;
@@ -46,7 +47,7 @@ fn main() -> Result<(), anyhow::Error> {
     objects: Rc::new(vec![]),
     meta: Meta::default(),
     errors: vec![],
-    // cic_data: HashMap::new(),
+    cic_data: HashMap::new(),
   };
 
   cirno::terminal::enter()?;
