@@ -1,4 +1,4 @@
-use crate::{CirnoState, read, error::CirnoError, parser::parse, terminal::{EventResult, assert_is_within_bounds_unchecked, move_within_bounds}};
+use crate::{CirnoState, stdlib, error::CirnoError, parser::parse, terminal::{EventResult, assert_is_within_bounds_unchecked, move_within_bounds}};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io::stdout;
@@ -64,8 +64,7 @@ impl Chip {
     let x = self.position.x;
     let y = self.position.y;
     // read .cic based on type field
-    let filename = format!("../stdlib/{}{}", self.t, ".cic"); // TODO: make this stronger, make sure this doesn't break
-    let contents = read(filename.as_str())?;
+    let contents = stdlib(self.t.as_str())?;
     let pins: Vec<Object> = parse(&contents)?;
     let width = pins.len() / 2;
     // bounds check

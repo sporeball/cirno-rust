@@ -25,6 +25,8 @@ pub enum CirnoError {
   MissingMetaObject,
   #[error("invalid value for attribute '{0}'")]
   NamelessInvalidValueForAttribute(String),
+  #[error("'{0}' not found in stdlib")]
+  NotFoundInStdlib(String),
   #[error("opening .cic files is not yet implemented")]
   OpenCicNotImplemented,
   #[error("object out of bounds")]

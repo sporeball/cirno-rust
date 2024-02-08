@@ -1,5 +1,6 @@
 use crate::{error::{CirnoError, try_to}, project::{Meta, Mode, Modes, Object, Vector2}, terminal::EventResult};
 // use std::collections::HashMap;
+use std::fs;
 use std::path::Path;
 use std::rc::Rc;
 use crossterm::event::Event;
@@ -111,4 +112,15 @@ pub fn read(filename: &str) -> Result<String, anyhow::Error> {
     },
     x => Err(CirnoError::InvalidFiletype(x.to_string()).into()),
   }
+}
+
+pub fn stdlib(filename: &str) -> Result<String, anyhow::Error> {
+  let out_dir = std::env::var_os("OUT_DIR").unwrap();
+  let path = Path::new(&out_dir)
+    .join(format!("stdlib/{}.cic", filename));
+  if !path.exists() {
+    return Err(CirnoError::NotFoundInStdlib(filename.to_string()).into())
+  }
+  let contents: String = fs::read_to_string(path)?;
+  Ok(contents)
 }
