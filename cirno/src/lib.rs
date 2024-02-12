@@ -1,4 +1,5 @@
-use crate::{error::{CirnoError, try_to}, project::{Meta, Mode, Modes, Object, Region, Vector2}, terminal::EventResult};
+use crate::{error::{CirnoError, try_to}, project::{Meta, Mode, Modes, Object, Vector2}, terminal::EventResult};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -21,8 +22,7 @@ pub struct CirnoState {
   pub rows: u16,
   pub mode: Modes,
   pub cursor: Vector2,
-  pub objects: Rc<Vec<Object>>,
-  pub regions: Rc<Vec<Region>>,
+  pub objects: Rc<RefCell<Vec<Object>>>,
   pub meta: Meta,
   pub errors: Vec<String>,
   pub cic_data: HashMap<String, Vec<Object>>,
@@ -45,6 +45,7 @@ impl CirnoState {
   /// Populate `cic_data` based on the chip types in `objects`.
   pub fn set_cic_data(&mut self) -> Result<(), anyhow::Error> {
     let mut types: Vec<String> = self.objects
+      .borrow()
       .iter()
       .filter_map(|x| match x {
         Object::Chip(chip) => Some(chip.to_owned().t),
@@ -61,6 +62,13 @@ impl CirnoState {
       }
     }
     // logger::debug(format!("{:?}", self.cic_data));
+    Ok(())
+  }
+  /// Set the `region.size` property of every object.
+  pub fn set_region_sizes(&mut self) -> Result<(), anyhow::Error> {
+    for object in self.objects.borrow_mut().iter_mut() {
+      object.set_region_size(self)?;
+    }
     Ok(())
   }
   /// cirno's event loop.
@@ -85,16 +93,18 @@ impl CirnoState {
   }
   /// Render all objects.
   pub fn render(&mut self) -> Result<(), anyhow::Error> {
-    for object in self.objects.iter() {
+    for object in self.objects.borrow().iter() {
       object.render(self)?;
     }
     cursor::render(self)?;
+    cursor::report(self)?;
     Ok(())
   }
   /// Set the meta object, returning CirnoError::MissingMetaObject if it cannot be found.
   pub fn apply_meta(&mut self) -> Result<(), CirnoError> {
     // get meta object
-    let meta = self.objects
+    let binding = self.objects.borrow();
+    let meta = binding
       .iter()
       .find_map(|x| match x {
         Object::Meta(meta) => Some(meta),
@@ -119,11 +129,26 @@ impl CirnoState {
       return Err(CirnoError::TerminalTooSmall)
     }
     // no regions should overlap with each other
-    for (index, region) in self.regions.iter().enumerate() {
-      for (other_index, other_region) in self.regions.iter().enumerate().filter(|x| x.0 > index) {
-        let overlapping = region.overlapping(other_region.clone());
-        if overlapping {
-          return Err(CirnoError::OverlappingRegion(index, other_index))
+    for (index, object) in self.objects.borrow().iter().enumerate() {
+      let option_region = match object.to_owned() {
+        Object::Chip(chip) => Some(chip.region),
+        Object::Meta(_meta) => None,
+        Object::Net(net) => Some(net.region),
+        Object::Pin(pin) => Some(pin.region),
+      };
+      for (other_index, other_object) in self.objects.borrow().iter().enumerate().filter(|x| x.0 > index) {
+        let option_other_region = match other_object.to_owned() {
+          Object::Chip(chip) => Some(chip.region),
+          Object::Meta(_meta) => None,
+          Object::Net(net) => Some(net.region),
+          Object::Pin(pin) => Some(pin.region),
+        };
+        if option_region.is_some() && option_other_region.is_some() {
+          let region = option_region.clone().unwrap();
+          let other_region = option_other_region.unwrap();
+          if region.overlapping(other_region) {
+            return Err(CirnoError::OverlappingRegion(index, other_index))
+          }
         }
       }
     }

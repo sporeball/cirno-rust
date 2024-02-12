@@ -1,6 +1,7 @@
 // need to use "cirno" in this file, not "crate"
 
-use cirno::{CirnoState, read, bar, error::try_to, parser, project::{Meta, Modes, Vector2}};
+use cirno::{CirnoState, read, error::try_to, parser, project::{Meta, Modes, Vector2}};
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::time::{Duration, Instant};
@@ -14,14 +15,13 @@ struct Cli {
 
 /// Open a cirno project given its contents.
 fn open(contents: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
-  state.objects = Rc::new(parser::parse(contents)?);
-  // cirno::logger::debug(format!("objects: {:?}", &state.objects));
+  state.objects = Rc::new(RefCell::new(parser::parse(contents)?));
 
   state.apply_meta()?;
   state.set_cic_data()?;
+  state.set_region_sizes()?;
 
-  state.regions = Rc::new(state.objects.iter().filter_map(|x| x.region(state)).collect());
-  // cirno::logger::debug(format!("regions: {:?}", &state.regions));
+  cirno::logger::debug(format!("objects: {:?}", &state.objects));
 
   // TODO: DRY
   let now = Instant::now();
@@ -32,7 +32,7 @@ fn open(contents: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   let now = Instant::now();
   state.render()?;
   let elapsed = now.elapsed();
-  bar::message(format!("{:?}", elapsed), &state)?;
+  // bar::message(format!("{:?}", elapsed), &state)?;
   cirno::logger::info(format!("rendered in {:?}", elapsed));
 
   Ok(())
@@ -52,8 +52,7 @@ fn main() -> Result<(), anyhow::Error> {
     rows,
     mode: Modes::Normal,
     cursor: Vector2::default(),
-    objects: Rc::new(vec![]),
-    regions: Rc::new(vec![]),
+    objects: Rc::new(RefCell::new(vec![])),
     meta: Meta::default(),
     errors: vec![],
     cic_data: HashMap::new(),

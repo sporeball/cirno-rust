@@ -68,16 +68,22 @@ impl std::fmt::Display for Attribute {
 #[derive(Clone, Debug, Default)]
 pub struct Chip {
   pub t: String,
-  pub position: Vector2,
+  pub region: Region,
 }
 
 impl Chip {
   pub fn apply_attribute(&mut self, attribute: Attribute) -> Result<(), CirnoError> {
     match attribute {
       Attribute::Type(t) => self.t = t,
-      Attribute::Position(vec2) => self.position = vec2,
+      Attribute::Position(vec2) => self.region.position = vec2,
       a => return Err(CirnoError::InvalidAttributeForObject(a, "chip".to_string())),
     }
+    Ok(())
+  }
+  pub fn set_region_size(&mut self, state: &CirnoState) -> Result<(), anyhow::Error> {
+    let pins = state.cic_data.get(&self.t).unwrap().to_owned();
+    let width = u16::try_from(pins.len() / 2).unwrap();
+    self.region.size = Vector2 { x: width, y: 3 };
     Ok(())
   }
   pub fn verify(&mut self) -> Result<(), CirnoError> {
@@ -87,22 +93,15 @@ impl Chip {
     // TODO: chip position
     Ok(())
   }
-  pub fn region(&self, state: &CirnoState) -> Option<Region> {
-    let pins = state.cic_data.get(&self.t).unwrap().to_owned();
-    let width = u16::try_from(pins.len() / 2).unwrap();
-    let position = Vector2 { x: self.position.x, y: self.position.y };
-    let size = Vector2 { x: width, y: 3 };
-    Some(Region { position, size })
-  }
   pub fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
-    let x = self.position.x;
-    let y = self.position.y;
+    let x = self.region.position.x;
+    let y = self.region.position.y;
     let pins = state.cic_data.get(&self.t).unwrap().to_owned();
     let width = pins.len() / 2;
     // bounds check
     for pin in pins {
       let position = match pin {
-        Object::Pin(pin) => pin.position,
+        Object::Pin(pin) => pin.region.position,
         _ => todo!(),
       };
       assert_is_within_bounds_unchecked(x + position.x, y + position.y, state)?;
@@ -113,6 +112,34 @@ impl Chip {
     move_within_bounds(x, y + 2, state)?;
     execute!(stdout(), crossterm::style::Print(".".repeat(width.into())))?;
     Ok(())
+  }
+  pub fn report(&self, state: &CirnoState) -> Result<String, anyhow::Error> {
+    let pins = state.cic_data.get(&self.t).unwrap().to_owned();
+    // let width = pins.len() / 2;
+    let index: usize;
+    let pin;
+    if state.cursor.y == self.region.position.y + 2 {
+      index = usize::from(state.cursor.x - self.region.position.x);
+    } else if state.cursor.y == self.region.position.y {
+      index = pins.len() - usize::from(state.cursor.x - self.region.position.x + 1);
+    } else {
+      return Ok(String::new())
+    }
+    pin = pins.get(index).unwrap();
+    let (label, value) = match pin.to_owned() {
+      Object::Pin(pin) => (pin.label, pin.value),
+      _ => unreachable!(),
+    };
+    if label.ne("") {
+      return Ok(label)
+    }
+    else {
+      match value {
+        Value::Gnd => return Ok("gnd".to_string()),
+        Value::Vcc => return Ok("vcc".to_string()),
+        _ => return Ok(String::new()),
+      }
+    }
   }
 }
 
@@ -129,6 +156,9 @@ impl Meta {
     }
     Ok(())
   }
+  pub fn set_region_size(&mut self, _state: &CirnoState) -> Result<(), anyhow::Error> {
+    Ok(())
+  }
   pub fn verify(&mut self) -> Result<(), CirnoError> {
     if self.bounds.x == 0 && self.bounds.y == 0 {
       return Err(CirnoError::MissingAttribute("bounds".to_string()))
@@ -137,9 +167,6 @@ impl Meta {
       return Err(CirnoError::NamelessInvalidValueForAttribute("bounds".to_string()))
     }
     Ok(())
-  }
-  pub fn region(&self, _state: &CirnoState) -> Option<Region> {
-    None
   }
   pub fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let bound_x = state.meta.bounds.x;
@@ -172,21 +199,28 @@ impl Meta {
     execute!(stdout(), crossterm::style::ResetColor)?;
     Ok(())
   }
+  pub fn report(&self, _state: &CirnoState) -> Result<String, anyhow::Error> {
+    Ok(String::new())
+  }
 }
 
 #[derive(Clone, Debug, Default)]
 pub struct Net {
   pub t: String,
-  pub y: u16,
+  pub region: Region,
 }
 
 impl Net {
   pub fn apply_attribute(&mut self, attribute: Attribute) -> Result<(), CirnoError> {
     match attribute {
       Attribute::Type(t) => self.t = t,
-      Attribute::YCoordinate(y) => self.y = y,
+      Attribute::YCoordinate(y) => self.region.position.y = y,
       a => return Err(CirnoError::InvalidAttributeForObject(a, "net".to_string())),
     }
+    Ok(())
+  }
+  pub fn set_region_size(&mut self, state: &CirnoState) -> Result<(), anyhow::Error> {
+    self.region.size = Vector2 { x: state.meta.bounds.x, y: 1 };
     Ok(())
   }
   pub fn verify(&mut self) -> Result<(), CirnoError> {
@@ -198,13 +232,8 @@ impl Net {
     // TODO: net y
     Ok(())
   }
-  pub fn region(&self, state: &CirnoState) -> Option<Region> {
-    let position = Vector2 { x: 0, y: self.y };
-    let size = Vector2 { x: state.meta.bounds.x, y: 1 };
-    Some(Region { position, size })
-  }
   pub fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
-    let y = self.y;
+    let y = self.region.position.y;
     let bound_x = state.meta.bounds.x;
     // bounds check
     assert_is_within_bounds_unchecked(0, y, state)?;
@@ -224,6 +253,9 @@ impl Net {
     execute!(stdout(), crossterm::style::ResetColor)?;
     Ok(())
   }
+  pub fn report(&self, _state: &CirnoState) -> Result<String, anyhow::Error> {
+    Ok(self.t.to_string())
+  }
 }
 
 // impl Default for Net {
@@ -236,8 +268,8 @@ impl Net {
 pub struct Pin {
   pub label: String,
   pub num: u16,
-  pub position: Vector2,
   pub value: Value,
+  pub region: Region,
 }
 
 impl Pin {
@@ -245,33 +277,36 @@ impl Pin {
     match attribute {
       Attribute::Label(label) => self.label = label,
       Attribute::Num(num) => self.num = num,
-      Attribute::Position(vec2) => self.position = vec2,
+      Attribute::Position(vec2) => self.region.position = vec2,
       Attribute::Value(value) => self.value = value,
       a => return Err(CirnoError::InvalidAttributeForObject(a, "pin".to_string())),
     }
+    Ok(())
+  }
+  pub fn set_region_size(&mut self, _state: &CirnoState) -> Result<(), anyhow::Error> {
+    self.region.size = Vector2 { x: 1, y: 1 };
     Ok(())
   }
   pub fn verify(&mut self) -> Result<(), CirnoError> {
     // TODO: pin num, pin position
     Ok(())
   }
-  pub fn region(&self, _state: &CirnoState) -> Option<Region> {
-    let position = Vector2 { x: self.position.x, y: self.position.y };
-    let size = Vector2 { x: 1, y: 1 };
-    Some(Region { position, size })
-  }
   // TODO: dead code?
   pub fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
     // this call returns the position of the top left corner of the parent chip
     let (col, row) = crossterm::cursor::position()?;
-    let x = col + self.position.x;
-    let y = row + self.position.y;
+    let x = col + self.region.position.x;
+    let y = row + self.region.position.y;
     // bounds check
     assert_is_within_bounds_unchecked(x, y, state)?;
     // rendering
     move_within_bounds(x, y, state)?;
     execute!(stdout(), crossterm::style::Print("."))?;
     Ok(())
+  }
+  // TODO: unused?
+  pub fn report(&self, _state: &CirnoState) -> Result<String, anyhow::Error> {
+    Ok(String::new())
   }
 }
 
@@ -293,6 +328,14 @@ impl Object {
       Object::Pin(pin) => pin.apply_attribute(attribute),
     }
   }
+  pub fn set_region_size(&mut self, state: &CirnoState) -> Result<(), anyhow::Error> {
+    match self {
+      Object::Chip(chip) => chip.set_region_size(state),
+      Object::Meta(meta) => meta.set_region_size(state),
+      Object::Net(net) => net.set_region_size(state),
+      Object::Pin(pin) => pin.set_region_size(state),
+    }
+  }
   pub fn verify(&mut self) -> Result<(), CirnoError> {
     match self {
       Object::Chip(chip) => chip.verify(),
@@ -301,20 +344,20 @@ impl Object {
       Object::Pin(pin) => pin.verify(),
     }
   }
-  pub fn region(&self, state: &CirnoState) -> Option<Region> {
-    match self {
-      Object::Chip(chip) => chip.region(state),
-      Object::Meta(meta) => meta.region(state),
-      Object::Net(net) => net.region(state),
-      Object::Pin(pin) => pin.region(state),
-    }
-  }
   pub fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
     match self {
       Object::Chip(chip) => chip.render(state),
       Object::Meta(meta) => meta.render(state),
       Object::Net(net) => net.render(state),
       Object::Pin(pin) => pin.render(state),
+    }
+  }
+  pub fn report(&self, state: &CirnoState) -> Result<String, anyhow::Error> {
+    match self {
+      Object::Chip(chip) => chip.report(state),
+      Object::Meta(meta) => meta.report(state),
+      Object::Net(net) => net.report(state),
+      Object::Pin(pin) => pin.report(state),
     }
   }
 }
