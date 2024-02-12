@@ -23,6 +23,7 @@ fn open(contents: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   state.regions = Rc::new(state.objects.iter().filter_map(|x| x.region(state)).collect());
   // cirno::logger::debug(format!("regions: {:?}", &state.regions));
 
+  // TODO: DRY
   let now = Instant::now();
   state.verify()?;
   let elapsed = now.elapsed();

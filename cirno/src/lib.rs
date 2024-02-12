@@ -7,6 +7,7 @@ use crossterm::event::Event;
 use parser::parse;
 
 pub mod bar;
+pub mod cursor;
 pub mod error;
 pub mod logger;
 pub mod modes;
@@ -87,6 +88,7 @@ impl CirnoState {
     for object in self.objects.iter() {
       object.render(self)?;
     }
+    cursor::render(self)?;
     Ok(())
   }
   /// Set the meta object, returning CirnoError::MissingMetaObject if it cannot be found.

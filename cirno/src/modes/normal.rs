@@ -1,4 +1,4 @@
-use crate::{CirnoState, bar, project::{Mode, Modes}, terminal::{EventResult, backspace, clear_all, read_line}};
+use crate::{bar, cursor, project::{Mode, Modes}, terminal::{backspace, clear_all, read_line, EventResult}, CirnoState};
 use std::collections::HashMap;
 use crossterm::event::KeyEvent;
 
@@ -55,29 +55,33 @@ fn handle_resize_event(state: &mut CirnoState) -> Result<EventResult, anyhow::Er
 
 fn on_key_h(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
   if state.cursor.x > 0 {
-    state.cursor.x -= 1;
+    cursor::move_left(1, state)?;
     state.render()?;
   }
   Ok(EventResult::Ok)
 }
 
 fn on_key_j(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
-  state.cursor.y += 1;
-  state.render()?;
+  if state.cursor.y < state.meta.bounds.y - 2 { // ???
+    cursor::move_down(1, state)?;
+    state.render()?;
+  }
   Ok(EventResult::Ok)
 }
 
 fn on_key_k(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
   if state.cursor.y > 0 {
-    state.cursor.y -= 1;
+    cursor::move_up(1, state)?;
     state.render()?;
   }
   Ok(EventResult::Ok)
 }
 
 fn on_key_l(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
-  state.cursor.x += 1;
-  state.render()?;
+  if state.cursor.x < state.meta.bounds.x - 1 {
+    cursor::move_right(1, state)?;
+    state.render()?;
+  }
   Ok(EventResult::Ok)
 }
 
