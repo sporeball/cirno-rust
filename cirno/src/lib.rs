@@ -1,4 +1,4 @@
-use crate::{error::{CirnoError, try_to}, project::{Meta, Mode, Modes, Object, Vector2}, terminal::EventResult};
+use crate::{error::{CirnoError, try_to}, project::{Meta, Mode, Modes, Object, Region, Vector2}, terminal::EventResult};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -21,6 +21,7 @@ pub struct CirnoState {
   pub mode: Modes,
   pub cursor: Vector2,
   pub objects: Rc<Vec<Object>>,
+  pub regions: Rc<Vec<Region>>,
   pub meta: Meta,
   pub errors: Vec<String>,
   pub cic_data: HashMap<String, Vec<Object>>,
@@ -114,6 +115,15 @@ impl CirnoState {
     // 2 extra columns and rows are added to account for the border
     if bound_x + 2 > self.columns || bound_y + 2 > self.rows {
       return Err(CirnoError::TerminalTooSmall)
+    }
+    // no regions should overlap with each other
+    for (index, region) in self.regions.iter().enumerate() {
+      for (other_index, other_region) in self.regions.iter().enumerate().filter(|x| x.0 > index) {
+        let overlapping = region.overlapping(other_region.clone());
+        if overlapping {
+          return Err(CirnoError::OverlappingRegion(index, other_index))
+        }
+      }
     }
     Ok(())
   }

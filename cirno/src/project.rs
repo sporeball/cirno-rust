@@ -1,4 +1,4 @@
-use crate::{CirnoState, error::CirnoError, terminal::{EventResult, assert_is_within_bounds_unchecked, move_within_bounds}};
+use crate::{error::CirnoError, terminal::{assert_is_within_bounds_unchecked, move_within_bounds, EventResult}, CirnoState};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io::stdout;
@@ -8,6 +8,33 @@ use crossterm::execute;
 pub struct Vector2 {
   pub x: u16,
   pub y: u16,
+}
+
+#[derive(Clone, Debug, Default)]
+pub struct Region {
+  pub position: Vector2,
+  pub size: Vector2,
+}
+
+impl Region {
+  /// Return whether a region is overlapping another.
+  pub fn overlapping(&self, other_region: Region) -> bool {
+    // region bounds
+    let (r1_min_x, r1_min_y) = (self.position.x, self.position.y);
+    let (r1_max_x, r1_max_y) = (r1_min_x + self.size.x - 1, r1_min_y + self.size.y - 1);
+    let (r2_min_x, r2_min_y) = (other_region.position.x, other_region.position.y);
+    let (r2_max_x, r2_max_y) = (r2_min_x + other_region.size.x - 1, r2_min_y + other_region.size.y - 1);
+    // valid locations
+    let r2_min_x_inside = r2_min_x >= r1_min_x && r2_min_x <= r1_max_x;
+    let r2_max_x_inside = r2_max_x >= r1_min_x && r2_max_x <= r1_max_x;
+    let r2_min_y_inside = r2_min_y >= r1_min_y && r2_min_y <= r1_max_y;
+    let r2_max_y_inside = r2_max_y >= r1_min_y && r2_max_y <= r1_max_y;
+    let r2_top_left_inside = r2_min_x_inside && r2_min_y_inside;
+    let r2_top_right_inside = r2_max_x_inside && r2_min_y_inside;
+    let r2_bottom_left_inside = r2_min_x_inside && r2_max_y_inside;
+    let r2_bottom_right_inside = r2_max_x_inside && r2_max_y_inside;
+    r2_top_left_inside || r2_top_right_inside || r2_bottom_left_inside || r2_bottom_right_inside
+  }
 }
 
 #[derive(Clone, Debug, Default)]
@@ -60,6 +87,13 @@ impl Chip {
     // TODO: chip position
     Ok(())
   }
+  pub fn region(&self, state: &CirnoState) -> Option<Region> {
+    let pins = state.cic_data.get(&self.t).unwrap().to_owned();
+    let width = u16::try_from(pins.len() / 2).unwrap();
+    let position = Vector2 { x: self.position.x, y: self.position.y };
+    let size = Vector2 { x: width, y: 3 };
+    Some(Region { position, size })
+  }
   pub fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let x = self.position.x;
     let y = self.position.y;
@@ -103,6 +137,9 @@ impl Meta {
       return Err(CirnoError::NamelessInvalidValueForAttribute("bounds".to_string()))
     }
     Ok(())
+  }
+  pub fn region(&self, _state: &CirnoState) -> Option<Region> {
+    None
   }
   pub fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let bound_x = state.meta.bounds.x;
@@ -161,6 +198,11 @@ impl Net {
     // TODO: net y
     Ok(())
   }
+  pub fn region(&self, state: &CirnoState) -> Option<Region> {
+    let position = Vector2 { x: 0, y: self.y };
+    let size = Vector2 { x: state.meta.bounds.x, y: 1 };
+    Some(Region { position, size })
+  }
   pub fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let y = self.y;
     let bound_x = state.meta.bounds.x;
@@ -213,6 +255,11 @@ impl Pin {
     // TODO: pin num, pin position
     Ok(())
   }
+  pub fn region(&self, _state: &CirnoState) -> Option<Region> {
+    let position = Vector2 { x: self.position.x, y: self.position.y };
+    let size = Vector2 { x: 1, y: 1 };
+    Some(Region { position, size })
+  }
   // TODO: dead code?
   pub fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
     // this call returns the position of the top left corner of the parent chip
@@ -252,6 +299,14 @@ impl Object {
       Object::Meta(meta) => meta.verify(),
       Object::Net(net) => net.verify(),
       Object::Pin(pin) => pin.verify(),
+    }
+  }
+  pub fn region(&self, state: &CirnoState) -> Option<Region> {
+    match self {
+      Object::Chip(chip) => chip.region(state),
+      Object::Meta(meta) => meta.region(state),
+      Object::Net(net) => net.region(state),
+      Object::Pin(pin) => pin.region(state),
     }
   }
   pub fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {

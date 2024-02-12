@@ -15,17 +15,24 @@ struct Cli {
 /// Open a cirno project given its contents.
 fn open(contents: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   state.objects = Rc::new(parser::parse(contents)?);
-  cirno::logger::debug(format!("objects: {:#?}", &state.objects));
+  // cirno::logger::debug(format!("objects: {:?}", &state.objects));
 
   state.apply_meta()?;
-  state.verify()?;
   state.set_cic_data()?;
+
+  state.regions = Rc::new(state.objects.iter().filter_map(|x| x.region(state)).collect());
+  // cirno::logger::debug(format!("regions: {:?}", &state.regions));
+
+  let now = Instant::now();
+  state.verify()?;
+  let elapsed = now.elapsed();
+  cirno::logger::info(format!("verified state in {:?}", elapsed));
 
   let now = Instant::now();
   state.render()?;
   let elapsed = now.elapsed();
   bar::message(format!("{:?}", elapsed), &state)?;
-  cirno::logger::info(format!("finished rendering in {:?}", elapsed));
+  cirno::logger::info(format!("rendered in {:?}", elapsed));
 
   Ok(())
 }
@@ -45,6 +52,7 @@ fn main() -> Result<(), anyhow::Error> {
     mode: Modes::Normal,
     cursor: Vector2::default(),
     objects: Rc::new(vec![]),
+    regions: Rc::new(vec![]),
     meta: Meta::default(),
     errors: vec![],
     cic_data: HashMap::new(),
@@ -59,6 +67,7 @@ fn main() -> Result<(), anyhow::Error> {
   let contents_binding = contents.unwrap_or(String::new());
   // only open project if the read succeeded
   if contents_binding.ne("") {
+    cirno::logger::info(format!("opening {}", filename));
     // TODO: i wish we didn't have to pass &mut state two times
     try_to(open(&contents_binding, &mut state), &mut state)?;
   }

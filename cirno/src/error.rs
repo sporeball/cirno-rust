@@ -35,6 +35,8 @@ pub enum CirnoError {
   OutOfTokens(Token),
   #[error("expected Number, got None")]
   OutOfTokensExpectedNumber,
+  #[error("regions {0} and {1} are overlapping")]
+  OverlappingRegion(usize, usize),
   #[error("terminal too small")]
   TerminalTooSmall,
   #[error("expected {0}, got {1}")]
