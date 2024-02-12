@@ -1,19 +1,19 @@
-: pin num 14 pos 0 0 value vcc
+: pin label '1a
+: pin label '1b
+: pin label '1y value and '1a '1b .
 
-: pin num 13 pos 1 0 label '4b
-: pin num 12 pos 2 0 label '4a
-: pin num 11 pos 3 0 label '4y value and '4a '4b .
+: pin label '2a
+: pin label '2b
+: pin label '2y value and '2a '2b .
 
-: pin num 10 pos 4 0 label '3b
-: pin num 9 pos 5 0 label '3a
-: pin num 8 pos 6 0 label '3y value and '3a '3b .
+: pin value gnd
 
-: pin num 1 pos 0 2 label '1a
-: pin num 2 pos 1 2 label '1b
-: pin num 3 pos 2 2 label '1y value and '1a '1b .
+: pin label '3y value and '3a '3b .
+: pin label '3a
+: pin label '3b
 
-: pin num 4 pos 3 2 label '2a
-: pin num 5 pos 4 2 label '2b
-: pin num 6 pos 5 2 label '2y value and '2a '2b .
+: pin label '4y value and '4a '4b .
+: pin label '4a
+: pin label '4b
 
-: pin num 7 pos 6 2 value gnd
+: pin value vcc
