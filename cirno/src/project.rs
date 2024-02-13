@@ -254,7 +254,7 @@ impl Net {
     Ok(())
   }
   pub fn report(&self, _state: &CirnoState) -> Result<String, anyhow::Error> {
-    Ok(self.t.to_string())
+    Ok(format!("{} net", self.t))
   }
 }
 
