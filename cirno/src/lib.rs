@@ -100,22 +100,16 @@ impl CirnoState {
     cursor::report(self)?;
     Ok(())
   }
-  /// Set the meta object, returning CirnoError::MissingMetaObject if it cannot be found.
-  pub fn apply_meta(&mut self) -> Result<(), CirnoError> {
-    // get meta object
-    let binding = self.objects.borrow();
-    let meta = binding
+  /// Return the meta object, or CirnoError::MissingMetaObject if it cannot be found.
+  pub fn find_meta(&mut self) -> Result<Meta, CirnoError> {
+    self.objects
+      .borrow()
       .iter()
       .find_map(|x| match x {
-        Object::Meta(meta) => Some(meta),
+        Object::Meta(meta) => Some(meta.to_owned()),
         _ => None,
-      });
-    if meta.is_none() {
-      return Err(CirnoError::MissingMetaObject)
-    }
-    self.meta = meta.unwrap().to_owned();
-    // crate::logger::debug(&self);
-    Ok(())
+      })
+      .ok_or(CirnoError::MissingMetaObject)
   }
   /// Verify the current state.
   /// This function should be called only after the `meta` property has been

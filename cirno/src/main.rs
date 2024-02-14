@@ -16,8 +16,8 @@ struct Cli {
 /// Open a cirno project given its contents.
 fn open(contents: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   state.objects = Rc::new(RefCell::new(parser::parse(contents)?));
+  state.meta = state.find_meta()?;
 
-  state.apply_meta()?;
   state.set_cic_data()?;
   state.set_region_sizes()?;
 
