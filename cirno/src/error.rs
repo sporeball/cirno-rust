@@ -52,39 +52,31 @@ pub fn try_to<T, E: Display>(f: Result<T, E>, state: &mut CirnoState) -> Result<
   match f {
     Ok(v) => Ok(Some(v)),
     Err(e) => {
-      throw(e.to_string(), state)?;
+      state.error = e.to_string();
+      throw(state)?;
       Ok(None)
     },
   }
 }
 
-pub fn throw(e: String, state: &mut CirnoState) -> Result<(), anyhow::Error> {
-  state.errors.push(e.clone());
-  logger::error(e);
+pub fn throw(state: &CirnoState) -> Result<(), anyhow::Error> {
+  logger::error(state.error.clone());
   display(state)?;
   Ok(())
 }
 
-pub fn display(state: &mut CirnoState) -> Result<(), anyhow::Error> {
+pub fn display(state: &CirnoState) -> Result<(), anyhow::Error> {
   clear(state)?;
-  let l: u16 = state.errors.len() as u16;
-  execute!(stdout(), crossterm::cursor::MoveTo(0, state.rows - l - 1))?;
+  execute!(stdout(), crossterm::cursor::MoveTo(0, state.rows - 1))?;
   execute!(stdout(), crossterm::style::SetBackgroundColor(crossterm::style::Color::Red))?;
   execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::White))?;
-  for e in state.errors.clone() {
-    execute!(stdout(), crossterm::cursor::MoveToNextLine(1))?;
-    execute!(stdout(), crossterm::style::Print(format!("E: {}", e)))?;
-  }
+  execute!(stdout(), crossterm::style::Print(format!("E: {}", state.error)))?;
   execute!(stdout(), crossterm::style::ResetColor)?;
   Ok(())
 }
 
-pub fn clear(state: &mut CirnoState) -> Result<(), anyhow::Error> {
-  let l: u16 = state.errors.len() as u16;
-  execute!(stdout(), crossterm::cursor::MoveTo(0, state.rows - l - 1))?;
-  for _e in state.errors.clone() {
-    execute!(stdout(), crossterm::cursor::MoveToNextLine(1))?;
-    execute!(stdout(), crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine))?;
-  }
+pub fn clear(state: &CirnoState) -> Result<(), anyhow::Error> {
+  execute!(stdout(), crossterm::cursor::MoveTo(0, state.rows - 1))?;
+  execute!(stdout(), crossterm::terminal::Clear(crossterm::terminal::ClearType::CurrentLine))?;
   Ok(())
 }

@@ -54,7 +54,7 @@ fn main() -> Result<(), anyhow::Error> {
     cursor: Vector2::default(),
     objects: Rc::new(RefCell::new(vec![])),
     meta: Meta::default(),
-    errors: vec![],
+    error: String::new(),
     cic_data: HashMap::new(),
   };
 

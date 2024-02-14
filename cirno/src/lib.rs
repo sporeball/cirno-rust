@@ -24,7 +24,7 @@ pub struct CirnoState {
   pub cursor: Vector2,
   pub objects: Rc<RefCell<Vec<Object>>>,
   pub meta: Meta,
-  pub errors: Vec<String>,
+  pub error: String,
   pub cic_data: HashMap<String, Vec<Object>>,
 }
 
