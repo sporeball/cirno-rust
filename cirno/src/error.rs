@@ -19,10 +19,10 @@ pub enum CirnoError {
   InvalidValueAttribute(String),
   #[error("invalid value '{0}' for attribute '{1}'")]
   InvalidValueForAttribute(String, String),
+  #[error("meta object missing or invalid")]
+  MetaObjectError,
   #[error("missing attribute: {0}")]
   MissingAttribute(String),
-  #[error("missing meta object")]
-  MissingMetaObject,
   #[error("invalid value for attribute '{0}'")]
   NamelessInvalidValueForAttribute(String),
   #[error("'{0}' not found in stdlib")]

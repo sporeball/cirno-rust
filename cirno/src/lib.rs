@@ -100,7 +100,7 @@ impl CirnoState {
     cursor::report(self)?;
     Ok(())
   }
-  /// Return the meta object, or CirnoError::MissingMetaObject if it cannot be found.
+  /// Return the meta object, or CirnoError::MetaObjectError if it cannot be found.
   pub fn find_meta(&mut self) -> Result<Meta, CirnoError> {
     self.objects
       .borrow()
@@ -109,14 +109,16 @@ impl CirnoState {
         Object::Meta(meta) => Some(meta.to_owned()),
         _ => None,
       })
-      .ok_or(CirnoError::MissingMetaObject)
+      .ok_or(CirnoError::MetaObjectError)
   }
   /// Verify the current state.
-  /// This function should be called only after the `meta` property has been
-  /// successfully set.
   pub fn verify(&mut self) -> Result<(), CirnoError> {
+    // state.meta.bounds should be set
     let bound_x = self.meta.bounds.x;
     let bound_y = self.meta.bounds.y;
+    if bound_x == 0 && bound_y == 0 {
+      return Err(CirnoError::MetaObjectError)
+    }
     // the terminal should be large enough to render the entire bounds
     // 2 extra columns and rows are added to account for the border
     if bound_x + 2 > self.columns || bound_y + 2 > self.rows {
