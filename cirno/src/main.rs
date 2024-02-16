@@ -21,7 +21,7 @@ fn open(contents: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   state.set_cic_data()?;
   state.set_region_sizes()?;
 
-  cirno::logger::debug(format!("objects: {:?}", &state.objects));
+  // cirno::logger::debug(format!("objects: {:?}", &state.objects));
 
   // TODO: DRY
   let now = Instant::now();

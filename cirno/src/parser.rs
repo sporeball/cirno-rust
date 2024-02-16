@@ -51,9 +51,9 @@ macro_rules! expect_token {
   }}
 }
 
-pub fn parse(contents: &str) -> Result<Vec<Object>, anyhow::Error> {
+pub fn parse(contents: &str) -> Result<Vec<ObjectEnum>, anyhow::Error> {
   // open file
-  let mut ast: Vec<Object> = vec![];
+  let mut ast: Vec<ObjectEnum> = vec![];
   // for each line in the file
   for line in contents.lines() {
     // tokenize the line if it is not blank
@@ -126,17 +126,17 @@ fn parse_attribute_value(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Re
   }
 }
 
-fn object_default(token: &str) -> Result<Object, CirnoError> {
+fn object_default(token: &str) -> Result<ObjectEnum, CirnoError> {
   match token {
-    "chip" => Ok(Object::Chip(Chip::default())),
-    "meta" => Ok(Object::Meta(Meta::default())),
-    "net" => Ok(Object::Net(Net::default())),
-    "pin" => Ok(Object::Pin(Pin::default())),
+    "chip" => Ok(ObjectEnum::Chip(Chip::default())),
+    "meta" => Ok(ObjectEnum::Meta(Meta::default())),
+    "net" => Ok(ObjectEnum::Net(Net::default())),
+    "pin" => Ok(ObjectEnum::Pin(Pin::default())),
     t => Err(CirnoError::InvalidObjectType(t.to_string())),
   }
 }
 
-fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<Object, anyhow::Error> {
+fn parse_object(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<ObjectEnum, anyhow::Error> {
   // create uninitialized object
   let mut object = object_default(token)?;
   // parse tokens into attributes

@@ -1,4 +1,4 @@
-use crate::{bar, project::{Region, Vector2}, terminal::move_within_bounds, CirnoState};
+use crate::{bar, project::{Object, Region, Vector2}, terminal::move_within_bounds, CirnoState};
 use std::io::stdout;
 use crossterm::execute;
 
@@ -46,7 +46,7 @@ pub fn report(state: &CirnoState) -> Result<(), anyhow::Error> {
   };
   for object in state.objects.borrow().iter() {
     let Some(region) = object.get_region() else { continue };
-    if region.overlapping(&cursor_region.to_owned()) {
+    if region.overlapping(&cursor_region) {
       let report = object.report(state)?;
       bar::message(format!("{}", report), state)?;
     }

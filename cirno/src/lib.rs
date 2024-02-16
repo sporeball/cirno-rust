@@ -1,4 +1,4 @@
-use crate::{error::{CirnoError, try_to}, project::{Meta, Mode, Modes, Object, Vector2}, terminal::EventResult};
+use crate::{error::{CirnoError, try_to}, project::{Chip, Meta, Mode, Modes, Object, ObjectEnum, Vector2}, terminal::EventResult};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
@@ -22,10 +22,10 @@ pub struct CirnoState {
   pub rows: u16,
   pub mode: Modes,
   pub cursor: Vector2,
-  pub objects: Rc<RefCell<Vec<Object>>>,
+  pub objects: Rc<RefCell<Vec<ObjectEnum>>>,
   pub meta: Meta,
   pub error: String,
-  pub cic_data: HashMap<String, Vec<Object>>,
+  pub cic_data: HashMap<String, Vec<ObjectEnum>>,
 }
 
 impl CirnoState {
@@ -44,21 +44,21 @@ impl CirnoState {
   }
   /// Populate `cic_data` based on the chip types in `objects`.
   pub fn set_cic_data(&mut self) -> Result<(), anyhow::Error> {
-    let mut types: Vec<String> = self.objects
-      .borrow()
+    let binding = self.objects.borrow();
+    let mut types: Vec<&str> = binding
       .iter()
       .filter_map(|x| match x {
-        Object::Chip(chip) => Some(chip.to_owned().t),
+        ObjectEnum::Chip(Chip { t, region: _ }) => Some(t.as_str()),
         _ => None,
       })
       .collect();
     types.sort();
     types.dedup();
     for t in types {
-      if !self.cic_data.contains_key(&t) {
-        let contents = stdlib(&t)?;
+      if !self.cic_data.contains_key(t) {
+        let contents = stdlib(t)?;
         let v = parse(&contents)?;
-        self.cic_data.insert(t, v);
+        self.cic_data.insert(t.to_string(), v);
       }
     }
     // logger::debug(format!("{:?}", self.cic_data));
@@ -106,7 +106,7 @@ impl CirnoState {
       .borrow()
       .iter()
       .find_map(|x| match x {
-        Object::Meta(meta) => Some(meta.to_owned()),
+        ObjectEnum::Meta(meta) => Some(meta.to_owned()),
         _ => None,
       })
       .ok_or(CirnoError::MetaObjectError)
