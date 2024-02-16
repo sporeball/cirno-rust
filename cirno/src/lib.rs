@@ -126,25 +126,11 @@ impl CirnoState {
     }
     // no regions should overlap with each other
     for (index, object) in self.objects.borrow().iter().enumerate() {
-      let option_region = match object.to_owned() {
-        Object::Chip(chip) => Some(chip.region),
-        Object::Meta(_meta) => None,
-        Object::Net(net) => Some(net.region),
-        Object::Pin(pin) => Some(pin.region),
-      };
+      let Some(region) = object.get_region() else { continue };
       for (other_index, other_object) in self.objects.borrow().iter().enumerate().filter(|x| x.0 > index) {
-        let option_other_region = match other_object.to_owned() {
-          Object::Chip(chip) => Some(chip.region),
-          Object::Meta(_meta) => None,
-          Object::Net(net) => Some(net.region),
-          Object::Pin(pin) => Some(pin.region),
-        };
-        if option_region.is_some() && option_other_region.is_some() {
-          let region = option_region.clone().unwrap();
-          let other_region = option_other_region.unwrap();
-          if region.overlapping(other_region) {
-            return Err(CirnoError::OverlappingRegion(index, other_index))
-          }
+        let Some(other_region) = other_object.get_region() else { continue };
+        if region.overlapping(other_region) {
+          return Err(CirnoError::OverlappingRegion(index, other_index))
         }
       }
     }

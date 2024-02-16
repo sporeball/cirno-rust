@@ -18,22 +18,16 @@ pub struct Region {
 
 impl Region {
   /// Return whether a region is overlapping another.
-  pub fn overlapping(&self, other_region: Region) -> bool {
-    // region bounds
-    let (r1_min_x, r1_min_y) = (self.position.x, self.position.y);
-    let (r1_max_x, r1_max_y) = (r1_min_x + self.size.x - 1, r1_min_y + self.size.y - 1);
-    let (r2_min_x, r2_min_y) = (other_region.position.x, other_region.position.y);
-    let (r2_max_x, r2_max_y) = (r2_min_x + other_region.size.x - 1, r2_min_y + other_region.size.y - 1);
-    // valid locations
-    let r2_min_x_inside = r2_min_x >= r1_min_x && r2_min_x <= r1_max_x;
-    let r2_max_x_inside = r2_max_x >= r1_min_x && r2_max_x <= r1_max_x;
-    let r2_min_y_inside = r2_min_y >= r1_min_y && r2_min_y <= r1_max_y;
-    let r2_max_y_inside = r2_max_y >= r1_min_y && r2_max_y <= r1_max_y;
-    let r2_top_left_inside = r2_min_x_inside && r2_min_y_inside;
-    let r2_top_right_inside = r2_max_x_inside && r2_min_y_inside;
-    let r2_bottom_left_inside = r2_min_x_inside && r2_max_y_inside;
-    let r2_bottom_right_inside = r2_max_x_inside && r2_max_y_inside;
-    r2_top_left_inside || r2_top_right_inside || r2_bottom_left_inside || r2_bottom_right_inside
+  pub fn overlapping(&self, other: &Region) -> bool {
+    let r1_left_side = self.position.x;
+    let r1_right_side = self.position.x + self.size.x - 1;
+    let r1_top_side = self.position.y;
+    let r1_bottom_side = self.position.y + self.size.y - 1;
+    let r2_left_side = other.position.x;
+    let r2_right_side = other.position.x + other.size.x - 1;
+    let r2_top_side = other.position.y;
+    let r2_bottom_side = other.position.y + other.size.y - 1;
+    r1_left_side <= r2_right_side && r1_right_side >= r2_left_side && r1_top_side <= r2_bottom_side && r1_bottom_side >= r2_top_side
   }
 }
 
@@ -79,6 +73,9 @@ impl Chip {
       a => return Err(CirnoError::InvalidAttributeForObject(a, "chip".to_string())),
     }
     Ok(())
+  }
+  pub fn get_region(&self) -> Option<&Region> {
+    Some(&self.region)
   }
   pub fn set_region_size(&mut self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let pins = state.cic_data.get(&self.t).unwrap().to_owned();
@@ -156,6 +153,9 @@ impl Meta {
     }
     Ok(())
   }
+  pub fn get_region(&self) -> Option<&Region> {
+    None
+  }
   pub fn set_region_size(&mut self, _state: &CirnoState) -> Result<(), anyhow::Error> {
     Ok(())
   }
@@ -218,6 +218,9 @@ impl Net {
       a => return Err(CirnoError::InvalidAttributeForObject(a, "net".to_string())),
     }
     Ok(())
+  }
+  pub fn get_region(&self) -> Option<&Region> {
+    Some(&self.region)
   }
   pub fn set_region_size(&mut self, state: &CirnoState) -> Result<(), anyhow::Error> {
     self.region.size = Vector2 { x: state.meta.bounds.x, y: 1 };
@@ -283,6 +286,9 @@ impl Pin {
     }
     Ok(())
   }
+  pub fn get_region(&self) -> Option<&Region> {
+    Some(&self.region)
+  }
   pub fn set_region_size(&mut self, _state: &CirnoState) -> Result<(), anyhow::Error> {
     self.region.size = Vector2 { x: 1, y: 1 };
     Ok(())
@@ -326,6 +332,14 @@ impl Object {
       Object::Meta(meta) => meta.apply_attribute(attribute),
       Object::Net(net) => net.apply_attribute(attribute),
       Object::Pin(pin) => pin.apply_attribute(attribute),
+    }
+  }
+  pub fn get_region(&self) -> Option<&Region> {
+    match self {
+      Object::Chip(chip) => chip.get_region(),
+      Object::Meta(meta) => meta.get_region(),
+      Object::Net(net) => net.get_region(),
+      Object::Pin(pin) => pin.get_region(),
     }
   }
   pub fn set_region_size(&mut self, state: &CirnoState) -> Result<(), anyhow::Error> {
