@@ -78,7 +78,7 @@ pub trait Object: Debug {
   fn set_region_size(&mut self, state: &CirnoState) -> Result<(), anyhow::Error>;
   fn verify(&self) -> Result<(), CirnoError>;
   fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error>;
-  fn report(&self, state: &CirnoState) -> Result<String, anyhow::Error>;
+  fn report(&self, state: &CirnoState) -> Result<(String, crossterm::style::Color), anyhow::Error>;
 }
 
 #[derive(Clone, Debug, Default)]
@@ -132,7 +132,7 @@ impl Object for Chip {
     execute!(stdout(), crossterm::style::Print(".".repeat(width.into())))?;
     Ok(())
   }
-  fn report(&self, state: &CirnoState) -> Result<String, anyhow::Error> {
+  fn report(&self, state: &CirnoState) -> Result<(String, crossterm::style::Color), anyhow::Error> {
     let pins = state.cic_data.get(&self.t).unwrap();
     // let width = pins.len() / 2;
     let index: usize;
@@ -142,7 +142,7 @@ impl Object for Chip {
     } else if state.cursor.y == self.region.position.y {
       index = pins.len() - usize::from(state.cursor.x - self.region.position.x + 1);
     } else {
-      return Ok(String::new())
+      return Ok((String::new(), crossterm::style::Color::White))
     }
     pin = pins.get(index).unwrap();
     let (label, value) = match pin {
@@ -150,13 +150,13 @@ impl Object for Chip {
       _ => unreachable!(),
     };
     if label.ne("") {
-      return Ok(label.to_string())
+      return Ok((label.to_string(), crossterm::style::Color::Cyan))
     }
     else {
       match value {
-        Value::Gnd => return Ok("gnd".to_string()),
-        Value::Vcc => return Ok("vcc".to_string()),
-        _ => return Ok(String::new()),
+        Value::Gnd => return Ok(("gnd".to_string(), crossterm::style::Color::Blue)),
+        Value::Vcc => return Ok(("vcc".to_string(), crossterm::style::Color::Red)),
+        _ => return Ok((String::new(), crossterm::style::Color::White)),
       }
     }
   }
@@ -221,8 +221,8 @@ impl Object for Meta {
     execute!(stdout(), crossterm::style::ResetColor)?;
     Ok(())
   }
-  fn report(&self, _state: &CirnoState) -> Result<String, anyhow::Error> {
-    Ok(String::new())
+  fn report(&self, _state: &CirnoState) -> Result<(String, crossterm::style::Color), anyhow::Error> {
+    Ok((String::new(), crossterm::style::Color::White))
   }
 }
 
@@ -278,8 +278,12 @@ impl Object for Net {
     execute!(stdout(), crossterm::style::ResetColor)?;
     Ok(())
   }
-  fn report(&self, _state: &CirnoState) -> Result<String, anyhow::Error> {
-    Ok(format!("{} net", self.t))
+  fn report(&self, _state: &CirnoState) -> Result<(String, crossterm::style::Color), anyhow::Error> {
+    match self.t.as_str() {
+      "vcc" => Ok(("vcc net".to_string(), crossterm::style::Color::Red)),
+      "gnd" => Ok(("gnd net".to_string(), crossterm::style::Color::Blue)),
+      _ => unreachable!(),
+    }
   }
 }
 
@@ -333,8 +337,8 @@ impl Object for Pin {
     Ok(())
   }
   // TODO: unused?
-  fn report(&self, _state: &CirnoState) -> Result<String, anyhow::Error> {
-    Ok(String::new())
+  fn report(&self, _state: &CirnoState) -> Result<(String, crossterm::style::Color), anyhow::Error> {
+    Ok((String::new(), crossterm::style::Color::White))
   }
 }
 
