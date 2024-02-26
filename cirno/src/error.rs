@@ -9,6 +9,8 @@ pub enum CirnoError {
   InvalidAttribute(String),
   #[error("attribute '{0}' is invalid for {1} objects")]
   InvalidAttributeForObject(Attribute, String),
+  #[error("invalid color attribute: {0}")]
+  InvalidColorAttribute(String),
   #[error("invalid file '{0}'")]
   InvalidFile(String),
   #[error("invalid filetype '{0}'")]

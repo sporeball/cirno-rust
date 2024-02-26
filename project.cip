@@ -3,3 +3,5 @@
 : chip type ls0xx/sn74ls08 pos 10 2
 : net type vcc y 0
 : net type gnd y 1
+: wire color red from 0 0 to 0 2
+: wire color blue from 6 4 to 6 1

@@ -2,7 +2,7 @@ use crate::{error::CirnoError, terminal::{assert_is_within_bounds_unchecked, mov
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io::stdout;
-use crossterm::execute;
+use crossterm::{execute, style::Color};
 use enum_dispatch::enum_dispatch;
 
 #[derive(Clone, Debug, Default)]
@@ -46,9 +46,12 @@ pub enum Value {
 // an attribute that an object can have
 pub enum Attribute {
   Bounds(Vector2),
+  Color(Color),
+  From(Vector2),
   Label(String),
   Num(u16),
   Position(Vector2),
+  To(Vector2),
   Type(String),
   Value(Value),
   YCoordinate(u16),
@@ -68,6 +71,7 @@ pub enum ObjectEnum {
   Meta(Meta),
   Net(Net),
   Pin(Pin),
+  Wire(Wire),
 }
 
 #[enum_dispatch(ObjectEnum)]
@@ -338,6 +342,60 @@ impl Object for Pin {
   }
   // TODO: unused?
   fn report(&self, _state: &CirnoState) -> Result<(String, crossterm::style::Color), anyhow::Error> {
+    Ok((String::new(), crossterm::style::Color::White))
+  }
+}
+
+#[derive(Clone, Debug)]
+pub struct Wire {
+  pub color: Color,
+  pub from: Vector2,
+  pub to: Vector2,
+}
+
+impl Default for Wire {
+  fn default() -> Wire {
+    Wire { color: Color::Red, from: Vector2::default(), to: Vector2::default() }
+  }
+}
+
+impl Object for Wire {
+  fn apply_attribute(&mut self, attribute: Attribute) -> Result<(), CirnoError> {
+    match attribute {
+      Attribute::Color(color) => self.color = color,
+      Attribute::From(vec2) => self.from = vec2,
+      Attribute::To(vec2) => self.to = vec2,
+      a => return Err(CirnoError::InvalidAttributeForObject(a, "wire".to_string()))
+    }
+    Ok(())
+  }
+  fn get_region(&self) -> Option<&Region> {
+    None
+  }
+  fn set_region_size(&mut self, _state: &CirnoState) -> Result<(), anyhow::Error> {
+    Ok(())
+  }
+  fn verify(&self) -> Result<(), CirnoError> {
+    // TODO
+    Ok(())
+  }
+  fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
+    let (from_x, from_y) = (self.from.x, self.from.y);
+    let (to_x, to_y) = (self.to.x, self.to.y);
+    // bounds check
+    assert_is_within_bounds_unchecked(from_x, from_y, state)?;
+    assert_is_within_bounds_unchecked(to_x, to_y, state)?;
+    // rendering
+    execute!(stdout(), crossterm::style::SetForegroundColor(self.color))?;
+    move_within_bounds(from_x, from_y, state)?;
+    execute!(stdout(), crossterm::style::Print("o"))?;
+    move_within_bounds(to_x, to_y, state)?;
+    execute!(stdout(), crossterm::style::Print("o"))?;
+    execute!(stdout(), crossterm::style::ResetColor)?;
+    Ok(())
+  }
+  fn report(&self, _state: &CirnoState) -> Result<(String, Color), anyhow::Error> {
+    // TODO
     Ok((String::new(), crossterm::style::Color::White))
   }
 }

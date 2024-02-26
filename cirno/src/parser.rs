@@ -1,4 +1,5 @@
 use crate::{CirnoError, project::*};
+use crossterm::style::Color;
 use logos::Logos;
 
 #[derive(Logos, Debug, PartialEq)]
@@ -78,10 +79,20 @@ fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<A
       let y: u16 = expect_number!(lexer)?;
       Ok(Attribute::Bounds(Vector2 { x, y }))
     },
+    "color" => {
+      let c_string = expect_token!(lexer, Token::Keyword)?;
+      let c = parse_attribute_color(&c_string)?;
+      Ok(Attribute::Color(c))
+    },
+    "from" => {
+      let x: u16 = expect_number!(lexer)?;
+      let y: u16 = expect_number!(lexer)?;
+      Ok(Attribute::From(Vector2 { x, y }))
+    },
     "label" => {
       let label = expect_token!(lexer, Token::Identifier)?;
       Ok(Attribute::Label(label))
-    }
+    },
     "num" => {
       let num: u16 = expect_number!(lexer)?;
       Ok(Attribute::Num(num))
@@ -90,6 +101,11 @@ fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<A
       let x: u16 = expect_number!(lexer)?;
       let y: u16 = expect_number!(lexer)?;
       Ok(Attribute::Position(Vector2 { x, y }))
+    },
+    "to" => {
+      let x: u16 = expect_number!(lexer)?;
+      let y: u16 = expect_number!(lexer)?;
+      Ok(Attribute::To(Vector2 { x, y }))
     },
     "type" => {
       let t = expect_token!(lexer, Token::Keyword)?;
@@ -105,6 +121,18 @@ fn parse_attribute(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<A
       Ok(Attribute::YCoordinate(y))
     },
     a => Err(CirnoError::InvalidAttribute(a.to_string())),
+  }
+}
+
+fn parse_attribute_color(token: &str) -> Result<Color, CirnoError> {
+  match token {
+    "red" => Ok(Color::Red),
+    "green" => Ok(Color::Green),
+    "yellow" => Ok(Color::Yellow),
+    "blue" => Ok(Color::Blue),
+    "magenta" => Ok(Color::Magenta),
+    "cyan" => Ok(Color::Cyan),
+    c => Err(CirnoError::InvalidColorAttribute(c.to_string())),
   }
 }
 
@@ -132,6 +160,7 @@ fn object_default(token: &str) -> Result<ObjectEnum, CirnoError> {
     "meta" => Ok(ObjectEnum::Meta(Meta::default())),
     "net" => Ok(ObjectEnum::Net(Net::default())),
     "pin" => Ok(ObjectEnum::Pin(Pin::default())),
+    "wire" => Ok(ObjectEnum::Wire(Wire::default())),
     t => Err(CirnoError::InvalidObjectType(t.to_string())),
   }
 }
