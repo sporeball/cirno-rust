@@ -41,6 +41,8 @@ pub enum CirnoError {
   OverlappingRegion(usize, usize),
   #[error("terminal too small")]
   TerminalTooSmall,
+  #[error("too many {0} wires")]
+  TooManyWiresOfColor(String),
   #[error("expected {0}, got {1}")]
   UnexpectedToken(Token, Token),
   #[error("expected Number, got {0}")]

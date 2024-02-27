@@ -351,11 +351,12 @@ pub struct Wire {
   pub color: Color,
   pub from: Vector2,
   pub to: Vector2,
+  pub label: char,
 }
 
 impl Default for Wire {
   fn default() -> Wire {
-    Wire { color: Color::Red, from: Vector2::default(), to: Vector2::default() }
+    Wire { color: Color::Red, from: Vector2::default(), to: Vector2::default(), label: 'a' }
   }
 }
 
@@ -388,9 +389,9 @@ impl Object for Wire {
     // rendering
     execute!(stdout(), crossterm::style::SetForegroundColor(self.color))?;
     move_within_bounds(from_x, from_y, state)?;
-    execute!(stdout(), crossterm::style::Print("o"))?;
+    execute!(stdout(), crossterm::style::Print(self.label))?;
     move_within_bounds(to_x, to_y, state)?;
-    execute!(stdout(), crossterm::style::Print("o"))?;
+    execute!(stdout(), crossterm::style::Print(self.label))?;
     execute!(stdout(), crossterm::style::ResetColor)?;
     Ok(())
   }

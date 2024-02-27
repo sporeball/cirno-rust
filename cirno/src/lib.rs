@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use std::rc::Rc;
-use crossterm::event::Event;
+use crossterm::{event::Event, style::Color};
 use parser::parse;
 
 pub mod bar;
@@ -68,6 +68,38 @@ impl CirnoState {
   pub fn set_region_sizes(&mut self) -> Result<(), anyhow::Error> {
     for object in self.objects.borrow_mut().iter_mut() {
       object.set_region_size(self)?;
+    }
+    Ok(())
+  }
+  /// Set the `label` property of every wire object.
+  pub fn set_wire_labels(&mut self) -> Result<(), anyhow::Error> {
+    let mut counts: HashMap<Color, u32> = HashMap::from([
+      (Color::Red, 0),
+      (Color::Green, 0),
+      (Color::Yellow, 0),
+      (Color::Blue, 0),
+      (Color::Magenta, 0),
+      (Color::Cyan, 0),
+    ]);
+    let mut binding = self.objects.borrow_mut();
+    let wires = binding
+      .iter_mut()
+      .filter_map(|x| match x {
+        ObjectEnum::Wire(wire) => Some(wire),
+        _ => None,
+      });
+    for wire in wires {
+      let count: u32 = *counts.get(&wire.color).unwrap();
+      if count > 51 {
+        return Err(CirnoError::TooManyWiresOfColor(color_to_string(wire.color)).into())
+      } else if count > 25 {
+        wire.label = char::from_u32(39 + count).unwrap(); // A..Z
+      } else {
+        wire.label = char::from_u32(97 + count).unwrap(); // a..z
+      }
+      if let Some(c) = counts.get_mut(&wire.color) {
+        *c += 1;
+      }
     }
     Ok(())
   }
@@ -164,4 +196,16 @@ pub fn stdlib(filename: &str) -> Result<String, anyhow::Error> {
   }
   let contents: String = fs::read_to_string(path)?;
   Ok(contents)
+}
+
+pub fn color_to_string(color: Color) -> String {
+  match color {
+    Color::Red => "red".to_string(),
+    Color::Green => "green".to_string(),
+    Color::Yellow => "yellow".to_string(),
+    Color::Blue => "blue".to_string(),
+    Color::Magenta => "magenta".to_string(),
+    Color::Cyan => "cyan".to_string(),
+    _ => todo!(),
+  }
 }

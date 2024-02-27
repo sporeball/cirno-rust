@@ -20,6 +20,7 @@ fn open(contents: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
 
   state.set_cic_data()?;
   state.set_region_sizes()?;
+  state.set_wire_labels()?;
 
   // cirno::logger::debug(format!("objects: {:?}", &state.objects));
 
