@@ -1,6 +1,6 @@
-use crate::{bar, project::{Object, Region, Vector2}, terminal::move_within_bounds, CirnoState};
+use crate::{color_to_string, bar, project::{Object, ObjectEnum, Region, Vector2}, terminal::move_within_bounds, CirnoState};
 use std::io::stdout;
-use crossterm::execute;
+use crossterm::{execute, style::Color};
 
 pub fn move_left(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   clear(state)?;
@@ -44,14 +44,31 @@ pub fn report(state: &CirnoState) -> Result<(), anyhow::Error> {
     position: Vector2 { x: state.cursor.x, y: state.cursor.y },
     size: Vector2 { x: 1, y: 1 },
   };
-  for object in state.objects.borrow().iter() {
+  let (mut report, mut color) = (String::new(), Color::White);
+  let objects = state.objects.borrow();
+  let wire = objects
+    .iter()
+    .filter_map(|x| match x {
+      ObjectEnum::Wire(wire) => Some(wire.to_owned()),
+      _ => None,
+    })
+    .find(|w| {
+      (state.cursor.x == w.from.x && state.cursor.y == w.from.y) ||
+      (state.cursor.x == w.to.x && state.cursor.y == w.to.y)
+    });
+  for object in objects.iter() {
     let Some(region) = object.get_region() else { continue };
     if region.overlapping(&cursor_region) {
-      let (report, color) = object.report(state)?;
-      execute!(stdout(), crossterm::style::SetForegroundColor(color))?;
-      bar::message(report, state)?;
-      execute!(stdout(), crossterm::style::ResetColor)?;
+      (report, color) = object.report(state)?;
     }
   }
+  if wire.is_some() {
+    let wire = wire.unwrap();
+    report = format!("({}) {}", wire.label, report);
+    color = wire.color;
+  }
+  execute!(stdout(), crossterm::style::SetForegroundColor(color))?;
+  bar::message(report, state)?;
+  execute!(stdout(), crossterm::style::ResetColor)?;
   Ok(())
 }
