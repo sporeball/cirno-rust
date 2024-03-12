@@ -19,7 +19,6 @@ impl Level {
   }
 }
 
-
 #[derive(Debug)]
 pub struct LogItem {
   pub level: Level,

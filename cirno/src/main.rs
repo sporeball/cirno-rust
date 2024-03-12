@@ -57,6 +57,7 @@ fn main() -> Result<(), anyhow::Error> {
     meta: Meta::default(),
     error: String::new(),
     cic_data: HashMap::new(),
+    repeat_amount: 0,
   };
 
   cirno::terminal::enter()?;

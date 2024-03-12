@@ -1,4 +1,4 @@
-use crate::{color_to_string, bar, project::{Object, ObjectEnum, Region, Vector2}, terminal::move_within_bounds, CirnoState};
+use crate::{bar, project::{Object, ObjectEnum, Region, Vector2}, terminal::move_within_bounds, CirnoState};
 use std::io::stdout;
 use crossterm::{execute, style::Color};
 

@@ -26,6 +26,7 @@ pub struct CirnoState {
   pub meta: Meta,
   pub error: String,
   pub cic_data: HashMap<String, Vec<ObjectEnum>>,
+  pub repeat_amount: u16,
 }
 
 impl CirnoState {
@@ -112,6 +113,8 @@ impl CirnoState {
           let res = (self.get_mode().key_event_cb)(event, self).unwrap();
           if matches!(res, EventResult::Exit) {
             return Ok(())
+          } else if matches!(res, EventResult::Ok) {
+            self.repeat_amount = 0;
           }
         },
         Event::Resize(columns, rows) => {

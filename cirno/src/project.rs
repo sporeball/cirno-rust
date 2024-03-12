@@ -354,6 +354,13 @@ pub struct Wire {
   pub label: char,
 }
 
+// impl Wire {
+//   fn is_connected_to(&self, position: Vector2) -> bool {
+//     (self.from.x == position.x && self.from.y == position.y) ||
+//     (self.to.x == position.x && self.to.y == position.y)
+//   }
+// }
+
 impl Default for Wire {
   fn default() -> Wire {
     Wire { color: Color::Red, from: Vector2::default(), to: Vector2::default(), label: 'a' }
