@@ -5,24 +5,28 @@ use crossterm::{execute, style::Color};
 pub fn move_left(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   clear(state)?;
   state.cursor.x -= cells;
+  state.render()?;
   Ok(())
 }
 
 pub fn move_right(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   clear(state)?;
   state.cursor.x += cells;
+  state.render()?;
   Ok(())
 }
 
 pub fn move_up(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   clear(state)?;
   state.cursor.y -= cells;
+  state.render()?;
   Ok(())
 }
 
 pub fn move_down(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   clear(state)?;
   state.cursor.y += cells;
+  state.render()?;
   Ok(())
 }
 

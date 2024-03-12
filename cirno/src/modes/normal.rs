@@ -62,7 +62,7 @@ fn update_repeat_amount(c: char, state: &mut CirnoState) -> () {
   let digit = c.to_digit(10).unwrap() as u16;
   if state.repeat_amount == 0 {
     state.repeat_amount = digit;
-  } else {
+  } else if state.repeat_amount < 1000 {
     state.repeat_amount *= 10;
     state.repeat_amount += digit;
   }
@@ -72,9 +72,10 @@ fn on_key_h(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
   if state.repeat_amount == 0 {
     state.repeat_amount = 1;
   }
-  if state.cursor.x > state.repeat_amount - 1 {
+  if state.repeat_amount > state.cursor.x {
+    cursor::move_left(state.cursor.x, state)?;
+  } else {
     cursor::move_left(state.repeat_amount, state)?;
-    state.render()?;
   }
   Ok(EventResult::Ok)
 }
@@ -83,9 +84,10 @@ fn on_key_j(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
   if state.repeat_amount == 0 {
     state.repeat_amount = 1;
   }
-  if state.cursor.y < state.meta.bounds.y + state.repeat_amount - 3 { // ???
+  if state.repeat_amount > state.meta.bounds.y - state.cursor.y - 2 { // ???
+    cursor::move_down(state.meta.bounds.y - state.cursor.y - 2, state)?;
+  } else {
     cursor::move_down(state.repeat_amount, state)?;
-    state.render()?;
   }
   Ok(EventResult::Ok)
 }
@@ -94,9 +96,10 @@ fn on_key_k(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
   if state.repeat_amount == 0 {
     state.repeat_amount = 1;
   }
-  if state.cursor.y > state.repeat_amount - 1 {
+  if state.repeat_amount > state.cursor.y {
+    cursor::move_up(state.cursor.y, state)?;
+  } else {
     cursor::move_up(state.repeat_amount, state)?;
-    state.render()?;
   }
   Ok(EventResult::Ok)
 }
@@ -105,9 +108,10 @@ fn on_key_l(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
   if state.repeat_amount == 0 {
     state.repeat_amount = 1;
   }
-  if state.cursor.x < state.meta.bounds.x + state.repeat_amount - 2 { // ???
+  if state.repeat_amount > state.meta.bounds.x - state.cursor.x - 1 {
+    cursor::move_right(state.meta.bounds.x - state.cursor.x - 1, state)?;
+  } else {
     cursor::move_right(state.repeat_amount, state)?;
-    state.render()?;
   }
   Ok(EventResult::Ok)
 }
