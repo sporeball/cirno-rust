@@ -1,4 +1,4 @@
-use crate::{bar, cursor, project::{Mode, Modes}, terminal::{backspace, clear_all, read_line, EventResult}, CirnoState};
+use crate::{bar, cursor, error::{CirnoError, try_to}, project::{Mode, Modes}, terminal::{backspace, clear_all, read_line, EventResult}, CirnoState};
 use std::collections::HashMap;
 use crossterm::event::KeyEvent;
 
@@ -42,7 +42,7 @@ fn handle_key_event(event: KeyEvent, state: &mut CirnoState) -> Result<EventResu
       return (cmd)(state);
     }
     match c {
-      '0' ..= '9' => { update_repeat_amount(c, state); },
+      '0' ..= '9' => { try_to(update_repeat_amount(c, state), state)?; },
       _ => {},
     }
   }
@@ -58,14 +58,18 @@ fn handle_resize_event(state: &mut CirnoState) -> Result<EventResult, anyhow::Er
 
 /// Update `state.repeat_amount` based on a character `c`.
 /// This function does not verify that `c` is a number.
-fn update_repeat_amount(c: char, state: &mut CirnoState) -> () {
+fn update_repeat_amount(c: char, state: &mut CirnoState) -> Result<(), CirnoError> {
   let digit = c.to_digit(10).unwrap() as u16;
   if state.repeat_amount == 0 {
     state.repeat_amount = digit;
   } else if state.repeat_amount < 1000 {
     state.repeat_amount *= 10;
     state.repeat_amount += digit;
+  } else {
+    state.repeat_amount = 0;
+    return Err(CirnoError::TooManyRepetitions)
   }
+  Ok(())
 }
 
 fn on_key_h(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
