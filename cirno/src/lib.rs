@@ -44,6 +44,7 @@ impl CirnoState {
     Ok(())
   }
   /// Populate `cic_data` based on the chip types in `objects`.
+  /// The top left pin of each chip added will have a position of (0, 0).
   pub fn set_cic_data(&mut self) -> Result<(), anyhow::Error> {
     let binding = self.objects.borrow();
     let mut types: Vec<&str> = binding
@@ -56,11 +57,15 @@ impl CirnoState {
     types.sort();
     types.dedup();
     for t in types {
-      if !self.cic_data.contains_key(t) {
-        let contents = stdlib(t)?;
-        let v = parse(&contents)?;
-        self.cic_data.insert(t.to_string(), v);
+      let contents = stdlib(t)?;
+      let mut v = parse(&contents)?;
+      let len = v.len() / 2;
+      for (index, pin) in v.iter_mut().enumerate() {
+        let ObjectEnum::Pin(pin) = pin else { unreachable!(); };
+        pin.set_temp_region_position(index, len)?;
+        pin.set_region_size(self)?;
       }
+      self.cic_data.insert(t.to_string(), v);
     }
     // logger::debug(format!("{:?}", self.cic_data));
     Ok(())
@@ -102,6 +107,27 @@ impl CirnoState {
         *c += 1;
       }
     }
+    Ok(())
+  }
+  /// Replace the chips in `objects` with the corresponding pins from `cic_data`, updating the
+  /// position of each.
+  pub fn convert_chips(&mut self) -> Result<(), anyhow::Error> {
+    let binding = self.objects.borrow();
+    let mut v: Vec<ObjectEnum> = vec![];
+    for object in binding.iter().cloned() { // objects
+      if let ObjectEnum::Chip(chip) = object {
+        for pin in self.cic_data.get(&chip.t).unwrap().clone().iter_mut() {
+          let ObjectEnum::Pin(pin) = pin else { unreachable!(); };
+          pin.region.position.x += chip.region.position.x;
+          pin.region.position.y += chip.region.position.y;
+          v.push(ObjectEnum::Pin(pin.clone()));
+        }
+      } else {
+        v.push(object);
+      }
+    }
+    drop(binding); // avoids a panic
+    self.objects.replace(v);
     Ok(())
   }
   /// cirno's event loop.

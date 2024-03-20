@@ -42,6 +42,14 @@ pub enum Value {
   Vcc,
 }
 
+#[derive(Clone, Debug, Default)]
+pub enum Voltage {
+  #[default]
+  Floating,
+  High,
+  Low,
+}
+
 #[derive(Clone, Debug)]
 // an attribute that an object can have
 pub enum Attribute {
@@ -63,7 +71,7 @@ impl std::fmt::Display for Attribute {
   }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 #[enum_dispatch]
 // TODO: manually implement Debug again
 pub enum ObjectEnum {
@@ -116,53 +124,11 @@ impl Object for Chip {
     // TODO: chip position
     Ok(())
   }
-  fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
-    let x = self.region.position.x;
-    let y = self.region.position.y;
-    let pins = state.cic_data.get(&self.t).unwrap();
-    let width = pins.len() / 2;
-    // bounds check
-    for pin in pins {
-      let position = match pin {
-        ObjectEnum::Pin(pin) => &pin.region.position,
-        _ => todo!(),
-      };
-      assert_is_within_bounds_unchecked(x + position.x, y + position.y, state)?;
-    }
-    // rendering
-    move_within_bounds(x, y, state)?;
-    execute!(stdout(), crossterm::style::Print(".".repeat(width.into())))?;
-    move_within_bounds(x, y + 2, state)?;
-    execute!(stdout(), crossterm::style::Print(".".repeat(width.into())))?;
+  fn render(&self, _state: &CirnoState) -> Result<(), anyhow::Error> {
     Ok(())
   }
-  fn report(&self, state: &CirnoState) -> Result<(String, crossterm::style::Color), anyhow::Error> {
-    let pins = state.cic_data.get(&self.t).unwrap();
-    // let width = pins.len() / 2;
-    let index: usize;
-    let pin;
-    if state.cursor.y == self.region.position.y + 2 {
-      index = usize::from(state.cursor.x - self.region.position.x);
-    } else if state.cursor.y == self.region.position.y {
-      index = pins.len() - usize::from(state.cursor.x - self.region.position.x + 1);
-    } else {
-      return Ok((String::new(), crossterm::style::Color::White))
-    }
-    pin = pins.get(index).unwrap();
-    let (label, value) = match pin {
-      ObjectEnum::Pin(Pin { label, num: _, value, region: _}) => (label, value),
-      _ => unreachable!(),
-    };
-    if label.ne("") {
-      return Ok((label.to_string(), crossterm::style::Color::Cyan))
-    }
-    else {
-      match value {
-        Value::Gnd => return Ok(("gnd".to_string(), crossterm::style::Color::Blue)),
-        Value::Vcc => return Ok(("vcc".to_string(), crossterm::style::Color::Red)),
-        _ => return Ok((String::new(), crossterm::style::Color::White)),
-      }
-    }
+  fn report(&self, _state: &CirnoState) -> Result<(String, crossterm::style::Color), anyhow::Error> {
+    Ok((String::new(), crossterm::style::Color::White))
   }
 }
 
@@ -300,17 +266,30 @@ impl Object for Net {
 #[derive(Clone, Debug, Default)]
 pub struct Pin {
   pub label: String,
-  pub num: u16,
   pub value: Value,
   pub region: Region,
+  pub voltage: Voltage,
+}
+
+impl Pin {
+  pub fn set_temp_region_position(&mut self, index: usize, width: usize) -> Result<(), anyhow::Error> {
+    if index >= width {
+      let index = u16::try_from(index).unwrap();
+      let max = u16::try_from(width).unwrap() * 2;
+      self.region.position = Vector2 { x: max - index - 1, y: 0 };
+    } else {
+      let index = u16::try_from(index).unwrap();
+      self.region.position = Vector2 { x: index, y: 2 };
+    }
+    Ok(())
+  }
 }
 
 impl Object for Pin {
   fn apply_attribute(&mut self, attribute: Attribute) -> Result<(), CirnoError> {
     match attribute {
       Attribute::Label(label) => self.label = label,
-      Attribute::Num(num) => self.num = num,
-      Attribute::Position(vec2) => self.region.position = vec2,
+      // Attribute::Position(vec2) => self.region.position = vec2,
       Attribute::Value(value) => self.value = value,
       a => return Err(CirnoError::InvalidAttributeForObject(a, "pin".to_string())),
     }
@@ -324,15 +303,12 @@ impl Object for Pin {
     Ok(())
   }
   fn verify(&self) -> Result<(), CirnoError> {
-    // TODO: pin num, pin position
+    // TODO: pin position
     Ok(())
   }
-  // TODO: dead code?
   fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
-    // this call returns the position of the top left corner of the parent chip
-    let (col, row) = crossterm::cursor::position()?;
-    let x = col + self.region.position.x;
-    let y = row + self.region.position.y;
+    let x = self.region.position.x;
+    let y = self.region.position.y;
     // bounds check
     assert_is_within_bounds_unchecked(x, y, state)?;
     // rendering
@@ -340,9 +316,15 @@ impl Object for Pin {
     execute!(stdout(), crossterm::style::Print("."))?;
     Ok(())
   }
-  // TODO: unused?
   fn report(&self, _state: &CirnoState) -> Result<(String, crossterm::style::Color), anyhow::Error> {
-    Ok((String::new(), crossterm::style::Color::White))
+    if self.label.ne("") {
+      return Ok((self.label.to_string(), crossterm::style::Color::Cyan))
+    }
+    match self.value {
+      Value::Gnd => Ok(("gnd".to_string(), crossterm::style::Color::Blue)),
+      Value::Vcc => Ok(("vcc".to_string(), crossterm::style::Color::Red)),
+      _ => Ok((String::new(), crossterm::style::Color::White)),
+    }
   }
 }
 

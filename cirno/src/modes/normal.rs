@@ -36,7 +36,6 @@ fn handle_key_event(event: KeyEvent, state: &mut CirnoState) -> Result<EventResu
   // Ctrl+C
   if matches!(code, crossterm::event::KeyCode::Char('c')) && modifiers.contains(crossterm::event::KeyModifiers::CONTROL) {
     bar::message("type  :q  and press <Enter> to exit cirno".to_string(), state)?;
-    return Ok(EventResult::Drop)
   } else if let crossterm::event::KeyCode::Char(c) = code {
     if let Some(cmd) = get().key_commands.get(&c) {
       return (cmd)(state);
