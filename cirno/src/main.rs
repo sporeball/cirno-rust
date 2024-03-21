@@ -21,10 +21,15 @@ fn open(contents: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   state.set_cic_data()?;
   state.set_region_sizes()?;
   state.set_wire_labels()?;
+  state.verify_overlap()?;
   state.convert_chips()?;
 
-  // cirno::logger::debug(format!("objects: {:?}", &state.objects));
+  cirno::logger::debug(format!("objects: {:?}", &state.objects));
   // cirno::logger::debug(format!("cic_data: {:?}", &state.cic_data));
+
+  let now = Instant::now();
+  let elapsed = now.elapsed();
+  cirno::logger::info(format!("verified overlap in {:?}", elapsed));
 
   // TODO: DRY
   let now = Instant::now();

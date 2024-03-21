@@ -116,11 +116,11 @@ impl CirnoState {
     let mut v: Vec<ObjectEnum> = vec![];
     for object in binding.iter().cloned() { // objects
       if let ObjectEnum::Chip(chip) = object {
-        for pin in self.cic_data.get(&chip.t).unwrap().clone().iter_mut() {
-          let ObjectEnum::Pin(pin) = pin else { unreachable!(); };
+        for pin in self.cic_data.get(&chip.t).unwrap().iter().cloned() {
+          let ObjectEnum::Pin(mut pin) = pin else { unreachable!(); };
           pin.region.position.x += chip.region.position.x;
           pin.region.position.y += chip.region.position.y;
-          v.push(ObjectEnum::Pin(pin.clone()));
+          v.push(ObjectEnum::Pin(pin));
         }
       } else {
         v.push(object);
@@ -185,7 +185,10 @@ impl CirnoState {
     if bound_x + 2 > self.columns || bound_y + 2 > self.rows {
       return Err(CirnoError::TerminalTooSmall)
     }
-    // no regions should overlap with each other
+    Ok(())
+  }
+  /// Verify that no objects overlap with each other.
+  pub fn verify_overlap(&mut self) -> Result<(), CirnoError> {
     for (index, object) in self.objects.borrow().iter().enumerate() {
       let Some(region) = object.get_region() else { continue };
       for (other_index, other_object) in self.objects.borrow().iter().enumerate().filter(|x| x.0 > index) {
