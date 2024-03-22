@@ -1,4 +1,4 @@
-use crate::{error::{CirnoError, try_to}, project::{Chip, Meta, Mode, Modes, Object, ObjectEnum, Vector2}, terminal::EventResult};
+use crate::{error::{CirnoError, try_to}, project::{Chip, Meta, Mode, Modes, Object, ObjectEnum, Vector2, Voltage}, terminal::EventResult};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
@@ -109,6 +109,29 @@ impl CirnoState {
     }
     Ok(())
   }
+  /// Set the `voltage` property of every pin object.
+  pub fn set_pin_voltages(&mut self) -> Result<(), anyhow::Error> {
+    let mut binding = self.objects.borrow_mut();
+    let (mut pins, mut wires, mut nets) = binding.iter_mut().fold((vec![], vec![], vec![]), |mut acc, x| {
+      match x {
+        ObjectEnum::Pin(pin) => acc.0.push(pin),
+        ObjectEnum::Wire(wire) => acc.1.push(wire),
+        ObjectEnum::Net(net) => acc.2.push(net),
+        _ => {},
+      };
+      acc
+    });
+    for pin in pins.iter_mut() {
+      let Some(wire) = wires.iter_mut().find(|x| x.is_connected_to(pin.region.position)) else { continue; };
+      let Some(net) = nets.iter_mut().find(|x| x.region.overlapping_vec2(wire.from) || x.region.overlapping_vec2(wire.to)) else { continue; };
+      pin.voltage = match net.t.as_str() {
+        "vcc" => Voltage::High,
+        "gnd" => Voltage::Low,
+        _ => unreachable!(),
+      };
+    }
+    Ok(())
+  }
   /// Replace the chips in `objects` with the corresponding pins from `cic_data`, updating the
   /// position of each.
   pub fn convert_chips(&mut self) -> Result<(), anyhow::Error> {
@@ -212,7 +235,7 @@ pub fn read(filename: &str) -> Result<String, anyhow::Error> {
   }
   match extension.unwrap().to_str().unwrap() { // converts from Option<&OsStr> to &str
     "cic" | "cip" => {
-      let contents = std::fs::read_to_string(path)?;
+      let contents = fs::read_to_string(path)?;
       Ok(contents)
     },
     x => Err(CirnoError::InvalidFiletype(x.to_string()).into()),
@@ -221,12 +244,11 @@ pub fn read(filename: &str) -> Result<String, anyhow::Error> {
 
 pub fn stdlib(filename: &str) -> Result<String, anyhow::Error> {
   let out_dir = std::env::var_os("OUT_DIR").unwrap();
-  let path = Path::new(&out_dir)
-    .join(format!("stdlib/{}.cic", filename));
+  let path = Path::new(&out_dir).join(format!("stdlib/{}.cic", filename));
   if !path.exists() {
     return Err(CirnoError::NotFoundInStdlib(filename.to_string()).into())
   }
-  let contents: String = fs::read_to_string(path)?;
+  let contents = fs::read_to_string(path)?;
   Ok(contents)
 }
 

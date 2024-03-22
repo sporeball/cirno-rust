@@ -5,13 +5,13 @@ use std::io::stdout;
 use crossterm::{execute, style::Color};
 use enum_dispatch::enum_dispatch;
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Vector2 {
   pub x: u16,
   pub y: u16,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default)]
 pub struct Region {
   pub position: Vector2,
   pub size: Vector2,
@@ -29,6 +29,10 @@ impl Region {
     let r2_top_side = other.position.y;
     let r2_bottom_side = other.position.y + other.size.y - 1;
     r1_left_side <= r2_right_side && r1_right_side >= r2_left_side && r1_top_side <= r2_bottom_side && r1_bottom_side >= r2_top_side
+  }
+  /// Return whether a region is overlapping a Vector2.
+  pub fn overlapping_vec2(&self, vec2: Vector2) -> bool {
+    self.overlapping(&Region { position: vec2, size: Vector2 { x: 1, y: 1 } })
   }
 }
 
@@ -336,16 +340,21 @@ pub struct Wire {
   pub label: char,
 }
 
-// impl Wire {
-//   fn is_connected_to(&self, position: Vector2) -> bool {
-//     (self.from.x == position.x && self.from.y == position.y) ||
-//     (self.to.x == position.x && self.to.y == position.y)
-//   }
-// }
+impl Wire {
+  pub fn is_connected_to(&self, position: Vector2) -> bool {
+    (self.from.x == position.x && self.from.y == position.y) ||
+      (self.to.x == position.x && self.to.y == position.y)
+  }
+}
 
 impl Default for Wire {
   fn default() -> Wire {
-    Wire { color: Color::Red, from: Vector2::default(), to: Vector2::default(), label: 'a' }
+    Wire {
+      color: Color::Red,
+      from: Vector2::default(),
+      to: Vector2::default(),
+      label: 'a',
+    }
   }
 }
 
