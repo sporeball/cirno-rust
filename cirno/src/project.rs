@@ -5,7 +5,7 @@ use std::io::stdout;
 use crossterm::{execute, style::Color};
 use enum_dispatch::enum_dispatch;
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
 pub struct Vector2 {
   pub x: u16,
   pub y: u16,
@@ -351,8 +351,7 @@ pub struct Wire {
 
 impl Wire {
   pub fn is_connected_to(&self, position: Vector2) -> bool {
-    (self.from.x == position.x && self.from.y == position.y) ||
-      (self.to.x == position.x && self.to.y == position.y)
+    self.from == position || self.to == position
   }
 }
 

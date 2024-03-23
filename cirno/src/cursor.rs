@@ -56,10 +56,7 @@ pub fn report(state: &CirnoState) -> Result<(), anyhow::Error> {
       ObjectEnum::Wire(wire) => Some(wire.to_owned()),
       _ => None,
     })
-    .find(|w| {
-      (state.cursor.x == w.from.x && state.cursor.y == w.from.y) ||
-      (state.cursor.x == w.to.x && state.cursor.y == w.to.y)
-    });
+    .find(|w| w.is_connected_to(state.cursor));
   for object in objects.iter() {
     let Some(region) = object.get_region() else { continue };
     if region.overlapping(&cursor_region) {
