@@ -321,13 +321,22 @@ impl Object for Pin {
     Ok(())
   }
   fn report(&self, _state: &CirnoState) -> Result<(String, crossterm::style::Color), anyhow::Error> {
+    let (report, color);
+    // basic value
     if self.label.ne("") {
-      return Ok((self.label.to_string(), crossterm::style::Color::Cyan))
+      (report, color) = (self.label.to_string(), crossterm::style::Color::Cyan);
+    } else {
+      (report, color) = match self.value {
+        Value::Gnd => ("gnd".to_string(), crossterm::style::Color::Blue),
+        Value::Vcc => ("vcc".to_string(), crossterm::style::Color::Red),
+        _ => (String::new(), crossterm::style::Color::White),
+      };
     }
-    match self.value {
-      Value::Gnd => Ok(("gnd".to_string(), crossterm::style::Color::Blue)),
-      Value::Vcc => Ok(("vcc".to_string(), crossterm::style::Color::Red)),
-      _ => Ok((String::new(), crossterm::style::Color::White)),
+    // voltage
+    match self.voltage {
+      Voltage::High => Ok((format!("{} ({})", report, "hi"), color)),
+      Voltage::Low => Ok((format!("{} ({})", report, "lo"), color)),
+      Voltage::Floating => Ok((report, color)),
     }
   }
 }

@@ -5,3 +5,5 @@
 : net type gnd y 1
 : wire color red from 0 0 to 0 2
 : wire color blue from 6 4 to 6 1
+: wire color green from 2 0 to 2 2
+: wire color green from 1 0 to 1 2
