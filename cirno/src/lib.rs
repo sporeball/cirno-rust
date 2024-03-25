@@ -1,4 +1,4 @@
-use crate::{error::{CirnoError, try_to}, project::{Chip, Meta, Mode, Modes, Object, ObjectEnum, Vector2, Voltage}, terminal::EventResult};
+use crate::{error::{CirnoError, try_to}, project::{Chip, Meta, Mode, Modes, Object, ObjectEnum, Value, Vector2, Voltage}, terminal::EventResult};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
@@ -135,14 +135,42 @@ impl CirnoState {
   /// Replace the chips in `objects` with the corresponding pins from `cic_data`, updating the
   /// position of each.
   pub fn convert_chips(&mut self) -> Result<(), anyhow::Error> {
-    let binding = self.objects.borrow();
     let mut v: Vec<ObjectEnum> = vec![];
+    let mut chip_counts: HashMap<String, u32> = HashMap::new();
+    let binding = self.objects.borrow();
     for object in binding.iter().cloned() { // objects
       if let ObjectEnum::Chip(chip) = object {
+        let short_chip_type = short_chip_type(chip.t.clone());
+        // update chip_counts based on chip type
+        if !chip_counts.contains_key(&chip.t) {
+          chip_counts.insert(chip.t.clone(), 0);
+        }
+        if let Some(c) = chip_counts.get_mut(&chip.t) {
+          *c += 1;
+        }
+        let c = chip_counts.get(&chip.t).unwrap();
+        // for each pin
         for pin in self.cic_data.get(&chip.t).unwrap().iter().cloned() {
           let ObjectEnum::Pin(mut pin) = pin else { unreachable!(); };
+          // update position
           pin.region.position.x += chip.region.position.x;
           pin.region.position.y += chip.region.position.y;
+          // update label
+          if pin.label != "" {
+            pin.label = format!("{}_{}_{}", pin.label, short_chip_type, c);
+          }
+          // update value
+          match pin.value {
+            Value::And(labels) => {
+              let mut lv: Vec<String> = vec![];
+              for label in labels {
+                lv.push(format!("{}_{}_{}", label, short_chip_type, c));
+              }
+              pin.value = Value::And(lv);
+            },
+            _ => {},
+          }
+          // push the updated pin
           v.push(ObjectEnum::Pin(pin));
         }
       } else {
@@ -262,4 +290,8 @@ pub fn color_to_string(color: Color) -> String {
     Color::Cyan => "cyan".to_string(),
     _ => todo!(),
   }
+}
+
+pub fn short_chip_type(t: String) -> String {
+  t.split('/').collect::<Vec<&str>>().last().unwrap().to_string()
 }
