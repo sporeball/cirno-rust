@@ -19,6 +19,8 @@ pub enum CirnoError {
   InvalidObjectType(String),
   #[error("invalid value attribute: {0}")]
   InvalidValueAttribute(String),
+  #[error("invalid wire")]
+  InvalidWire,
   #[error("invalid value '{0}' for attribute '{1}'")]
   InvalidValueForAttribute(String, String),
   #[error("meta object missing or invalid")]

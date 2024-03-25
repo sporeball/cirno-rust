@@ -398,7 +398,9 @@ impl Object for Wire {
     Ok(())
   }
   fn verify(&self) -> Result<(), CirnoError> {
-    // TODO
+    if self.from == self.to {
+      return Err(CirnoError::InvalidWire)
+    }
     Ok(())
   }
   fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
@@ -417,7 +419,6 @@ impl Object for Wire {
     Ok(())
   }
   fn report(&self, _state: &CirnoState) -> Result<(String, Color), anyhow::Error> {
-    // TODO
     Ok((String::new(), crossterm::style::Color::White))
   }
 }
