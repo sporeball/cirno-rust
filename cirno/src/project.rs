@@ -287,6 +287,21 @@ impl Pin {
     }
     Ok(())
   }
+  pub fn calculate_voltage_from_value(&mut self, voltages: &HashMap<String, Voltage>) -> Result<Voltage, anyhow::Error> {
+    match &self.value {
+      Value::And(labels) => {
+        for label in labels {
+          let v = voltages.get(label);
+          match v {
+            Some(&Voltage::High) => { continue },
+            _ => return Ok(Voltage::Low),
+          };
+        }
+        Ok(Voltage::High)
+      },
+      _ => Ok(Voltage::Floating),
+    }
+  }
 }
 
 impl Object for Pin {

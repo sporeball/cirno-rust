@@ -1,4 +1,4 @@
-use crate::{error::{CirnoError, try_to}, project::{Chip, Meta, Mode, Modes, Object, ObjectEnum, Value, Vector2, Voltage}, terminal::EventResult};
+use crate::{error::{CirnoError, try_to}, project::{Chip, Meta, Mode, Modes, Object, ObjectEnum, Pin, Value, Vector2, Voltage}, terminal::EventResult};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
@@ -109,7 +109,7 @@ impl CirnoState {
     }
     Ok(())
   }
-  /// Set the `voltage` property of every pin object.
+  /// Set the `voltage` property of every pin object connected to a net with a wire.
   pub fn set_pin_voltages(&mut self) -> Result<(), anyhow::Error> {
     let mut binding = self.objects.borrow_mut();
     let (mut pins, mut wires, mut nets) = binding.iter_mut().fold((vec![], vec![], vec![]), |mut acc, x| {
@@ -128,6 +128,34 @@ impl CirnoState {
         "vcc" => Voltage::High,
         "gnd" => Voltage::Low,
         _ => unreachable!(),
+      };
+    }
+    Ok(())
+  }
+  /// Calculate the `voltage` property for every pin object with a calculable Value.
+  pub fn calculate_voltages_from_values(&mut self) -> Result<(), anyhow::Error> {
+    let mut binding = self.objects.borrow_mut();
+    let mut pins: Vec<&mut Pin> = binding
+      .iter_mut()
+      .filter_map(|x| match x {
+        ObjectEnum::Pin(pin) => Some(pin),
+        _ => None,
+      })
+      .collect();
+    let mut voltages: HashMap<String, Voltage> = HashMap::new();
+    for pin in pins.iter() {
+      if pin.label == "" {
+        continue;
+      }
+      voltages.insert(pin.label.clone(), pin.voltage.clone());
+    }
+    for pin in pins.iter_mut() {
+      match pin.value {
+        Value::And(_) => {
+          pin.voltage = pin.calculate_voltage_from_value(&voltages)?;
+          voltages.insert(pin.label.clone(), pin.voltage.clone());
+        },
+        _ => { continue; },
       };
     }
     Ok(())

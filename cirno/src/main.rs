@@ -24,8 +24,9 @@ fn open(contents: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   state.verify_overlap()?;
   state.convert_chips()?;
   state.set_pin_voltages()?;
+  state.calculate_voltages_from_values()?;
 
-  cirno::logger::debug(format!("objects: {:?}", &state.objects));
+  // cirno::logger::debug(format!("objects: {:?}", &state.objects));
   // cirno::logger::debug(format!("cic_data: {:?}", &state.cic_data));
 
   let now = Instant::now();
