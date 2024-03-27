@@ -139,19 +139,29 @@ fn parse_attribute_color(token: &str) -> Result<Color, CirnoError> {
 fn parse_attribute_value(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Result<Value, CirnoError> {
   match token {
     "and" => {
-      let mut values: Vec<String> = vec![];
-      while let Some(_token) = lexer.next() {
-        if lexer.slice() == "." {
-          break;
-        }
-        values.push(lexer.slice().to_string());
-      }
+      let values: Vec<String> = consume_until_ender(lexer)?;
       Ok(Value::And(values))
     },
+    "or" => {
+      let values: Vec<String> = consume_until_ender(lexer)?;
+      Ok(Value::Or(values))
+    }
     "gnd" => Ok(Value::Gnd),
     "vcc" => Ok(Value::Vcc),
     v => Err(CirnoError::InvalidValueAttribute(v.to_string())),
   }
+}
+
+// TODO: should this function return Ok on an ender and Err if it reaches None?
+fn consume_until_ender(lexer: &mut logos::Lexer<'_, Token>) -> Result<Vec<String>, CirnoError> { // TODO: anyhow?
+  let mut values: Vec<String> = vec![];
+  while let Some(_token) = lexer.next() {
+    if lexer.slice() == "." {
+      break;
+    }
+    values.push(lexer.slice().to_string());
+  }
+  Ok(values)
 }
 
 fn object_default(token: &str) -> Result<ObjectEnum, CirnoError> {

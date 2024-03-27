@@ -43,6 +43,7 @@ pub enum Value {
   Gnd,
   #[default]
   None,
+  Or(Vec<String>),
   Vcc,
 }
 
@@ -298,6 +299,16 @@ impl Pin {
           };
         }
         Ok(Voltage::High)
+      },
+      Value::Or(labels) => {
+        for label in labels {
+          let v = voltages.get(label);
+          match v {
+            Some(&Voltage::High) => return Ok(Voltage::High),
+            _ => { continue },
+          };
+        }
+        Ok(Voltage::Low)
       },
       _ => Ok(Voltage::Floating),
     }

@@ -151,7 +151,7 @@ impl CirnoState {
     }
     for pin in pins.iter_mut() {
       match pin.value {
-        Value::And(_) => {
+        Value::And(_) | Value::Or(_)=> {
           pin.voltage = pin.calculate_voltage_from_value(&voltages)?;
           voltages.insert(pin.label.clone(), pin.voltage.clone());
         },
@@ -185,16 +185,17 @@ impl CirnoState {
           pin.region.position.y += chip.region.position.y;
           // update label
           if pin.label != "" {
-            pin.label = format!("{}_{}_{}", pin.label, short_chip_type, c);
+            pin.label = unique_label(pin.label, &short_chip_type, *c);
           }
           // update value
           match pin.value {
             Value::And(labels) => {
-              let mut lv: Vec<String> = vec![];
-              for label in labels {
-                lv.push(format!("{}_{}_{}", label, short_chip_type, c));
-              }
-              pin.value = Value::And(lv);
+              let v: Vec<String> = unique_label_vec(labels, &short_chip_type, *c);
+              pin.value = Value::And(v);
+            },
+            Value::Or(labels) => {
+              let v: Vec<String> = unique_label_vec(labels, &short_chip_type, *c);
+              pin.value = Value::Or(v);
             },
             _ => {},
           }
@@ -251,6 +252,8 @@ impl CirnoState {
       })
       .ok_or(CirnoError::MetaObjectError)
   }
+  // TODO: if parsing fails, this function returns CirnoError::MetaObjectError when entering normal
+  // mode from console mode
   /// Verify the current state.
   pub fn verify(&mut self) -> Result<(), CirnoError> {
     // state.meta.bounds should be set
@@ -322,4 +325,16 @@ pub fn color_to_string(color: Color) -> String {
 
 pub fn short_chip_type(t: String) -> String {
   t.split('/').collect::<Vec<&str>>().last().unwrap().to_string()
+}
+
+pub fn unique_label(original: String, t: &str, count: u32) -> String {
+  format!("{}_{}_{}", original, t, count)
+}
+
+pub fn unique_label_vec(originals: Vec<String>, t: &str, count: u32) -> Vec<String> {
+  let mut v: Vec<String> = vec![];
+  for original in originals {
+    v.push(unique_label(original, t, count));
+  }
+  v
 }
