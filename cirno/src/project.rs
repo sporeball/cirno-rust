@@ -177,7 +177,7 @@ impl Object for Meta {
     let center_y = state.rows / 2;
     let min_x = center_x - (bound_x / 2) - 1;
     let min_y = center_y - (bound_y / 2) - 1;
-    let max_x = center_x + (bound_x / 2);
+    // let max_x = center_x + (bound_x / 2);
     let max_y = center_y + (bound_y / 2);
     execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::DarkGrey))?;
     // top border
@@ -186,13 +186,8 @@ impl Object for Meta {
     // side borders
     let mut i = 1;
     while i < bound_y + 1 {
-      // execute!(stdout(), crossterm::style::Print(format!("{}{}{}", "~", " ".repeat(state.bound_x.into()), "~")))?;
-      // left border
       execute!(stdout(), crossterm::cursor::MoveTo(min_x, min_y + i))?;
-      execute!(stdout(), crossterm::style::Print("~"))?;
-      // right border
-      execute!(stdout(), crossterm::cursor::MoveTo(max_x, min_y + i))?;
-      execute!(stdout(), crossterm::style::Print("~"))?;
+      execute!(stdout(), crossterm::style::Print(format!("{}{}{}", "~", " ".repeat(bound_x.into()), "~")))?;
       i = i + 1;
     }
     // bottom border
