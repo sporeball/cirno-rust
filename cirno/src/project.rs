@@ -93,7 +93,7 @@ pub trait Object: Debug {
   fn apply_attribute(&mut self, attribute: Attribute) -> Result<(), CirnoError>;
   fn get_region(&self) -> Option<&Region>;
   fn set_region_size(&mut self, state: &CirnoState) -> Result<(), anyhow::Error>;
-  fn verify(&self) -> Result<(), CirnoError>;
+  fn verify(&self, state: &CirnoState) -> Result<(), CirnoError>;
   fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error>;
   fn report(&self, state: &CirnoState) -> Result<(String, crossterm::style::Color), anyhow::Error>;
 }
@@ -122,11 +122,15 @@ impl Object for Chip {
     self.region.size = Vector2 { x: width, y: 3 };
     Ok(())
   }
-  fn verify(&self) -> Result<(), CirnoError> {
+  fn verify(&self, state: &CirnoState) -> Result<(), CirnoError> {
+    // chip type
     if self.t.eq("") {
       return Err(CirnoError::MissingAttribute("chip type".to_string()))
     }
     // TODO: chip position
+    // bounds check
+    assert_is_within_bounds_unchecked(self.region.position.x, self.region.position.y, state)?;
+    assert_is_within_bounds_unchecked(self.region.position.x + self.region.size.x - 1, self.region.position.y + self.region.size.y - 1, state)?;
     Ok(())
   }
   fn render(&self, _state: &CirnoState) -> Result<(), anyhow::Error> {
@@ -156,7 +160,8 @@ impl Object for Meta {
   fn set_region_size(&mut self, _state: &CirnoState) -> Result<(), anyhow::Error> {
     Ok(())
   }
-  fn verify(&self) -> Result<(), CirnoError> {
+  fn verify(&self, _state: &CirnoState) -> Result<(), CirnoError> {
+    // bounds
     if self.bounds.x == 0 && self.bounds.y == 0 {
       return Err(CirnoError::MissingAttribute("bounds".to_string()))
     }
@@ -223,20 +228,21 @@ impl Object for Net {
     self.region.size = Vector2 { x: state.meta.bounds.x, y: 1 };
     Ok(())
   }
-  fn verify(&self) -> Result<(), CirnoError> {
+  fn verify(&self, state: &CirnoState) -> Result<(), CirnoError> {
+    // net type
     match self.t.as_str() {
       "vcc" | "gnd" => {},
       "" => return Err(CirnoError::MissingAttribute("net type".to_string())),
       t => return Err(CirnoError::InvalidValueForAttribute(t.to_string(), "net type".to_string())),
     };
     // TODO: net y
+    // bounds check
+    assert_is_within_bounds_unchecked(0, self.region.position.y, state)?;
     Ok(())
   }
   fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let y = self.region.position.y;
     let bound_x = state.meta.bounds.x;
-    // bounds check
-    assert_is_within_bounds_unchecked(0, y, state)?;
     // rendering
     move_within_bounds(0, y, state)?;
     match self.t.as_str() {
@@ -332,15 +338,15 @@ impl Object for Pin {
     self.region.size = Vector2 { x: 1, y: 1 };
     Ok(())
   }
-  fn verify(&self) -> Result<(), CirnoError> {
+  fn verify(&self, state: &CirnoState) -> Result<(), CirnoError> {
     // TODO: pin position
+    // bounds check
+    assert_is_within_bounds_unchecked(self.region.position.x, self.region.position.y, state)?;
     Ok(())
   }
   fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let x = self.region.position.x;
     let y = self.region.position.y;
-    // bounds check
-    assert_is_within_bounds_unchecked(x, y, state)?;
     // rendering
     move_within_bounds(x, y, state)?;
     execute!(stdout(), crossterm::style::Print("."))?;
@@ -408,18 +414,19 @@ impl Object for Wire {
   fn set_region_size(&mut self, _state: &CirnoState) -> Result<(), anyhow::Error> {
     Ok(())
   }
-  fn verify(&self) -> Result<(), CirnoError> {
+  fn verify(&self, state: &CirnoState) -> Result<(), CirnoError> {
+    // from and to
     if self.from == self.to {
       return Err(CirnoError::InvalidWire)
     }
+    // bounds check
+    assert_is_within_bounds_unchecked(self.from.x, self.from.y, state)?;
+    assert_is_within_bounds_unchecked(self.to.x, self.to.y, state)?;
     Ok(())
   }
   fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
     let (from_x, from_y) = (self.from.x, self.from.y);
     let (to_x, to_y) = (self.to.x, self.to.y);
-    // bounds check
-    assert_is_within_bounds_unchecked(from_x, from_y, state)?;
-    assert_is_within_bounds_unchecked(to_x, to_y, state)?;
     // rendering
     execute!(stdout(), crossterm::style::SetForegroundColor(self.color))?;
     move_within_bounds(from_x, from_y, state)?;

@@ -267,6 +267,11 @@ impl CirnoState {
     if bound_x + 2 > self.columns || bound_y + 2 > self.rows {
       return Err(CirnoError::TerminalTooSmall)
     }
+    // verify all objects plus overlap
+    for object in self.objects.borrow().iter() {
+      object.verify(self)?;
+    }
+    self.verify_overlap()?;
     Ok(())
   }
   /// Verify that no objects overlap with each other.
