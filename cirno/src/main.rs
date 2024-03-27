@@ -57,6 +57,7 @@ fn main() -> Result<(), anyhow::Error> {
     rows,
     mode: Modes::Normal,
     cursor: Vector2::default(),
+    char_under_cursor: (' ', crossterm::style::Color::White),
     objects: Rc::new(RefCell::new(vec![])),
     meta: Meta::default(),
     error: String::new(),

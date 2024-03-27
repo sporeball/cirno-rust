@@ -5,50 +5,61 @@ use crossterm::{execute, style::Color};
 pub fn move_left(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   clear(state)?;
   state.cursor.x -= cells;
-  state.render()?;
+  render(state)?;
+  report(state)?;
   Ok(())
 }
 
 pub fn move_right(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   clear(state)?;
   state.cursor.x += cells;
-  state.render()?;
+  render(state)?;
+  report(state)?;
   Ok(())
 }
 
 pub fn move_up(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   clear(state)?;
   state.cursor.y -= cells;
-  state.render()?;
+  render(state)?;
+  report(state)?;
   Ok(())
 }
 
 pub fn move_down(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   clear(state)?;
   state.cursor.y += cells;
-  state.render()?;
+  render(state)?;
+  report(state)?;
   Ok(())
 }
 
+/// Clear the cursor, replacing it with the character that should be underneath.
 pub fn clear(state: &CirnoState) -> Result<(), anyhow::Error> {
   move_within_bounds(state.cursor.x, state.cursor.y, state)?;
-  execute!(stdout(), crossterm::style::Print(" "))?;
+  execute!(stdout(), crossterm::style::SetForegroundColor(state.char_under_cursor.1))?;
+  execute!(stdout(), crossterm::style::Print(state.char_under_cursor.0))?;
+  execute!(stdout(), crossterm::style::ResetColor)?;
   Ok(())
 }
 
+/// Draw the cursor.
 pub fn render(state: &CirnoState) -> Result<(), anyhow::Error> {
   move_within_bounds(state.cursor.x, state.cursor.y, state)?;
   execute!(stdout(), crossterm::style::Print("@"))?;
   Ok(())
 }
 
-pub fn report(state: &CirnoState) -> Result<(), anyhow::Error> {
+/// Print information about the object that the cursor is overlapping.
+/// Sets `state.char_under_cursor`.
+pub fn report(state: &mut CirnoState) -> Result<(), anyhow::Error> {
   bar::clear(state)?;
   let cursor_region = Region {
     position: Vector2 { x: state.cursor.x, y: state.cursor.y },
     size: Vector2 { x: 1, y: 1 },
   };
   let (mut report, mut color) = (String::new(), Color::White);
+  let (mut u_char, mut u_color) = (' ', Color::White);
   let objects = state.objects.borrow();
   let wire = objects
     .iter()
@@ -61,13 +72,18 @@ pub fn report(state: &CirnoState) -> Result<(), anyhow::Error> {
     let Some(region) = object.get_region() else { continue };
     if region.overlapping(&cursor_region) {
       (report, color) = object.report(state)?;
+      (u_char, u_color) = object.get_char().unwrap();
     }
   }
   if wire.is_some() {
     let wire = wire.unwrap();
     report = format!("({}) {}", wire.label, report);
     color = wire.color;
+    (u_char, u_color) = wire.get_char().unwrap();
   }
+  // set state.char_under_cursor
+  state.char_under_cursor = (u_char, u_color);
+  // print report
   execute!(stdout(), crossterm::style::SetForegroundColor(color))?;
   bar::message(report, state)?;
   execute!(stdout(), crossterm::style::ResetColor)?;

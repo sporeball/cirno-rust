@@ -22,6 +22,7 @@ pub struct CirnoState {
   pub rows: u16,
   pub mode: Modes,
   pub cursor: Vector2,
+  pub char_under_cursor: (char, Color),
   pub objects: Rc<RefCell<Vec<ObjectEnum>>>,
   pub meta: Meta,
   pub error: String,
