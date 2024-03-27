@@ -1,4 +1,4 @@
-use crate::{bar, project::{Object, ObjectEnum, Region, Vector2}, terminal::move_within_bounds, CirnoState};
+use crate::{bar, logger, project::{Object, ObjectEnum, Region, Vector2}, terminal::move_within_bounds, CirnoState};
 use std::io::stdout;
 use crossterm::{execute, style::Color};
 
@@ -87,5 +87,32 @@ pub fn report(state: &mut CirnoState) -> Result<(), anyhow::Error> {
   execute!(stdout(), crossterm::style::SetForegroundColor(color))?;
   bar::message(report, state)?;
   execute!(stdout(), crossterm::style::ResetColor)?;
+  Ok(())
+}
+
+/// Print information about the object that the cursor is overlapping to the console.
+pub fn debug(state: &CirnoState) -> Result<(), anyhow::Error> {
+  let cursor_region = Region {
+    position: Vector2 { x: state.cursor.x, y: state.cursor.y },
+    size: Vector2 { x: 1, y: 1 },
+  };
+  let objects = state.objects.borrow();
+  let wire = objects
+    .iter()
+    .filter_map(|x| match x {
+      ObjectEnum::Wire(wire) => Some(wire.to_owned()),
+      _ => None,
+    })
+    .find(|w| w.is_connected_to(state.cursor));
+  for object in objects.iter() {
+    let Some(region) = object.get_region() else { continue };
+    if region.overlapping(&cursor_region) {
+      logger::debug(format!("({}, {}) -> {:?}", state.cursor.x, state.cursor.y, object));
+    }
+  }
+  if wire.is_some() {
+    let wire = wire.unwrap();
+    logger::debug(format!("w: {:?}", wire));
+  }
   Ok(())
 }

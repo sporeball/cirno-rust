@@ -13,6 +13,7 @@ pub fn get() -> Mode {
       ('k', on_key_k as _),
       ('l', on_key_l as _),
       ('C', on_key_cap_c as _),
+      ('L', on_key_cap_l as _),
       (':', on_key_colon as _),
     ]),
     commands: HashMap::from([
@@ -121,6 +122,11 @@ fn on_key_l(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
 
 fn on_key_cap_c(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
   state.set_mode(Modes::Console)?;
+  Ok(EventResult::Ok)
+}
+
+fn on_key_cap_l(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
+  cursor::debug(state)?;
   Ok(EventResult::Ok)
 }
 
