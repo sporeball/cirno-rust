@@ -5,10 +5,16 @@ use std::io::stdout;
 use crossterm::{execute, style::Color};
 use enum_dispatch::enum_dispatch;
 
-#[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Clone, Copy, Default, PartialEq)]
 pub struct Vector2 {
   pub x: u16,
   pub y: u16,
+}
+
+impl Debug for Vector2 {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+    f.write_fmt(format_args!("\u{1b}[36m({}, {})\u{1b}[0m", self.x, self.y))
+  }
 }
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -36,7 +42,7 @@ impl Region {
   }
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Default)]
 // a value that a pin can have
 pub enum Value {
   And(Vec<String>),
@@ -47,12 +53,50 @@ pub enum Value {
   Vcc,
 }
 
-#[derive(Clone, Debug, Default)]
+impl Debug for Value {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+    match self {
+      Value::And(values) => {
+        f.write_str("\u{1b}[33mAnd(\u{1b}[0m")?;
+        values.fmt(f)?;
+        f.write_str("\u{1b}[33m)\u{1b}[0m")?;
+      },
+      Value::Or(values) => {
+        f.write_str("\u{1b}[33mOr(\u{1b}[0m")?;
+        values.fmt(f)?;
+        f.write_str("\u{1b}[33m)\u{1b}[0m")?;
+      }
+      Value::Vcc => {
+        f.write_str("\u{1b}[31mVcc\u{1b}[0m")?;
+      },
+      Value::Gnd => {
+        f.write_str("\u{1b}[34mGnd\u{1b}[0m")?;
+      },
+      Value::None => {
+        f.write_str("\u{1b}[90mNone\u{1b}[0m")?;
+      },
+    }
+    Ok(())
+  }
+}
+
+#[derive(Clone, Default)]
 pub enum Voltage {
   #[default]
   Floating,
   High,
   Low,
+}
+
+impl Debug for Voltage {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+    match self {
+      Voltage::High => f.write_str("\u{1b}[31mHigh\u{1b}[0m")?,
+      Voltage::Low => f.write_str("\u{1b}[34mLow\u{1b}[0m")?,
+      Voltage::Floating => f.write_str("Floating")?,
+    };
+    Ok(())
+  }
 }
 
 #[derive(Clone, Debug)]
@@ -76,15 +120,27 @@ impl std::fmt::Display for Attribute {
   }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 #[enum_dispatch]
-// TODO: manually implement Debug again
 pub enum ObjectEnum {
   Chip(Chip),
   Meta(Meta),
   Net(Net),
   Pin(Pin),
   Wire(Wire),
+}
+
+impl Debug for ObjectEnum {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+    f.write_str("ObjectEnum::")?;
+    match self {
+      ObjectEnum::Chip(chip) => chip.fmt(f),
+      ObjectEnum::Meta(meta) => meta.fmt(f),
+      ObjectEnum::Net(net) => net.fmt(f),
+      ObjectEnum::Pin(pin) => pin.fmt(f),
+      ObjectEnum::Wire(wire) => wire.fmt(f),
+    }
+  }
 }
 
 #[enum_dispatch(ObjectEnum)]
