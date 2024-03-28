@@ -50,6 +50,8 @@ fn main() -> Result<(), anyhow::Error> {
     default_panic(info);
   }));
 
+  let args = Cli::parse();
+
   let (columns, rows) = crossterm::terminal::size()?;
 
   let mut state = CirnoState {
@@ -67,7 +69,6 @@ fn main() -> Result<(), anyhow::Error> {
 
   cirno::terminal::enter()?;
 
-  let args = Cli::parse();
   let filename = args.filename.to_str().unwrap();
   let contents = try_to(read(filename), &mut state)?;
   // unwrap contents, yielding an empty string if the read failed
