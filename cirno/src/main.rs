@@ -1,6 +1,6 @@
 // need to use "cirno" in this file, not "crate"
 
-use cirno::{CirnoState, read, error::try_to, parser, project::{Meta, Modes, Vector2}};
+use cirno::{CirnoState, read, error::try_to, modes::normal::splash, parser, project::{Meta, Modes, Vector2}};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -10,7 +10,7 @@ use clap::Parser;
 /// Full-featured circuit design tool
 #[derive(Parser)]
 struct Cli {
-  filename: std::path::PathBuf,
+  filename: Option<std::path::PathBuf>,
 }
 
 /// Open a cirno project given its contents.
@@ -69,16 +69,23 @@ fn main() -> Result<(), anyhow::Error> {
 
   cirno::terminal::enter()?;
 
-  let filename = args.filename.to_str().unwrap();
-  let contents = try_to(read(filename), &mut state)?;
-  // unwrap contents, yielding an empty string if the read failed
-  let contents_binding = contents.unwrap_or(String::new());
-  // only open project if the read succeeded
-  if contents_binding.ne("") {
-    cirno::logger::info(format!("opening {}", filename));
-    // TODO: i wish we didn't have to pass &mut state two times
-    try_to(open(&contents_binding, &mut state), &mut state)?;
-  }
+  match args.filename {
+    Some(f) => {
+      let filename = f.to_str().unwrap();
+      let contents = try_to(read(filename), &mut state)?;
+      // unwrap contents, yielding an empty string if the read failed
+      let contents_binding = contents.unwrap_or(String::new());
+      // only open project if the read succeeded
+      if contents_binding.ne("") {
+        cirno::logger::info(format!("opening {}", filename));
+        // TODO: i wish we didn't have to pass &mut state two times
+        try_to(open(&contents_binding, &mut state), &mut state)?;
+      }
+    },
+    None => {
+      splash(&mut state)?;
+    },
+  };
 
   // Windows 11 spits out a resize event as soon as cirno starts, which
   // is unneeded and should be dropped

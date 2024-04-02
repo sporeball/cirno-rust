@@ -1,6 +1,8 @@
-use crate::{bar, cursor, error::{CirnoError, try_to}, project::{Mode, Modes}, terminal::{backspace, clear_all, read_line, EventResult}, CirnoState};
+use crate::{bar, cursor, error::{CirnoError, try_to}, project::{Mode, Modes}, terminal::{backspace, clear_all, move_to, read_line, EventResult}, CirnoState};
 use std::collections::HashMap;
+use std::io::stdout;
 use crossterm::event::KeyEvent;
+use crossterm::execute;
 
 pub fn get() -> Mode {
   Mode {
@@ -18,8 +20,29 @@ pub fn get() -> Mode {
     ]),
     commands: HashMap::from([
       ("q".to_string(), command_q as _),
+      ("splash".to_string(), splash as _),
     ]),
   }
+}
+
+pub fn splash(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
+  if state.columns < 30 || state.rows < 6 {
+    return Ok(EventResult::Ok)
+  }
+  let center_x = state.columns / 2;
+  let center_y = state.rows / 2;
+  clear_all()?;
+  move_to(center_x - 12, center_y - 2)?;
+  execute!(stdout(), crossterm::style::Print("\u{1b}[36mcirno\u{1b}[0m"))?;
+  move_to(center_x - 12, center_y - 1)?;
+  execute!(stdout(), crossterm::style::Print("\u{1b}[90m\"I can go anywhere\u{1b}[0m"))?;
+  move_to(center_x - 12, center_y)?;
+  execute!(stdout(), crossterm::style::Print("\u{1b}[90mand do anything I want!\"\u{1b}[0m"))?;
+  move_to(center_x - 15, center_y + 2)?;
+  execute!(stdout(), crossterm::style::Print("type :open \u{1b}[34m<filename>\u{1b}[0m to start"))?;
+  move_to(center_x - 15, center_y + 3)?;
+  execute!(stdout(), crossterm::style::Print("type :q\u{1b}[34m<Enter>\u{1b}[0m to quit"))?;
+  Ok(EventResult::Ok)
 }
 
 fn on_mode_set(state: &mut CirnoState) -> Result<(), anyhow::Error> {
