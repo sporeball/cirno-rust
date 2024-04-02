@@ -1,6 +1,7 @@
-use crate::{bar, cursor, error::{CirnoError, try_to}, project::{Mode, Modes}, terminal::{backspace, clear_all, move_to, read_line, EventResult}, CirnoState};
+use crate::{open, bar, cursor, error::{CirnoError, try_to}, project::{Mode, Modes}, terminal::{backspace, clear_all, move_to, read_line, EventResult}, CirnoState};
 use std::collections::HashMap;
 use std::io::stdout;
+use std::path::PathBuf;
 use crossterm::event::KeyEvent;
 use crossterm::execute;
 
@@ -19,8 +20,12 @@ pub fn get() -> Mode {
       (':', on_key_colon as _),
     ]),
     commands: HashMap::from([
+      // ("open".to_string(), command_open as _),
       ("q".to_string(), command_q as _),
       ("splash".to_string(), splash as _),
+    ]),
+    arg_commands: HashMap::from([
+      ("open".to_string(), command_open as _),
     ]),
   }
 }
@@ -154,17 +159,30 @@ fn on_key_cap_l(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
 }
 
 fn on_key_colon(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
+  let mode = get();
   bar::message(":".to_string(), state)?;
-  let command = read_line()?;
+  let line = read_line()?;
   // remove the colon if the command comes back empty
-  if command.eq("") {
+  if line.eq("") {
     backspace()?;
-  } else if let Some(cmd) = get().commands.get(&command) {
+  } else if let Some(cmd) = mode.commands.get(&line) {
     return (cmd)(state);
+  } else if let Some(key) = mode.arg_commands.keys().find(|&k| line.starts_with(k)) {
+    let cmd = mode.arg_commands.get(key).unwrap();
+    let args = line.split(" ").collect::<Vec<&str>>();
+    return (cmd)(args, state);
   }
   Ok(EventResult::Drop)
 }
 
 fn command_q(_state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
   Ok(EventResult::Exit)
+}
+
+fn command_open(args: Vec<&str>, state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
+  if let [_, filename] = args.as_slice() {
+    try_to(open(PathBuf::from(filename), state), state)?;
+    return Ok(EventResult::Ok)
+  }
+  Err(CirnoError::ArgumentError(1, args.len() - 1).into())
 }

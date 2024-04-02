@@ -4,6 +4,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 use std::rc::Rc;
+use std::time::Instant;
 use crossterm::{event::Event, style::Color};
 use parser::parse;
 
@@ -217,12 +218,13 @@ impl CirnoState {
     loop {
       match crossterm::event::read()? {
         Event::Key(event) => {
-          let res = (self.get_mode().key_event_cb)(event, self).unwrap();
-          if matches!(res, EventResult::Exit) {
-            return Ok(())
-          } else if matches!(res, EventResult::Ok) {
-            self.repeat_amount = 0;
-          }
+          // let res = (self.get_mode().key_event_cb)(event, self).unwrap();
+          match try_to((self.get_mode().key_event_cb)(event, self), self)? {
+            Some(EventResult::Exit) => return Ok(()),
+            Some(EventResult::Ok) => self.repeat_amount = 0,
+            Some(_r) => {},
+            None => {},
+          };
         },
         Event::Resize(columns, rows) => {
           self.columns = columns;
@@ -288,6 +290,45 @@ impl CirnoState {
     }
     Ok(())
   }
+}
+
+/// Open a cirno project.
+// fn open(contents: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
+pub fn open(f: std::path::PathBuf, state: &mut CirnoState) -> Result<(), anyhow::Error> {
+  let filename = f.to_str().unwrap();
+  let contents = try_to(read(filename), state)?;
+  // unwrap contents, yielding an empty string if the read failed
+  let contents_binding = contents.unwrap_or(String::new());
+  // only open project if the read succeeded
+  if contents_binding.eq("") {
+    return Ok(())
+  }
+
+  crate::logger::info(format!("opening {}", filename));
+
+  state.objects = Rc::new(RefCell::new(parser::parse(&contents_binding)?));
+  state.meta = state.find_meta()?;
+
+  state.set_cic_data()?;
+  state.set_region_sizes()?;
+  state.set_wire_labels()?;
+
+  let now = Instant::now();
+  state.verify()?;
+  let elapsed = now.elapsed();
+  crate::logger::info(format!("verified in {:?}", elapsed));
+
+  state.convert_chips()?;
+  state.set_pin_voltages()?;
+  state.calculate_voltages_from_values()?;
+
+  let now = Instant::now();
+  state.render()?;
+  let elapsed = now.elapsed();
+  // bar::message(format!("{:?}", elapsed), &state)?;
+  crate::logger::info(format!("rendered in {:?}", elapsed));
+
+  Ok(())
 }
 
 /// Read a file and return its contents.

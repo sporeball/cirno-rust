@@ -5,6 +5,8 @@ use crossterm::execute;
 
 #[derive(thiserror::Error, Debug)]
 pub enum CirnoError {
+  #[error("expected {0} arguments, got {1}")]
+  ArgumentError(u16, usize),
   #[error("invalid attribute '{0}'")]
   InvalidAttribute(String),
   #[error("attribute '{0}' is invalid for {1} objects")]
