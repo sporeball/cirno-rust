@@ -149,10 +149,10 @@ pub trait Object: Debug {
   fn apply_attribute(&mut self, attribute: Attribute) -> Result<(), CirnoError>;
   fn get_region(&self) -> Option<&Region>;
   fn set_region_size(&mut self, state: &CirnoState) -> Result<(), anyhow::Error>;
-  fn get_char(&self) -> Option<(char, crossterm::style::Color)>;
+  fn get_char(&self) -> Option<(char, Color)>;
   fn verify(&self, state: &CirnoState) -> Result<(), CirnoError>;
   fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error>;
-  fn report(&self, state: &CirnoState) -> Result<(String, crossterm::style::Color), anyhow::Error>;
+  fn report(&self, state: &CirnoState) -> Result<(String, Color), anyhow::Error>;
 }
 
 #[derive(Clone, Debug, Default)]
@@ -179,7 +179,7 @@ impl Object for Chip {
     self.region.size = Vector2 { x: width, y: 3 };
     Ok(())
   }
-  fn get_char(&self) -> Option<(char, crossterm::style::Color)> {
+  fn get_char(&self) -> Option<(char, Color)> {
     None
   }
   fn verify(&self, state: &CirnoState) -> Result<(), CirnoError> {
@@ -196,8 +196,8 @@ impl Object for Chip {
   fn render(&self, _state: &CirnoState) -> Result<(), anyhow::Error> {
     Ok(())
   }
-  fn report(&self, _state: &CirnoState) -> Result<(String, crossterm::style::Color), anyhow::Error> {
-    Ok((String::new(), crossterm::style::Color::White))
+  fn report(&self, _state: &CirnoState) -> Result<(String, Color), anyhow::Error> {
+    Ok((String::new(), Color::White))
   }
 }
 
@@ -220,7 +220,7 @@ impl Object for Meta {
   fn set_region_size(&mut self, _state: &CirnoState) -> Result<(), anyhow::Error> {
     Ok(())
   }
-  fn get_char(&self) -> Option<(char, crossterm::style::Color)> {
+  fn get_char(&self) -> Option<(char, Color)> {
     None
   }
   fn verify(&self, _state: &CirnoState) -> Result<(), CirnoError> {
@@ -242,7 +242,7 @@ impl Object for Meta {
     let min_y = center_y - (bound_y / 2) - 1;
     // let max_x = center_x + (bound_x / 2);
     let max_y = center_y + (bound_y / 2);
-    execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::DarkGrey))?;
+    execute!(stdout(), crossterm::style::SetForegroundColor(Color::DarkGrey))?;
     // top border
     execute!(stdout(), crossterm::cursor::MoveTo(min_x, min_y))?;
     execute!(stdout(), crossterm::style::Print("~".repeat((bound_x + 2).into())))?;
@@ -259,8 +259,8 @@ impl Object for Meta {
     execute!(stdout(), crossterm::style::ResetColor)?;
     Ok(())
   }
-  fn report(&self, _state: &CirnoState) -> Result<(String, crossterm::style::Color), anyhow::Error> {
-    Ok((String::new(), crossterm::style::Color::White))
+  fn report(&self, _state: &CirnoState) -> Result<(String, Color), anyhow::Error> {
+    Ok((String::new(), Color::White))
   }
 }
 
@@ -286,10 +286,10 @@ impl Object for Net {
     self.region.size = Vector2 { x: state.meta.bounds.x, y: 1 };
     Ok(())
   }
-  fn get_char(&self) -> Option<(char, crossterm::style::Color)> {
+  fn get_char(&self) -> Option<(char, Color)> {
     match self.t.as_str() {
-      "vcc" => Some(('+', crossterm::style::Color::Red)),
-      "gnd" => Some(('-', crossterm::style::Color::Blue)),
+      "vcc" => Some(('+', Color::Red)),
+      "gnd" => Some(('-', Color::Blue)),
       _ => unreachable!(),
     }
   }
@@ -312,11 +312,11 @@ impl Object for Net {
     move_within_bounds(0, y, state)?;
     match self.t.as_str() {
       "vcc" => {
-        execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Red))?;
+        execute!(stdout(), crossterm::style::SetForegroundColor(Color::Red))?;
         execute!(stdout(), crossterm::style::Print("+".repeat(bound_x.into())))?;
       },
       "gnd" => {
-        execute!(stdout(), crossterm::style::SetForegroundColor(crossterm::style::Color::Blue))?;
+        execute!(stdout(), crossterm::style::SetForegroundColor(Color::Blue))?;
         execute!(stdout(), crossterm::style::Print("-".repeat(bound_x.into())))?;
       },
       _t => unreachable!(),
@@ -324,10 +324,10 @@ impl Object for Net {
     execute!(stdout(), crossterm::style::ResetColor)?;
     Ok(())
   }
-  fn report(&self, _state: &CirnoState) -> Result<(String, crossterm::style::Color), anyhow::Error> {
+  fn report(&self, _state: &CirnoState) -> Result<(String, Color), anyhow::Error> {
     match self.t.as_str() {
-      "vcc" => Ok(("vcc net".to_string(), crossterm::style::Color::Red)),
-      "gnd" => Ok(("gnd net".to_string(), crossterm::style::Color::Blue)),
+      "vcc" => Ok(("vcc net".to_string(), Color::Red)),
+      "gnd" => Ok(("gnd net".to_string(), Color::Blue)),
       _ => unreachable!(),
     }
   }
@@ -403,8 +403,8 @@ impl Object for Pin {
     self.region.size = Vector2 { x: 1, y: 1 };
     Ok(())
   }
-  fn get_char(&self) -> Option<(char, crossterm::style::Color)> {
-    Some(('.', crossterm::style::Color::White))
+  fn get_char(&self) -> Option<(char, Color)> {
+    Some(('.', Color::White))
   }
   fn verify(&self, state: &CirnoState) -> Result<(), CirnoError> {
     // TODO: pin position
@@ -420,16 +420,16 @@ impl Object for Pin {
     execute!(stdout(), crossterm::style::Print("."))?;
     Ok(())
   }
-  fn report(&self, _state: &CirnoState) -> Result<(String, crossterm::style::Color), anyhow::Error> {
+  fn report(&self, _state: &CirnoState) -> Result<(String, Color), anyhow::Error> {
     let (report, color);
     // basic value
     if self.label.ne("") {
-      (report, color) = (self.label.to_string(), crossterm::style::Color::Cyan);
+      (report, color) = (self.label.to_string(), Color::Cyan);
     } else {
       (report, color) = match self.value {
-        Value::Gnd => ("gnd".to_string(), crossterm::style::Color::Blue),
-        Value::Vcc => ("vcc".to_string(), crossterm::style::Color::Red),
-        _ => (String::new(), crossterm::style::Color::White),
+        Value::Gnd => ("gnd".to_string(), Color::Blue),
+        Value::Vcc => ("vcc".to_string(), Color::Red),
+        _ => (String::new(), Color::White),
       };
     }
     // voltage
@@ -482,7 +482,7 @@ impl Object for Wire {
   fn set_region_size(&mut self, _state: &CirnoState) -> Result<(), anyhow::Error> {
     Ok(())
   }
-  fn get_char(&self) -> Option<(char, crossterm::style::Color)> {
+  fn get_char(&self) -> Option<(char, Color)> {
     Some((self.label, self.color))
   }
   fn verify(&self, state: &CirnoState) -> Result<(), CirnoError> {
@@ -508,7 +508,7 @@ impl Object for Wire {
     Ok(())
   }
   fn report(&self, _state: &CirnoState) -> Result<(String, Color), anyhow::Error> {
-    Ok((String::new(), crossterm::style::Color::White))
+    Ok((String::new(), Color::White))
   }
 }
 
