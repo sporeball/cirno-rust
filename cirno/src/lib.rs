@@ -293,20 +293,25 @@ impl CirnoState {
 }
 
 /// Open a cirno project.
-// fn open(contents: &str, state: &mut CirnoState) -> Result<(), anyhow::Error> {
-pub fn open(f: std::path::PathBuf, state: &mut CirnoState) -> Result<(), anyhow::Error> {
-  let filename = f.to_str().unwrap();
-  let contents = try_to(read(filename), state)?;
-  // unwrap contents, yielding an empty string if the read failed
-  let contents_binding = contents.unwrap_or(String::new());
-  // only open project if the read succeeded
-  if contents_binding.eq("") {
+pub fn open(path: std::path::PathBuf, state: &mut CirnoState) -> Result<(), anyhow::Error> {
+  let filename = path.to_str().unwrap();
+  crate::logger::info(format!("opening {}", filename));
+
+  // extension check
+  let extension = path.extension();
+  if extension.is_none() {
+    return Err(CirnoError::InvalidFile(filename.to_string()).into());
+  }
+  let contents = match extension.unwrap().to_str().unwrap() { // converts from Option<&OsStr> to &str
+    "cip" => fs::read_to_string(&path)?,
+    "cic" => return Err(CirnoError::OpenCicNotImplemented.into()),
+    x => return Err(CirnoError::InvalidFiletype(x.to_string()).into()),
+  };
+  if contents.eq("") {
     return Ok(())
   }
 
-  crate::logger::info(format!("opening {}", filename));
-
-  state.objects = Rc::new(RefCell::new(parser::parse(&contents_binding)?));
+  state.objects = Rc::new(RefCell::new(parser::parse(&contents)?));
   state.meta = state.find_meta()?;
 
   state.set_cic_data()?;
@@ -329,23 +334,6 @@ pub fn open(f: std::path::PathBuf, state: &mut CirnoState) -> Result<(), anyhow:
   crate::logger::info(format!("rendered in {:?}", elapsed));
 
   Ok(())
-}
-
-/// Read a file and return its contents.
-/// Only .cic and .cip files are accepted.
-pub fn read(filename: &str) -> Result<String, anyhow::Error> {
-  let path = Path::new(filename);
-  let extension = path.extension();
-  if extension.is_none() {
-    return Err(CirnoError::InvalidFile(filename.to_string()).into());
-  }
-  match extension.unwrap().to_str().unwrap() { // converts from Option<&OsStr> to &str
-    "cic" | "cip" => {
-      let contents = fs::read_to_string(path)?;
-      Ok(contents)
-    },
-    x => Err(CirnoError::InvalidFiletype(x.to_string()).into()),
-  }
 }
 
 pub fn stdlib(filename: &str) -> Result<String, anyhow::Error> {
