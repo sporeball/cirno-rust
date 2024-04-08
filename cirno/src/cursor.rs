@@ -107,7 +107,7 @@ pub fn debug(state: &CirnoState) -> Result<(), anyhow::Error> {
   for object in objects.iter() {
     let Some(region) = object.get_region() else { continue };
     if region.overlapping(&cursor_region) {
-      logger::debug(format!("({}, {}) -> {:?}", state.cursor.x, state.cursor.y, object));
+      logger::debug(format!("{:?} -> {:?}", state.cursor, object));
     }
   }
   if wire.is_some() {
