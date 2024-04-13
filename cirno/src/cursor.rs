@@ -2,33 +2,69 @@ use crate::{bar, logger, project::{Object, ObjectEnum, Region, Vector2}, termina
 use std::io::stdout;
 use crossterm::{execute, style::Color};
 
+/// Move the cursor left, up to the given number of cells.
 pub fn move_left(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> {
+  let lim = state.cursor.x;
+  if lim == 0 {
+    return Ok(())
+  }
   clear(state)?;
-  state.cursor.x -= cells;
+  state.cursor.x -= match cells {
+    0 => 1,
+    n if (1..=lim).contains(&n) => cells,
+    _ => lim,
+  };
   render(state)?;
   report(state)?;
   Ok(())
 }
 
+/// Move the cursor right, up to the given number of cells.
 pub fn move_right(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> {
+  let lim = state.meta.bounds.x - state.cursor.x - 1;
+  if lim == 0 {
+    return Ok(())
+  }
   clear(state)?;
-  state.cursor.x += cells;
+  state.cursor.x += match cells {
+    0 => 1,
+    n if (1..=lim).contains(&n) => cells,
+    _ => lim,
+  };
   render(state)?;
   report(state)?;
   Ok(())
 }
 
+/// Move the cursor up, up to the given number of cells.
 pub fn move_up(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> {
+  let lim = state.cursor.y;
+  if lim == 0 {
+    return Ok(())
+  }
   clear(state)?;
-  state.cursor.y -= cells;
+  state.cursor.y -= match cells {
+    0 => 1,
+    n if (1..=lim).contains(&n) => cells,
+    _ => lim,
+  };
   render(state)?;
   report(state)?;
   Ok(())
 }
 
+/// Move the cursor down, up to the given number of cells.
 pub fn move_down(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> {
+  let lim = state.meta.bounds.y - state.cursor.y - 2; // ???
+  if lim == 0 {
+    return Ok(())
+  }
   clear(state)?;
-  state.cursor.y += cells;
+  state.cursor.y += match cells {
+    0 => 1,
+    n if (1..=lim).contains(&n) => cells,
+    _ => lim,
+  };
   render(state)?;
   report(state)?;
   Ok(())

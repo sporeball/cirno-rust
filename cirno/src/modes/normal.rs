@@ -101,50 +101,22 @@ fn update_repeat_amount(c: char, state: &mut CirnoState) -> Result<(), CirnoErro
 }
 
 fn on_key_h(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
-  if state.repeat_amount == 0 {
-    state.repeat_amount = 1;
-  }
-  if state.repeat_amount > state.cursor.x {
-    cursor::move_left(state.cursor.x, state)?;
-  } else {
-    cursor::move_left(state.repeat_amount, state)?;
-  }
+  cursor::move_left(state.repeat_amount, state)?;
   Ok(EventResult::Ok)
 }
 
 fn on_key_j(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
-  if state.repeat_amount == 0 {
-    state.repeat_amount = 1;
-  }
-  if state.repeat_amount > state.meta.bounds.y - state.cursor.y - 2 { // ???
-    cursor::move_down(state.meta.bounds.y - state.cursor.y - 2, state)?;
-  } else {
-    cursor::move_down(state.repeat_amount, state)?;
-  }
+  cursor::move_down(state.repeat_amount, state)?;
   Ok(EventResult::Ok)
 }
 
 fn on_key_k(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
-  if state.repeat_amount == 0 {
-    state.repeat_amount = 1;
-  }
-  if state.repeat_amount > state.cursor.y {
-    cursor::move_up(state.cursor.y, state)?;
-  } else {
-    cursor::move_up(state.repeat_amount, state)?;
-  }
+  cursor::move_up(state.repeat_amount, state)?;
   Ok(EventResult::Ok)
 }
 
 fn on_key_l(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
-  if state.repeat_amount == 0 {
-    state.repeat_amount = 1;
-  }
-  if state.repeat_amount > state.meta.bounds.x - state.cursor.x - 1 {
-    cursor::move_right(state.meta.bounds.x - state.cursor.x - 1, state)?;
-  } else {
-    cursor::move_right(state.repeat_amount, state)?;
-  }
+  cursor::move_right(state.repeat_amount, state)?;
   Ok(EventResult::Ok)
 }
 
