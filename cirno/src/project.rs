@@ -159,6 +159,7 @@ pub trait Object: Debug {
   fn verify(&self, state: &CirnoState) -> Result<(), CirnoError>;
   fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error>;
   fn report(&self, state: &CirnoState) -> Result<(String, Color), anyhow::Error>;
+  fn highlight(&self, state: &CirnoState) -> Result<(), anyhow::Error>;
 }
 
 #[derive(Clone, Debug, Default)]
@@ -204,6 +205,9 @@ impl Object for Chip {
   }
   fn report(&self, _state: &CirnoState) -> Result<(String, Color), anyhow::Error> {
     Ok((String::new(), Color::White))
+  }
+  fn highlight(&self, _state: &CirnoState) -> Result<(), anyhow::Error> {
+    Ok(())
   }
 }
 
@@ -267,6 +271,9 @@ impl Object for Meta {
   }
   fn report(&self, _state: &CirnoState) -> Result<(String, Color), anyhow::Error> {
     Ok((String::new(), Color::White))
+  }
+  fn highlight(&self, _state: &CirnoState) -> Result<(), anyhow::Error> {
+    Ok(())
   }
 }
 
@@ -336,6 +343,10 @@ impl Object for Net {
       "gnd" => Ok(("gnd net".to_string(), Color::Blue)),
       _ => unreachable!(),
     }
+  }
+  fn highlight(&self, _state: &CirnoState) -> Result<(), anyhow::Error> {
+    // TODO
+    Ok(())
   }
 }
 
@@ -451,6 +462,10 @@ impl Object for Pin {
       Voltage::Floating => Ok((report, color)),
     }
   }
+  fn highlight(&self, _state: &CirnoState) -> Result<(), anyhow::Error> {
+    // TODO
+    Ok(())
+  }
 }
 
 #[derive(Clone, Debug)]
@@ -521,6 +536,19 @@ impl Object for Wire {
   }
   fn report(&self, _state: &CirnoState) -> Result<(String, Color), anyhow::Error> {
     Ok((String::new(), Color::White))
+  }
+  fn highlight(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
+    execute!(stdout(), crossterm::style::SetForegroundColor(Color::Black))?;
+    execute!(stdout(), crossterm::style::SetBackgroundColor(Color::Yellow))?;
+    // TODO: combine into render somehow (this part is the same)
+    let (from_x, from_y) = (self.from.x, self.from.y);
+    let (to_x, to_y) = (self.to.x, self.to.y);
+    move_within_bounds(from_x, from_y, state)?;
+    execute!(stdout(), crossterm::style::Print(self.label))?;
+    move_within_bounds(to_x, to_y, state)?;
+    execute!(stdout(), crossterm::style::Print(self.label))?;
+    execute!(stdout(), crossterm::style::ResetColor)?;
+    Ok(())
   }
 }
 

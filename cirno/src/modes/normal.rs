@@ -1,4 +1,4 @@
-use crate::{open, bar, cursor, error::{CirnoError, try_to}, project::{Mode, Modes}, terminal::{backspace, clear_all, move_to, read_line, EventResult}, CirnoState};
+use crate::{open, bar, cursor, error::{CirnoError, try_to}, project::{Mode, Modes}, search, terminal::{backspace, clear_all, move_to, read_line, EventResult}, CirnoState};
 use std::collections::HashMap;
 use std::io::stdout;
 use std::path::PathBuf;
@@ -18,6 +18,7 @@ pub fn get() -> Mode {
       ('C', on_key_cap_c as _),
       ('L', on_key_cap_l as _),
       (':', on_key_colon as _),
+      ('/', on_key_slash as _),
     ]),
     commands: HashMap::from([
       // ("open".to_string(), command_open as _),
@@ -143,6 +144,18 @@ fn on_key_colon(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
     let cmd = mode.arg_commands.get(key).unwrap();
     let args = line.split(" ").collect::<Vec<&str>>();
     return (cmd)(args, state);
+  }
+  Ok(EventResult::Drop)
+}
+
+fn on_key_slash(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
+  bar::message("/".to_string(), state)?;
+  let line = read_line()?;
+  // remove the slash if the search comes back empty
+  if line.eq("") {
+    backspace()?;
+  } else {
+    search::query(line, state)?;
   }
   Ok(EventResult::Drop)
 }

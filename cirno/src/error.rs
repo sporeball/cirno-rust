@@ -19,6 +19,8 @@ pub enum CirnoError {
   InvalidFiletype(String),
   #[error("invalid object type '{0}'")]
   InvalidObjectType(String),
+  #[error("invalid search")]
+  InvalidSearch,
   #[error("invalid value attribute: {0}")]
   InvalidValueAttribute(String),
   #[error("invalid wire")]
@@ -43,6 +45,8 @@ pub enum CirnoError {
   OutOfTokensExpectedNumber,
   #[error("regions {0} and {1} are overlapping")]
   OverlappingRegion(usize, usize),
+  #[error("no results found")]
+  NoResultsFound,
   #[error("terminal too small")]
   TerminalTooSmall,
   #[error("cannot repeat action more than 1000 times")]

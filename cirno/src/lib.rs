@@ -15,6 +15,7 @@ pub mod logger;
 pub mod modes;
 pub mod parser;
 pub mod project;
+pub mod search;
 pub mod terminal;
 
 #[derive(Debug)]
