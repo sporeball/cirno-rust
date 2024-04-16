@@ -1,0 +1,21 @@
+: pin label '1a
+: pin label '1y value not '1a
+
+: pin label '2a
+: pin label '2y value not '2a
+
+: pin label '3a
+: pin label '3y value not '3a
+
+: pin value gnd
+
+: pin label '4y value not '4a
+: pin label '4a
+
+: pin label '5y value not '5a
+: pin label '5a
+
+: pin label '6y value not '6a
+: pin label '6a
+
+: pin value vcc

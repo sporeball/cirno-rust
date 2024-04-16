@@ -49,6 +49,7 @@ pub enum Value {
   Gnd,
   #[default]
   None,
+  Not(String),
   Or(Vec<String>),
   Vcc,
 }
@@ -59,6 +60,11 @@ impl Debug for Value {
       Value::And(values) => {
         f.write_str("\u{1b}[33mAnd(\u{1b}[0m")?;
         values.fmt(f)?;
+        f.write_str("\u{1b}[33m)\u{1b}[0m")?;
+      },
+      Value::Not(value) => {
+        f.write_str("\u{1b}[33mNot(\u{1b}[0m")?;
+        value.fmt(f)?;
         f.write_str("\u{1b}[33m)\u{1b}[0m")?;
       },
       Value::Or(values) => {
@@ -370,6 +376,12 @@ impl Pin {
           };
         }
         Ok(Voltage::High)
+      },
+      Value::Not(label) => {
+        match voltages.get(label) {
+          Some(&Voltage::Low) => Ok(Voltage::High),
+          _ => Ok(Voltage::Low),
+        }
       },
       Value::Or(labels) => {
         for label in labels {

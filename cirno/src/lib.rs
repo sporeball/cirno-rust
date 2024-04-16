@@ -153,7 +153,7 @@ impl CirnoState {
     }
     for pin in pins.iter_mut() {
       match pin.value {
-        Value::And(_) | Value::Or(_)=> {
+        Value::And(_) | Value::Not(_) | Value::Or(_) => {
           pin.voltage = pin.calculate_voltage_from_value(&voltages)?;
           voltages.insert(pin.label.clone(), pin.voltage.clone());
         },
@@ -194,6 +194,10 @@ impl CirnoState {
             Value::And(labels) => {
               let v: Vec<String> = unique_label_vec(labels, &short_chip_type, *c);
               pin.value = Value::And(v);
+            },
+            Value::Not(label) => {
+              let l = unique_label(label, &short_chip_type, *c);
+              pin.value = Value::Not(l);
             },
             Value::Or(labels) => {
               let v: Vec<String> = unique_label_vec(labels, &short_chip_type, *c);

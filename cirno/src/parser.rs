@@ -142,6 +142,10 @@ fn parse_attribute_value(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Re
       let values: Vec<String> = consume_until_ender(lexer)?;
       Ok(Value::And(values))
     },
+    "not" => {
+      let label = expect_token!(lexer, Token::Identifier)?;
+      Ok(Value::Not(label))
+    },
     "or" => {
       let values: Vec<String> = consume_until_ender(lexer)?;
       Ok(Value::Or(values))
