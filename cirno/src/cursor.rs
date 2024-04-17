@@ -55,7 +55,7 @@ pub fn move_up(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> 
 
 /// Move the cursor down, up to the given number of cells.
 pub fn move_down(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> {
-  let lim = state.meta.bounds.y - state.cursor.y - 2; // ???
+  let lim = state.meta.bounds.y - state.cursor.y - 1;
   if lim == 0 {
     return Ok(())
   }

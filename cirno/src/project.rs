@@ -250,8 +250,8 @@ impl Object for Meta {
     let center_y = state.rows / 2;
     let min_x = center_x - (bound_x / 2) - 1;
     let min_y = center_y - (bound_y / 2) - 1;
-    // let max_x = center_x + (bound_x / 2);
-    let max_y = center_y + (bound_y / 2);
+    // let max_x = center_x + (bound_x / 2) + 1;
+    let max_y = center_y + (bound_y / 2) + 1;
     execute!(stdout(), crossterm::style::SetForegroundColor(Color::DarkGrey))?;
     // top border
     execute!(stdout(), crossterm::cursor::MoveTo(min_x, min_y))?;
