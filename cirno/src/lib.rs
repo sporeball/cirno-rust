@@ -6,7 +6,10 @@ use std::path::Path;
 use std::rc::Rc;
 use std::time::Instant;
 use crossterm::{event::Event, style::Color};
+use include_dir::{include_dir, Dir};
 use parser::parse;
+
+pub static STDLIB: Dir<'_> = include_dir!("../stdlib");
 
 pub mod bar;
 pub mod cursor;
@@ -342,12 +345,15 @@ pub fn open(path: std::path::PathBuf, state: &mut CirnoState) -> Result<(), anyh
 }
 
 pub fn stdlib(filename: &str) -> Result<String, anyhow::Error> {
-  let out_dir = std::env::var_os("OUT_DIR").unwrap();
-  let path = Path::new(&out_dir).join(format!("stdlib/{}.cic", filename));
-  if !path.exists() {
+  // let out_dir = std::env::var_os("OUT_DIR").unwrap();
+  // let path = Path::new(&out_dir).join(format!("stdlib/{}.cic", filename));
+  let file = STDLIB.get_file(format!("{}.cic", filename));
+  // if !path.exists() {
+  if file.is_none() {
     return Err(CirnoError::NotFoundInStdlib(filename.to_string()).into())
   }
-  let contents = fs::read_to_string(path)?;
+  // let contents = fs::read_to_string(path)?;
+  let contents = file.unwrap().contents_utf8().unwrap().to_string();
   Ok(contents)
 }
 

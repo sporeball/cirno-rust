@@ -40,13 +40,8 @@ fn main() -> Result<(), anyhow::Error> {
   cirno::terminal::enter()?;
 
   match args.filename {
-    Some(f) => {
-      // TODO: i wish we didn't have to pass &mut state two times
-      try_to(open(f, &mut state), &mut state)?;
-    },
-    None => {
-      splash(&mut state)?;
-    },
+    Some(f) => { try_to(open(f, &mut state), &mut state)?; },
+    None => { splash(&mut state)?; },
   };
 
   // Windows 11 spits out a resize event as soon as cirno starts, which
