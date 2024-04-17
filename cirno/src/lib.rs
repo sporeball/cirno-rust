@@ -1,8 +1,7 @@
-use crate::{error::{CirnoError, try_to}, project::{Chip, Meta, Mode, Modes, Object, ObjectEnum, Pin, Value, Vector2, Voltage}, terminal::EventResult};
+use crate::{error::{CirnoError, try_to}, project::{Chip, Meta, Mode, Modes, Object, ObjectEnum, Pin, Value, Vector2, Voltage}, terminal::{EventResult, clear_all}};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
 use std::rc::Rc;
 use std::time::Instant;
 use crossterm::{event::Event, style::Color};
@@ -334,6 +333,8 @@ pub fn open(path: std::path::PathBuf, state: &mut CirnoState) -> Result<(), anyh
   state.convert_chips()?;
   state.set_pin_voltages()?;
   state.calculate_voltages_from_values()?;
+
+  clear_all()?;
 
   let now = Instant::now();
   state.render()?;
