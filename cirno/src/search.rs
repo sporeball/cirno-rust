@@ -10,7 +10,7 @@ pub fn query(line: String, state: &mut CirnoState) -> Result<(), anyhow::Error> 
       query_wire(color, label, state)?;
     },
     Some(_) => return Err(CirnoError::InvalidSearch.into()),
-    None => return Err(CirnoError::NoResultsFound.into()),
+    None => unreachable!(),
   };
   if chars.next().is_some() {
     return Err(CirnoError::InvalidSearch.into())
