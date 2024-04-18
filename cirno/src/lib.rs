@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::rc::Rc;
 use std::time::Instant;
-use crossterm::{event::Event, style::Color};
+use crossterm::{event::Event, style::{Color, Colors}};
 use include_dir::{include_dir, Dir};
 use parser::parse;
 
@@ -245,7 +245,7 @@ impl CirnoState {
   /// Render all objects.
   pub fn render(&mut self) -> Result<(), anyhow::Error> {
     for object in self.objects.borrow().iter() {
-      object.render(self)?;
+      object.render(Colors { foreground: None, background: None }, self)?;
     }
     cursor::render(self)?;
     cursor::report(self)?;

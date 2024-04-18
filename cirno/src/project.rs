@@ -2,7 +2,7 @@ use crate::{error::CirnoError, terminal::{assert_is_within_bounds_unchecked, mov
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io::stdout;
-use crossterm::{execute, style::Color};
+use crossterm::{execute, style::{Color, Colors}};
 use enum_dispatch::enum_dispatch;
 
 #[derive(Clone, Copy, Default, PartialEq)]
@@ -157,7 +157,7 @@ pub trait Object: Debug {
   fn set_region_size(&mut self, state: &CirnoState) -> Result<(), anyhow::Error>;
   fn get_char(&self) -> Option<(char, Color)>;
   fn verify(&self, state: &CirnoState) -> Result<(), CirnoError>;
-  fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error>;
+  fn render(&self, colors: Colors, state: &CirnoState) -> Result<(), anyhow::Error>;
   fn report(&self, state: &CirnoState) -> Result<(String, Color), anyhow::Error>;
   fn highlight(&self, state: &CirnoState) -> Result<(), anyhow::Error>;
 }
@@ -200,7 +200,7 @@ impl Object for Chip {
     assert_is_within_bounds_unchecked(self.region.position.x + self.region.size.x - 1, self.region.position.y + self.region.size.y - 1, state)?;
     Ok(())
   }
-  fn render(&self, _state: &CirnoState) -> Result<(), anyhow::Error> {
+  fn render(&self, _colors: Colors, _state: &CirnoState) -> Result<(), anyhow::Error> {
     Ok(())
   }
   fn report(&self, _state: &CirnoState) -> Result<(String, Color), anyhow::Error> {
@@ -243,7 +243,7 @@ impl Object for Meta {
     }
     Ok(())
   }
-  fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
+  fn render(&self, _colors: Colors, state: &CirnoState) -> Result<(), anyhow::Error> {
     let bound_x = state.meta.bounds.x;
     let bound_y = state.meta.bounds.y;
     let center_x = state.columns / 2;
@@ -318,7 +318,7 @@ impl Object for Net {
     assert_is_within_bounds_unchecked(0, self.region.position.y, state)?;
     Ok(())
   }
-  fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
+  fn render(&self, _colors: Colors, state: &CirnoState) -> Result<(), anyhow::Error> {
     let y = self.region.position.y;
     let bound_x = state.meta.bounds.x;
     // rendering
@@ -435,7 +435,7 @@ impl Object for Pin {
     assert_is_within_bounds_unchecked(self.region.position.x, self.region.position.y, state)?;
     Ok(())
   }
-  fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
+  fn render(&self, _colors: Colors, state: &CirnoState) -> Result<(), anyhow::Error> {
     let x = self.region.position.x;
     let y = self.region.position.y;
     // rendering
@@ -522,11 +522,14 @@ impl Object for Wire {
     assert_is_within_bounds_unchecked(self.to.x, self.to.y, state)?;
     Ok(())
   }
-  fn render(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
+  fn render(&self, colors: Colors, state: &CirnoState) -> Result<(), anyhow::Error> {
     let (from_x, from_y) = (self.from.x, self.from.y);
     let (to_x, to_y) = (self.to.x, self.to.y);
     // rendering
-    execute!(stdout(), crossterm::style::SetForegroundColor(self.color))?;
+    match colors {
+      Colors { foreground: None, background: None } => execute!(stdout(), crossterm::style::SetForegroundColor(self.color))?,
+      _ => execute!(stdout(), crossterm::style::SetColors(colors))?,
+    }
     move_within_bounds(from_x, from_y, state)?;
     execute!(stdout(), crossterm::style::Print(self.label))?;
     move_within_bounds(to_x, to_y, state)?;
@@ -538,17 +541,7 @@ impl Object for Wire {
     Ok((String::new(), Color::White))
   }
   fn highlight(&self, state: &CirnoState) -> Result<(), anyhow::Error> {
-    execute!(stdout(), crossterm::style::SetForegroundColor(Color::Black))?;
-    execute!(stdout(), crossterm::style::SetBackgroundColor(Color::Yellow))?;
-    // TODO: combine into render somehow (this part is the same)
-    let (from_x, from_y) = (self.from.x, self.from.y);
-    let (to_x, to_y) = (self.to.x, self.to.y);
-    move_within_bounds(from_x, from_y, state)?;
-    execute!(stdout(), crossterm::style::Print(self.label))?;
-    move_within_bounds(to_x, to_y, state)?;
-    execute!(stdout(), crossterm::style::Print(self.label))?;
-    execute!(stdout(), crossterm::style::ResetColor)?;
-    Ok(())
+    self.render(Colors::new(Color::Black, Color::Yellow), state)
   }
 }
 
