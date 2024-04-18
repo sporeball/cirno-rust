@@ -1,25 +1,49 @@
-use crate::{CirnoState, bar, error::CirnoError, project::{Object, ObjectEnum, Wire}};
-use crossterm::style::Color;
+use crate::{CirnoState, bar, cursor, error::CirnoError, project::{Object, ObjectEnum}};
+use crossterm::style::{Color, Colors};
 
+/// Perform a search.
 pub fn query(line: String, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   let mut chars = line.chars();
+  let result: Vec<ObjectEnum>;
+  clear(state)?;
+  // perform query
   match chars.next() {
     Some('w') => {
       let color = chars.next();
       let label = chars.next();
-      query_wire(color, label, state)?;
+      if chars.next().is_some() {
+        return Err(CirnoError::InvalidSearch.into())
+      }
+      result = query_wire(color, label, state)?;
     },
     Some(_) => return Err(CirnoError::InvalidSearch.into()),
     None => unreachable!(),
   };
-  if chars.next().is_some() {
-    return Err(CirnoError::InvalidSearch.into())
+  let len = result.len();
+  if len == 0 {
+    return Err(CirnoError::NoResultsFound.into())
   }
+  // update state
+  state.search_result.replace(result);
+  for object in state.search_result.borrow().iter() {
+    object.highlight(state)?;
+  }
+  cursor::render(state)?;
+  bar::message(format!("{} results", len), state)?;
   Ok(())
 }
 
-// TODO: result cannot be cleared unless you move over the highlighted parts
-fn query_wire(color: Option<char>, label: Option<char>, state: &mut CirnoState) -> Result<(), anyhow::Error> {
+/// Clear `state.search_result` and any associated highlighting.
+pub fn clear(state: &mut CirnoState) -> Result<(), anyhow::Error> {
+  for object in state.search_result.borrow().iter() {
+    object.render(Colors { foreground: None, background: None }, state)?;
+  }
+  state.search_result.replace(vec![]);
+  Ok(())
+}
+
+/// Perform a wire search, given a color and optional label.
+fn query_wire(color: Option<char>, label: Option<char>, state: &mut CirnoState) -> Result<Vec<ObjectEnum>, anyhow::Error> {
   let color_struct = match color {
     Some('r') => Color::Red,
     Some('g') => Color::Green,
@@ -31,30 +55,23 @@ fn query_wire(color: Option<char>, label: Option<char>, state: &mut CirnoState) 
     None => return Err(CirnoError::InvalidSearch.into()),
   };
   let binding = state.objects.borrow();
-  let mut wires = binding
+  let wires = binding
     .iter()
     .filter_map(|x| match x {
-      ObjectEnum::Wire(wire) => Some(wire),
+      ObjectEnum::Wire(w) => Some((x.to_owned(), w)),
       _ => None,
     });
+  let result: Vec<ObjectEnum>;
   if let Some(l) = label {
-    let found = wires.find(|w| w.color == color_struct && w.label == l);
-    if found.is_none() {
-      return Err(CirnoError::NoResultsFound.into())
-    }
-    let found = found.unwrap();
-    found.highlight(state)?;
-    bar::message("1 result".to_string(), state)?;
+    result = wires
+      .filter(|w| w.1.color == color_struct && w.1.label == l)
+      .map(|w| w.0)
+      .collect();
   } else {
-    let found: Vec<&Wire> = wires.filter(|w| w.color == color_struct).collect();
-    let len = found.len();
-    if len == 0 {
-      return Err(CirnoError::NoResultsFound.into())
-    }
-    for object in found {
-      object.highlight(state)?;
-    }
-    bar::message(format!("{} results", len), state)?;
+    result = wires
+      .filter(|w| w.1.color == color_struct)
+      .map(|w| w.0)
+      .collect();
   }
-  Ok(())
+  Ok(result)
 }

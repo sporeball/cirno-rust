@@ -32,6 +32,7 @@ pub struct CirnoState {
   pub error: String,
   pub cic_data: HashMap<String, Vec<ObjectEnum>>,
   pub repeat_amount: u16,
+  pub search_result: Rc<RefCell<Vec<ObjectEnum>>>,
 }
 
 impl CirnoState {

@@ -1,4 +1,4 @@
-use crate::{bar, logger, project::{Object, ObjectEnum, Region, Vector2}, terminal::move_within_bounds, CirnoState};
+use crate::{bar, logger, project::{Object, ObjectEnum, Region, Vector2}, search, terminal::move_within_bounds, CirnoState};
 use std::io::stdout;
 use crossterm::{execute, style::Color};
 
@@ -14,6 +14,7 @@ pub fn move_left(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error
     n if (1..=lim).contains(&n) => cells,
     _ => lim,
   };
+  search::clear(state)?;
   render(state)?;
   report(state)?;
   Ok(())
@@ -31,6 +32,7 @@ pub fn move_right(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Erro
     n if (1..=lim).contains(&n) => cells,
     _ => lim,
   };
+  search::clear(state)?;
   render(state)?;
   report(state)?;
   Ok(())
@@ -48,6 +50,7 @@ pub fn move_up(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> 
     n if (1..=lim).contains(&n) => cells,
     _ => lim,
   };
+  search::clear(state)?;
   render(state)?;
   report(state)?;
   Ok(())
@@ -65,6 +68,7 @@ pub fn move_down(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error
     n if (1..=lim).contains(&n) => cells,
     _ => lim,
   };
+  search::clear(state)?;
   render(state)?;
   report(state)?;
   Ok(())

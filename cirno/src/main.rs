@@ -35,6 +35,7 @@ fn main() -> Result<(), anyhow::Error> {
     error: String::new(),
     cic_data: HashMap::new(),
     repeat_amount: 0,
+    search_result: Rc::new(RefCell::new(vec![])),
   };
 
   cirno::terminal::enter()?;
