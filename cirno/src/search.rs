@@ -4,17 +4,16 @@ use crossterm::style::{Color, Colors};
 /// Perform a search.
 pub fn query(line: String, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   let mut chars = line.chars();
-  let result: Vec<ObjectEnum>;
   clear(state)?;
   // perform query
-  match chars.next() {
+  let result: Vec<ObjectEnum> = match chars.next() {
     Some('w') => {
       let color = chars.next();
       let label = chars.next();
       if chars.next().is_some() {
         return Err(CirnoError::InvalidSearch.into())
       }
-      result = query_wire(color, label, state)?;
+      query_wire(color, label, state)?
     },
     Some(_) => return Err(CirnoError::InvalidSearch.into()),
     None => unreachable!(),

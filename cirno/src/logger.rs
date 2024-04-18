@@ -35,7 +35,7 @@ fn push(item: LogItem) {
 
 fn log(s: String, level: Level) {
   let s = format!("{} {}", level.marker(), s);
-  let lines = s.split("\n").collect::<Vec<&str>>().iter().map(|l| l.to_string()).collect();
+  let lines = s.split('\n').collect::<Vec<&str>>().iter().map(|l| l.to_string()).collect();
   let item = LogItem { level, lines };
   push(item);
 }

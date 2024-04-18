@@ -261,7 +261,7 @@ impl Object for Meta {
     while i < bound_y + 1 {
       execute!(stdout(), crossterm::cursor::MoveTo(min_x, min_y + i))?;
       execute!(stdout(), crossterm::style::Print(format!("{}{}{}", "~", " ".repeat(bound_x.into()), "~")))?;
-      i = i + 1;
+      i += 1;
     }
     // bottom border
     execute!(stdout(), crossterm::cursor::MoveTo(min_x, max_y))?;

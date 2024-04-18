@@ -47,7 +47,7 @@ fn main() -> Result<(), anyhow::Error> {
 
   // Windows 11 spits out a resize event as soon as cirno starts, which
   // is unneeded and should be dropped
-  if crossterm::event::poll(Duration::from_secs(0))? == true {
+  if crossterm::event::poll(Duration::from_secs(0))? {
     crossterm::event::read()?; // drop
   }
 

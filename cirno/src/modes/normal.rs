@@ -70,9 +70,8 @@ fn handle_key_event(event: KeyEvent, state: &mut CirnoState) -> Result<EventResu
     if let Some(cmd) = get().key_commands.get(&c) {
       return (cmd)(state);
     }
-    match c {
-      '0' ..= '9' => { try_to(update_repeat_amount(c, state), state)?; },
-      _ => {},
+    if let '0' ..= '9' = c {
+      try_to(update_repeat_amount(c, state), state)?;
     }
   }
   Ok(EventResult::Drop)
@@ -142,7 +141,7 @@ fn on_key_colon(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
     return (cmd)(state);
   } else if let Some(key) = mode.arg_commands.keys().find(|&k| line.starts_with(k)) {
     let cmd = mode.arg_commands.get(key).unwrap();
-    let args = line.split(" ").collect::<Vec<&str>>();
+    let args = line.split(' ').collect::<Vec<&str>>();
     return (cmd)(args, state);
   }
   Ok(EventResult::Drop)

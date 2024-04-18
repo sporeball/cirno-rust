@@ -150,7 +150,7 @@ impl CirnoState {
       .collect();
     let mut voltages: HashMap<String, Voltage> = HashMap::new();
     for pin in pins.iter() {
-      if pin.label == "" {
+      if pin.label.is_empty() {
         continue;
       }
       voltages.insert(pin.label.clone(), pin.voltage.clone());
@@ -190,7 +190,7 @@ impl CirnoState {
           pin.region.position.x += chip.region.position.x;
           pin.region.position.y += chip.region.position.y;
           // update label
-          if pin.label != "" {
+          if !pin.label.is_empty() {
             pin.label = unique_label(pin.label, &short_chip_type, *c);
           }
           // update value
