@@ -25,7 +25,10 @@ in {
 
   devShells = allSystems (pkgs: {
     default = pkgs.mkShell {
-      packages = [ pkgs.cargo ];
+      packages = with pkgs; [
+        cargo
+        clippy
+      ];
     };
   });
 };
