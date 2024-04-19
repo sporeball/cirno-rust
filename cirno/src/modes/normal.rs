@@ -137,6 +137,8 @@ fn on_key_colon(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
     let cmd = mode.arg_commands.get(key).unwrap();
     let args = line.split(' ').collect::<Vec<&str>>();
     return (cmd)(args, state);
+  } else {
+    return Err(CirnoError::InvalidCommand(line).into());
   }
   Ok(EventResult::Drop)
 }

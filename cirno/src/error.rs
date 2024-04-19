@@ -13,6 +13,8 @@ pub enum CirnoError {
   InvalidAttributeForObject(Attribute, String),
   #[error("invalid color attribute: {0}")]
   InvalidColorAttribute(String),
+  #[error("not an editor command: {0}")]
+  InvalidCommand(String),
   #[error("invalid file '{0}'")]
   InvalidFile(String),
   #[error("invalid filetype '{0}'")]
