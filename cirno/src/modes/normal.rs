@@ -2,13 +2,13 @@ use crate::{open, bar, cursor, error::{CirnoError, try_to}, project::{Mode, Mode
 use std::collections::HashMap;
 use std::io::stdout;
 use std::path::PathBuf;
-use crossterm::event::KeyEvent;
+use crossterm::event::{KeyCode, KeyModifiers};
 use crossterm::execute;
 
 pub fn get() -> Mode {
   Mode {
     mode_set_cb: on_mode_set,
-    key_event_cb: handle_key_event,
+    key_event_cb,
     resize_event_cb: handle_resize_event,
     key_commands: HashMap::from([
       ('h', on_key_h as _),
@@ -58,17 +58,11 @@ fn on_mode_set(state: &mut CirnoState) -> Result<(), anyhow::Error> {
   Ok(())
 }
 
-fn handle_key_event(event: KeyEvent, state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
-  let crossterm::event::KeyEvent { code, modifiers, kind, state: _ } = event;
-  if !matches!(kind, crossterm::event::KeyEventKind::Press) {
-    return Ok(EventResult::Drop)
-  }
-  // Ctrl+C
-  if matches!(code, crossterm::event::KeyCode::Char('c')) && modifiers.contains(crossterm::event::KeyModifiers::CONTROL) {
-    bar::message("type  :q  and press <Enter> to exit cirno".to_string(), state)?;
-  } else if let crossterm::event::KeyCode::Char(c) = code {
-    if let Some(cmd) = get().key_commands.get(&c) {
-      return (cmd)(state);
+fn key_event_cb(code: KeyCode, modifiers: KeyModifiers, state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
+  if let KeyCode::Char(c) = code {
+    // Ctrl+C
+    if c == 'c' && modifiers.contains(KeyModifiers::CONTROL) {
+      bar::message("type  :q  and press <Enter> to exit cirno".to_string(), state)?;
     }
     if let '0' ..= '9' = c {
       try_to(update_repeat_amount(c, state), state)?;

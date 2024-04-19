@@ -1,11 +1,11 @@
 use crate::{CirnoState, project::{Mode, Modes}, terminal::{EventResult, clear_all, move_to, println}};
 use std::collections::HashMap;
-use crossterm::event::KeyEvent;
+use crossterm::event::{KeyCode, KeyModifiers};
 
 pub fn get() -> Mode {
   Mode {
     mode_set_cb: on_mode_set,
-    key_event_cb: handle_key_event,
+    key_event_cb,
     resize_event_cb: handle_resize_event,
     key_commands: HashMap::from([
       ('j', on_key_j as _),
@@ -28,16 +28,7 @@ fn on_mode_set(state: &mut CirnoState) -> Result<(), anyhow::Error> {
   Ok(())
 }
 
-fn handle_key_event(event: KeyEvent, state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
-  let crossterm::event::KeyEvent { code, modifiers: _, kind, state: _ } = event;
-  if !matches!(kind, crossterm::event::KeyEventKind::Press) {
-    return Ok(EventResult::Drop)
-  }
-  if let crossterm::event::KeyCode::Char(c) = code {
-    if let Some(cmd) = get().key_commands.get(&c) {
-      return (cmd)(state);
-    }
-  }
+fn key_event_cb(_code: KeyCode, _modifiers: KeyModifiers, _state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
   Ok(EventResult::Drop)
 }
 

@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::rc::Rc;
 use std::time::Instant;
-use crossterm::{event::Event, style::{Color, Colors}};
+use crossterm::{event::{Event, KeyCode, KeyEvent, KeyEventKind}, style::{Color, Colors}};
 use include_dir::{include_dir, Dir};
 use parser::parse;
 
@@ -226,8 +226,24 @@ impl CirnoState {
     loop {
       match crossterm::event::read()? {
         Event::Key(event) => {
-          // let res = (self.get_mode().key_event_cb)(event, self).unwrap();
-          match try_to((self.get_mode().key_event_cb)(event, self), self)? {
+          let KeyEvent { code, modifiers, kind, state: _ } = event;
+          if !matches!(kind, KeyEventKind::Press) {
+            continue;
+          }
+          // unified
+          if let KeyCode::Char(c) = code {
+            if let Some(cmd) = self.get_mode().key_commands.get(&c) {
+              match try_to((cmd)(self), self)? {
+                Some(EventResult::Exit) => return Ok(()),
+                Some(EventResult::Ok) => self.repeat_amount = 0,
+                Some(_r) => {},
+                None => {},
+              }
+            }
+          }
+          // exclusive
+          // TODO: make this block smaller?
+          match try_to((self.get_mode().key_event_cb)(code, modifiers, self), self)? {
             Some(EventResult::Exit) => return Ok(()),
             Some(EventResult::Ok) => self.repeat_amount = 0,
             Some(_r) => {},

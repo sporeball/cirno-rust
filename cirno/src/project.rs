@@ -2,7 +2,7 @@ use crate::{error::CirnoError, terminal::{assert_is_within_bounds_unchecked, mov
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io::stdout;
-use crossterm::{execute, style::{Color, Colors}};
+use crossterm::{execute, event::{KeyCode, KeyModifiers}, style::{Color, Colors}};
 use enum_dispatch::enum_dispatch;
 
 #[derive(Clone, Copy, Default, PartialEq)]
@@ -548,7 +548,7 @@ impl Object for Wire {
 #[derive(Clone)]
 pub struct Mode {
   pub mode_set_cb: fn(&mut CirnoState) -> Result<(), anyhow::Error>,
-  pub key_event_cb: fn(crossterm::event::KeyEvent, &mut CirnoState) -> Result<EventResult, anyhow::Error>,
+  pub key_event_cb: fn(KeyCode, KeyModifiers, &mut CirnoState) -> Result<EventResult, anyhow::Error>,
   pub resize_event_cb: fn(&mut CirnoState) -> Result<EventResult, anyhow::Error>,
   pub key_commands: HashMap<char, fn(&mut CirnoState) -> Result<EventResult, anyhow::Error>>,
   // TODO: state needed or not?
