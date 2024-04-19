@@ -404,7 +404,7 @@ impl Pin {
         }
         Ok(Voltage::Low)
       },
-      _ => Ok(Voltage::Floating),
+      _ => Ok(self.voltage.clone()), // TODO: eliminate
     }
   }
 }

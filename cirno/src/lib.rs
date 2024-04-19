@@ -156,13 +156,8 @@ impl CirnoState {
       voltages.insert(pin.label.clone(), pin.voltage.clone());
     }
     for pin in pins.iter_mut() {
-      match pin.value {
-        Value::And(_) | Value::Not(_) | Value::Or(_) => {
-          pin.voltage = pin.calculate_voltage_from_value(&voltages)?;
-          voltages.insert(pin.label.clone(), pin.voltage.clone());
-        },
-        _ => { continue; },
-      };
+      pin.voltage = pin.calculate_voltage_from_value(&voltages)?;
+      voltages.insert(pin.label.clone(), pin.voltage.clone());
     }
     Ok(())
   }
