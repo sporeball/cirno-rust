@@ -73,7 +73,7 @@ fn key_event_cb(code: KeyCode, modifiers: KeyModifiers, state: &mut CirnoState) 
 
 fn handle_resize_event(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
   clear_all()?;
-  state.verify()?;
+  state.verify_size()?;
   state.render()?;
   Ok(EventResult::Ok)
 }

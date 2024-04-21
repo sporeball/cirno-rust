@@ -292,22 +292,8 @@ impl CirnoState {
       })
       .ok_or(CirnoError::MetaObjectError)
   }
-  // TODO: if parsing fails, this function returns CirnoError::MetaObjectError when entering normal
-  // mode from console mode
-  /// Verify the current state.
+  /// Verify all objects.
   pub fn verify(&mut self) -> Result<(), CirnoError> {
-    // state.meta.bounds should be set
-    let bound_x = self.meta.bounds.x;
-    let bound_y = self.meta.bounds.y;
-    if bound_x == 0 && bound_y == 0 {
-      return Err(CirnoError::MetaObjectError)
-    }
-    // the terminal should be large enough to render the entire bounds
-    // 2 extra columns and rows are added to account for the border
-    if bound_x + 2 > self.columns || bound_y + 2 > self.rows {
-      return Err(CirnoError::TerminalTooSmall)
-    }
-    // verify all objects plus overlap
     for object in self.objects.borrow().iter() {
       object.verify(self)?;
     }
@@ -324,6 +310,14 @@ impl CirnoState {
           return Err(CirnoError::OverlappingRegion(index, other_index))
         }
       }
+    }
+    Ok(())
+  }
+  /// Verify that the size of the terminal is large enough to fit the bounds.
+  pub fn verify_size(&mut self) -> Result<(), CirnoError> {
+    // 2 extra columns and rows are added to account for the border
+    if self.meta.bounds.x + 2 > self.columns || self.meta.bounds.y + 2 > self.rows {
+      return Err(CirnoError::TerminalTooSmall)
     }
     Ok(())
   }
@@ -348,29 +342,36 @@ pub fn open(path: std::path::PathBuf, state: &mut CirnoState) -> Result<(), anyh
     return Ok(())
   }
 
-  state.objects = Rc::new(RefCell::new(parser::parse(&contents)?));
-  state.meta = state.find_meta()?;
+  // operate on a new instance of state
+  let mut ns = CirnoState::new()?;
 
-  state.set_cic_data()?;
-  state.set_region_sizes()?;
-  state.set_wire_labels()?;
+  ns.objects = Rc::new(RefCell::new(parser::parse(&contents)?));
+  ns.meta = ns.find_meta()?;
+  ns.verify_size()?;
+
+  ns.set_cic_data()?;
+  ns.set_region_sizes()?;
+  ns.set_wire_labels()?;
 
   let now = Instant::now();
-  state.verify()?;
+  ns.verify()?;
   let elapsed = now.elapsed();
   crate::logger::info(format!("verified in {:?}", elapsed));
 
-  state.convert_chips()?;
-  state.set_pin_voltages()?;
-  state.calculate_voltages_from_values()?;
+  ns.convert_chips()?;
+  ns.set_pin_voltages()?;
+  ns.calculate_voltages_from_values()?;
 
   clear_all()?;
 
   let now = Instant::now();
-  state.render()?;
+  ns.render()?;
   let elapsed = now.elapsed();
   // bar::message(format!("{:?}", elapsed), &state)?;
   crate::logger::info(format!("rendered in {:?}", elapsed));
+
+  // reassign
+  *state = ns;
 
   Ok(())
 }
