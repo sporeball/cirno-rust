@@ -36,6 +36,24 @@ pub struct CirnoState {
 }
 
 impl CirnoState {
+  /// Create a new CirnoState instance.
+  pub fn new() -> Result<CirnoState, anyhow::Error> {
+    let (columns, rows) = crossterm::terminal::size()?;
+    let cs = CirnoState {
+      columns,
+      rows,
+      mode: Modes::Normal,
+      cursor: Vector2::default(),
+      char_under_cursor: (' ', crossterm::style::Color::White),
+      objects: Rc::new(RefCell::new(vec![])),
+      meta: Meta::default(),
+      error: String::new(),
+      cic_data: HashMap::new(),
+      repeat_amount: 0,
+      search_result: Rc::new(RefCell::new(vec![])),
+    };
+    Ok(cs)
+  }
   /// Get the current mode.
   pub fn get_mode(&mut self) -> Mode {
     match self.mode {

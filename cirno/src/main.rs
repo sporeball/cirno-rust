@@ -1,9 +1,6 @@
 // need to use "cirno" in this file, not "crate"
 
-use cirno::{CirnoState, open, error::try_to, modes::normal::splash, project::{Meta, Modes, Vector2}};
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::rc::Rc;
+use cirno::{CirnoState, open, error::try_to, modes::normal::splash};
 use std::time::Duration;
 use clap::Parser;
 
@@ -21,22 +18,7 @@ fn main() -> Result<(), anyhow::Error> {
   }));
 
   let args = Cli::parse();
-
-  let (columns, rows) = crossterm::terminal::size()?;
-
-  let mut state = CirnoState {
-    columns,
-    rows,
-    mode: Modes::Normal,
-    cursor: Vector2::default(),
-    char_under_cursor: (' ', crossterm::style::Color::White),
-    objects: Rc::new(RefCell::new(vec![])),
-    meta: Meta::default(),
-    error: String::new(),
-    cic_data: HashMap::new(),
-    repeat_amount: 0,
-    search_result: Rc::new(RefCell::new(vec![])),
-  };
+  let mut state = CirnoState::new()?;
 
   cirno::terminal::enter()?;
 
