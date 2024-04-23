@@ -149,7 +149,12 @@ fn parse_attribute_value(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Re
     "or" => {
       let values: Vec<String> = consume_until_ender(lexer)?;
       Ok(Value::Or(values))
-    }
+    },
+    "xor" => {
+      let a = expect_token!(lexer, Token::Identifier)?;
+      let b = expect_token!(lexer, Token::Identifier)?;
+      Ok(Value::Xor(a, b))
+    },
     "gnd" => Ok(Value::Gnd),
     "vcc" => Ok(Value::Vcc),
     v => Err(CirnoError::InvalidValueAttribute(v.to_string())),

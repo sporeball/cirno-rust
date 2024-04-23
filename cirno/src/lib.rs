@@ -220,6 +220,11 @@ impl CirnoState {
               let v: Vec<String> = unique_label_vec(labels, &short_chip_type, *c);
               pin.value = Value::Or(v);
             },
+            Value::Xor(a, b) => {
+              let la = unique_label(a, &short_chip_type, *c);
+              let lb = unique_label(b, &short_chip_type, *c);
+              pin.value = Value::Xor(la, lb);
+            },
             _ => {},
           }
           // push the updated pin

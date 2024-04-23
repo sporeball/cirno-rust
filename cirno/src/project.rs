@@ -51,6 +51,7 @@ pub enum Value {
   None,
   Not(String),
   Or(Vec<String>),
+  Xor(String, String),
   Vcc,
 }
 
@@ -71,7 +72,14 @@ impl Debug for Value {
         f.write_str("\u{1b}[33mOr(\u{1b}[0m")?;
         values.fmt(f)?;
         f.write_str("\u{1b}[33m)\u{1b}[0m")?;
-      }
+      },
+      Value::Xor(a, b) => {
+        f.write_str("\u{1b}[33mXor(\u{1b}[0m")?;
+        a.fmt(f)?;
+        f.write_str(", ")?;
+        b.fmt(f)?;
+        f.write_str("\u{1b}[33m)\u{1b}[0m")?;
+      },
       Value::Vcc => {
         f.write_str("\u{1b}[31mVcc\u{1b}[0m")?;
       },
@@ -403,6 +411,15 @@ impl Pin {
           };
         }
         Ok(Voltage::Low)
+      },
+      Value::Xor(a, b) => {
+        let va = voltages.get(a);
+        let vb = voltages.get(b);
+        match (va, vb) {
+          (Some(&Voltage::High), Some(&Voltage::Low)) => Ok(Voltage::High),
+          (Some(&Voltage::Low), Some(&Voltage::High)) => Ok(Voltage::High),
+          _ => Ok(Voltage::Low),
+        }
       },
       _ => Ok(self.voltage.clone()), // TODO: eliminate
     }
