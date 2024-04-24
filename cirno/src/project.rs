@@ -47,6 +47,7 @@ impl Region {
 pub enum Value {
   And(Vec<String>),
   Gnd,
+  Nand(Vec<String>),
   #[default]
   None,
   Not(String),
@@ -60,6 +61,11 @@ impl Debug for Value {
     match self {
       Value::And(values) => {
         f.write_str("\u{1b}[33mAnd(\u{1b}[0m")?;
+        values.fmt(f)?;
+        f.write_str("\u{1b}[33m)\u{1b}[0m")?;
+      },
+      Value::Nand(values) => {
+        f.write_str("\u{1b}[33mNand(\u{1b}[0m")?;
         values.fmt(f)?;
         f.write_str("\u{1b}[33m)\u{1b}[0m")?;
       },
@@ -395,6 +401,16 @@ impl Pin {
           };
         }
         Ok(Voltage::High)
+      },
+      Value::Nand(labels) => {
+        for label in labels {
+          let v = voltages.get(label);
+          match v {
+            Some(&Voltage::High) => { continue },
+            _ => return Ok(Voltage::High), // TODO: is this still correct if some v is Floating?
+          };
+        }
+        Ok(Voltage::Low)
       },
       Value::Not(label) => {
         match voltages.get(label) {

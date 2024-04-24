@@ -212,6 +212,10 @@ impl CirnoState {
               let v: Vec<String> = unique_label_vec(labels, &short_chip_type, *c);
               pin.value = Value::And(v);
             },
+            Value::Nand(labels) => {
+              let v: Vec<String> = unique_label_vec(labels, &short_chip_type, *c);
+              pin.value = Value::Nand(v);
+            },
             Value::Not(label) => {
               let l = unique_label(label, &short_chip_type, *c);
               pin.value = Value::Not(l);
