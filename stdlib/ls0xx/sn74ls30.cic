@@ -1,0 +1,17 @@
+: pin label 'a
+: pin label 'b
+: pin label 'c
+: pin label 'd
+: pin label 'e
+: pin label 'f
+
+: pin value gnd
+
+: pin label 'y value nand 'a 'b 'c 'd 'e 'f 'g 'h .
+: pin
+: pin
+: pin label 'g
+: pin label 'h
+: pin
+
+: pin value vcc

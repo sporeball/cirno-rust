@@ -1,0 +1,19 @@
+: pin label '1a
+: pin label '1b
+
+: pin label '2a
+: pin label '2b
+: pin label '2c
+: pin label '2y value nand '2a '2b '2c .
+
+: pin value gnd
+
+: pin label '3y value nand '3a '3b '3c .
+: pin label '3a
+: pin label '3b
+: pin label '3c
+
+: pin label '1y value nand '1a '1b '1c .
+: pin label '1c
+
+: pin value vcc
