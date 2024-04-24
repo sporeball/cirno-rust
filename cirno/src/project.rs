@@ -48,6 +48,7 @@ pub enum Value {
   And(Vec<String>),
   Gnd,
   Nand(Vec<String>),
+  Nc,
   #[default]
   None,
   Not(String),
@@ -68,6 +69,9 @@ impl Debug for Value {
         f.write_str("\u{1b}[33mNand(\u{1b}[0m")?;
         values.fmt(f)?;
         f.write_str("\u{1b}[33m)\u{1b}[0m")?;
+      },
+      Value::Nc => {
+        f.write_str("\u{1b}[90mNc\u{1b}[0m")?;
       },
       Value::Not(value) => {
         f.write_str("\u{1b}[33mNot(\u{1b}[0m")?;
@@ -485,6 +489,7 @@ impl Object for Pin {
       (report, color) = match self.value {
         Value::Gnd => ("gnd".to_string(), Color::Blue),
         Value::Vcc => ("vcc".to_string(), Color::Red),
+        Value::Nc => ("nc".to_string(), Color::DarkGrey),
         _ => (String::new(), Color::White),
       };
     }

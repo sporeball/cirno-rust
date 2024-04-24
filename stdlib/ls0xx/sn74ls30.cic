@@ -8,10 +8,10 @@
 : pin value gnd
 
 : pin label 'y value nand 'a 'b 'c 'd 'e 'f 'g 'h .
-: pin
-: pin
+: pin value nc
+: pin value nc
 : pin label 'g
 : pin label 'h
-: pin
+: pin value nc
 
 : pin value vcc

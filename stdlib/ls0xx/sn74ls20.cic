@@ -1,6 +1,6 @@
 : pin label '1a
 : pin label '1b
-: pin
+: pin value nc
 : pin label '1c
 : pin label '1d
 : pin label '1y value nand '1a '1b '1c '1d .
@@ -10,7 +10,7 @@
 : pin label '2y value nand '2a '2b '2c '2d .
 : pin label '2a
 : pin label '2b
-: pin
+: pin value nc
 : pin label '2c
 : pin label '2d
 

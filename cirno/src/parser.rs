@@ -161,6 +161,7 @@ fn parse_attribute_value(token: &str, lexer: &mut logos::Lexer<'_, Token>) -> Re
     },
     "gnd" => Ok(Value::Gnd),
     "vcc" => Ok(Value::Vcc),
+    "nc" => Ok(Value::Nc),
     v => Err(CirnoError::InvalidValueAttribute(v.to_string())),
   }
 }

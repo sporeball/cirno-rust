@@ -153,6 +153,9 @@ impl CirnoState {
         "gnd" => Voltage::Low,
         _ => unreachable!(),
       };
+      if let Value::Nc = pin.value {
+        logger::warn(format!("pin at {:?} is {:?}, but was pulled {:?}", pin.region.position, pin.value, pin.voltage));
+      }
     }
     Ok(())
   }
