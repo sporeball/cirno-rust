@@ -1,6 +1,6 @@
 // need to use "cirno" in this file, not "crate"
 
-use cirno::{CirnoState, open, error::try_to, modes::normal::splash};
+use cirno::{CirnoState, count_stdlib, open, error::try_to, logger, modes::normal::splash};
 use std::time::Duration;
 use clap::Parser;
 
@@ -19,6 +19,9 @@ fn main() -> Result<(), anyhow::Error> {
 
   let args = Cli::parse();
   let mut state = CirnoState::new()?;
+
+  // logger::info(format!("cirno"));
+  logger::info(format!("stdlib: loaded {} files", count_stdlib()));
 
   cirno::terminal::enter()?;
 

@@ -401,6 +401,24 @@ pub fn stdlib(filename: &str) -> Result<String, anyhow::Error> {
   Ok(contents)
 }
 
+pub fn count_stdlib() -> u16 {
+  let mut files = 0;
+  let mut dirs = vec![];
+  // every DirEntry at the top level of STDLIB matches the Dir variant
+  for entry in STDLIB.entries() {
+    dirs.push(entry.as_dir().unwrap());
+  }
+  while let Some(dir) = dirs.pop() {
+    for entry in dir.entries() {
+      match entry {
+        include_dir::DirEntry::Dir(sub_dir) => dirs.push(sub_dir),
+        include_dir::DirEntry::File(_) => files += 1,
+      }
+    }
+  }
+  files
+}
+
 pub fn color_to_string(color: Color) -> String {
   match color {
     Color::Red => "red".to_string(),
