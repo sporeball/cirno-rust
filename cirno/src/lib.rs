@@ -200,8 +200,8 @@ impl CirnoState {
         }
         let c = chip_counts.get(&chip.t).unwrap();
         // for each pin
-        for pin in self.cic_data.get(&chip.t).unwrap().iter().cloned() {
-          let ObjectEnum::Pin(mut pin) = pin else { unreachable!(); };
+        for object in self.cic_data.get(&chip.t).unwrap().iter().cloned() {
+          let ObjectEnum::Pin(mut pin) = object else { continue; };
           // update position
           pin.region.position.x += chip.region.position.x;
           pin.region.position.y += chip.region.position.y;
@@ -218,6 +218,10 @@ impl CirnoState {
             Value::Nand(labels) => {
               let v: Vec<String> = unique_label_vec(labels, &short_chip_type, *c);
               pin.value = Value::Nand(v);
+            },
+            Value::Nor(labels) => {
+              let v: Vec<String> = unique_label_vec(labels, &short_chip_type, *c);
+              pin.value = Value::Nor(v);
             },
             Value::Not(label) => {
               let l = unique_label(label, &short_chip_type, *c);

@@ -51,6 +51,7 @@ pub enum Value {
   Nc,
   #[default]
   None,
+  Nor(Vec<String>),
   Not(String),
   Or(Vec<String>),
   Xor(String, String),
@@ -72,6 +73,11 @@ impl Debug for Value {
       },
       Value::Nc => {
         f.write_str("\u{1b}[90mNc\u{1b}[0m")?;
+      },
+      Value::Nor(values) => {
+        f.write_str("\u{1b}[33mNor(\u{1b}[0m")?;
+        values.fmt(f)?;
+        f.write_str("\u{1b}[33m)\u{1b}[0m")?;
       },
       Value::Not(value) => {
         f.write_str("\u{1b}[33mNot(\u{1b}[0m")?;
@@ -415,6 +421,16 @@ impl Pin {
           };
         }
         Ok(Voltage::Low)
+      },
+      Value::Nor(labels) => {
+        for label in labels {
+          let v = voltages.get(label);
+          match v {
+            Some(&Voltage::Low) => { continue; },
+            _ => return Ok(Voltage::Low), // TODO: is this still correct if some v is Floating?
+          };
+        }
+        Ok(Voltage::High)
       },
       Value::Not(label) => {
         match voltages.get(label) {
