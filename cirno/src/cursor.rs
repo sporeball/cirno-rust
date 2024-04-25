@@ -22,6 +22,9 @@ pub fn move_left(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error
 
 /// Move the cursor right, up to the given number of cells.
 pub fn move_right(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> {
+  if state.meta.bounds.x == 0 {
+    return Ok(())
+  }
   let lim = state.meta.bounds.x - state.cursor.x - 1;
   if lim == 0 {
     return Ok(())
@@ -58,6 +61,9 @@ pub fn move_up(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> 
 
 /// Move the cursor down, up to the given number of cells.
 pub fn move_down(cells: u16, state: &mut CirnoState) -> Result<(), anyhow::Error> {
+  if state.meta.bounds.y == 0 {
+    return Ok(())
+  }
   let lim = state.meta.bounds.y - state.cursor.y - 1;
   if lim == 0 {
     return Ok(())
