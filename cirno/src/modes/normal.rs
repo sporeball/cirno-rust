@@ -86,12 +86,15 @@ fn handle_resize_event(state: &mut CirnoState) -> Result<EventResult, anyhow::Er
 /// This function does not verify that `c` is a number.
 fn update_repeat_amount(c: char, state: &mut CirnoState) -> Result<(), CirnoError> {
   let digit = c.to_digit(10).unwrap() as u16;
+  // update
   if state.repeat_amount == 0 {
     state.repeat_amount = digit;
-  } else if state.repeat_amount < 1000 {
+  } else {
     state.repeat_amount *= 10;
     state.repeat_amount += digit;
-  } else {
+  }
+  // limit
+  if state.repeat_amount > 1000 {
     state.repeat_amount = 0;
     return Err(CirnoError::TooManyRepetitions)
   }
