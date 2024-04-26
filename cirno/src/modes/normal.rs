@@ -53,6 +53,10 @@ pub fn splash(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
 
 fn on_mode_set(state: &mut CirnoState) -> Result<(), anyhow::Error> {
   clear_all()?;
+  if state.project.is_none() {
+    splash(state)?;
+    return Ok(())
+  }
   state.verify()?;
   state.render()?;
   Ok(())

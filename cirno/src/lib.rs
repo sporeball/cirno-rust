@@ -2,6 +2,7 @@ use crate::{error::{CirnoError, try_to}, project::{Chip, Meta, Mode, Modes, Obje
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
+use std::path::PathBuf;
 use std::rc::Rc;
 use std::time::Instant;
 use crossterm::{event::{Event, KeyCode, KeyEvent, KeyEventKind}, style::{Color, Colors}};
@@ -24,6 +25,7 @@ pub mod terminal;
 pub struct CirnoState {
   pub columns: u16,
   pub rows: u16,
+  pub project: Option<PathBuf>,
   pub mode: Modes,
   pub cursor: Vector2,
   pub char_under_cursor: (char, Color),
@@ -42,6 +44,7 @@ impl CirnoState {
     let cs = CirnoState {
       columns,
       rows,
+      project: None,
       mode: Modes::Normal,
       cursor: Vector2::default(),
       char_under_cursor: (' ', crossterm::style::Color::White),
@@ -290,6 +293,9 @@ impl CirnoState {
   }
   /// Render all objects.
   pub fn render(&mut self) -> Result<(), anyhow::Error> {
+    if self.project.is_none() {
+      return Ok(())
+    }
     for object in self.objects.borrow().iter() {
       object.render(Colors { foreground: None, background: None }, self)?;
     }
@@ -340,7 +346,7 @@ impl CirnoState {
 }
 
 /// Open a cirno project.
-pub fn open(path: std::path::PathBuf, state: &mut CirnoState) -> Result<(), anyhow::Error> {
+pub fn open(path: PathBuf, state: &mut CirnoState) -> Result<(), anyhow::Error> {
   let filename = path.to_str().unwrap();
   crate::logger::info(format!("opening {}", filename));
 
@@ -361,6 +367,7 @@ pub fn open(path: std::path::PathBuf, state: &mut CirnoState) -> Result<(), anyh
   // operate on a new instance of state
   let mut ns = CirnoState::new()?;
 
+  ns.project = Some(path);
   ns.objects = Rc::new(RefCell::new(parser::parse(&contents)?));
   ns.meta = ns.find_meta()?;
   ns.verify_size()?;
