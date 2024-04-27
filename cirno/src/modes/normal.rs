@@ -1,4 +1,4 @@
-use crate::{open, bar, cursor, error::{CirnoError, try_to}, project::{Mode, Modes}, search, terminal::{backspace, clear_all, move_to, read_line, EventResult}, CirnoState};
+use crate::{open, bar, cursor, error::{CirnoError, try_to}, project::{Mode, Modes}, search, terminal::{backspace, clear_all, move_to, read_key_presses, read_line, EventResult}, CirnoState};
 use std::collections::HashMap;
 use std::io::stdout;
 use std::path::PathBuf;
@@ -15,6 +15,7 @@ pub fn get() -> Mode {
       ('j', on_key_j as _),
       ('k', on_key_k as _),
       ('l', on_key_l as _),
+      ('p', on_key_p as _),
       ('C', on_key_cap_c as _),
       ('L', on_key_cap_l as _),
       (':', on_key_colon as _),
@@ -118,6 +119,13 @@ fn on_key_k(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
 
 fn on_key_l(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
   cursor::move_right(state.repeat_amount, state)?;
+  Ok(EventResult::Ok)
+}
+
+fn on_key_p(_state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
+  if let Some(sequence) = read_key_presses(3)? {
+    crate::logger::debug(format!("{:?}", sequence));
+  }
   Ok(EventResult::Ok)
 }
 

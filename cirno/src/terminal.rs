@@ -1,7 +1,7 @@
 use crate::{CirnoState, error::CirnoError};
 use std::io;
 use std::io::stdout;
-use crossterm::{event::KeyEvent, execute, terminal::ClearType};
+use crossterm::{event::{Event, KeyCode, KeyEvent, KeyEventKind}, execute, terminal::ClearType};
 
 pub enum EventResult {
   Drop,
@@ -77,20 +77,20 @@ pub fn assert_is_within_bounds_unchecked(x: u16, y: u16, state: &CirnoState) -> 
 
 pub fn read_line() -> Result<String, io::Error> {
   let mut line = String::new();
-  while let Ok(crossterm::event::Event::Key(KeyEvent { code, modifiers: _, kind, state: _ })) = crossterm::event::read() {
-    if !matches!(kind, crossterm::event::KeyEventKind::Press) {
+  while let Ok(Event::Key(KeyEvent { code, modifiers: _, kind, state: _ })) = crossterm::event::read() {
+    if !matches!(kind, KeyEventKind::Press) {
       continue;
     }
     match code {
-      crossterm::event::KeyCode::Enter => { break; },
-      crossterm::event::KeyCode::Backspace => {
+      KeyCode::Enter => { break; },
+      KeyCode::Backspace => {
         if line.eq("") {
           break;
         }
         line.pop();
         backspace()?;
       },
-      crossterm::event::KeyCode::Char(c) => {
+      KeyCode::Char(c) => {
         line.push(c);
         execute!(stdout(), crossterm::style::Print(c))?;
       },
@@ -98,4 +98,22 @@ pub fn read_line() -> Result<String, io::Error> {
     }
   }
   Ok(line)
+}
+
+pub fn read_key_presses(n: usize) -> Result<Option<String>, io::Error> {
+  let mut sequence = String::new();
+  while let Ok(Event::Key(KeyEvent { code, modifiers: _, kind, state: _ })) = crossterm::event::read() {
+    if !matches!(kind, KeyEventKind::Press) {
+      continue;
+    }
+    match code {
+      KeyCode::Esc => return Ok(None),
+      KeyCode::Char(c) => { sequence.push(c); },
+      _ => {},
+    }
+    if sequence.len() == n {
+      break;
+    }
+  }
+  Ok(Some(sequence))
 }
