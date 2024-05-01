@@ -1,6 +1,6 @@
 // need to use "cirno" in this file, not "crate"
 
-use cirno::{CirnoState, count_stdlib, open, error::try_to, logger, modes::normal::splash};
+use cirno::{CirnoState, count_stdlib, open, command::{Command, Splash}, error::try_to, logger};
 use std::time::Duration;
 use clap::Parser;
 
@@ -22,12 +22,13 @@ fn main() -> Result<(), anyhow::Error> {
 
   // logger::info(format!("cirno"));
   logger::info(format!("stdlib: loaded {} files", count_stdlib()));
+  logger::info(format!("editor: loaded {} commands", state.commands.keys().count()));
 
   cirno::terminal::enter()?;
 
   match args.filename {
     Some(f) => { try_to(open(f, &mut state), &mut state)?; },
-    None => { splash(&mut state)?; },
+    None => { Splash(Vec::new()).execute(&mut state)?; },
   };
 
   // Windows 11 spits out a resize event as soon as cirno starts, which

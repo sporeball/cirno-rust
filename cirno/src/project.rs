@@ -606,8 +606,8 @@ pub struct Mode {
   pub resize_event_cb: fn(&mut CirnoState) -> Result<EventResult, anyhow::Error>,
   pub key_commands: HashMap<char, fn(&mut CirnoState) -> Result<EventResult, anyhow::Error>>,
   // TODO: state needed or not?
-  pub commands: HashMap<String, fn(&mut CirnoState) -> Result<EventResult, anyhow::Error>>,
-  pub arg_commands: HashMap<String, fn(Vec<&str>, &mut CirnoState) -> Result<EventResult, anyhow::Error>>,
+  // pub commands: HashMap<String, fn(&mut CirnoState) -> Result<EventResult, anyhow::Error>>,
+  // pub arg_commands: HashMap<String, fn(Vec<&str>, &mut CirnoState) -> Result<EventResult, anyhow::Error>>,
 }
 
 #[derive(Clone, Copy, Debug)]

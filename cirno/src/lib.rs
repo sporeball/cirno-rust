@@ -1,4 +1,4 @@
-use crate::{error::{CirnoError, try_to}, project::{Chip, Meta, Mode, Modes, Object, ObjectEnum, Pin, Value, Vector2, Voltage}, terminal::{EventResult, clear_all}};
+use crate::{command::CommandEnum, error::{CirnoError, try_to}, project::{Chip, Meta, Mode, Modes, Object, ObjectEnum, Pin, Value, Vector2, Voltage}, terminal::{EventResult, clear_all}};
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs;
@@ -12,6 +12,7 @@ use parser::parse;
 pub static STDLIB: Dir<'_> = include_dir!("../stdlib");
 
 pub mod bar;
+pub mod command;
 pub mod cursor;
 pub mod error;
 pub mod logger;
@@ -27,6 +28,7 @@ pub struct CirnoState {
   pub rows: u16,
   pub project: Option<PathBuf>,
   pub mode: Modes,
+  pub commands: HashMap<String, fn(Vec<String>) -> CommandEnum>,
   pub cursor: Vector2,
   pub char_under_cursor: (char, Color),
   pub objects: Rc<RefCell<Vec<ObjectEnum>>>,
@@ -46,6 +48,7 @@ impl CirnoState {
       rows,
       project: None,
       mode: Modes::Normal,
+      commands: command::get_all_commands(),
       cursor: Vector2::default(),
       char_under_cursor: (' ', crossterm::style::Color::White),
       objects: Rc::new(RefCell::new(vec![])),

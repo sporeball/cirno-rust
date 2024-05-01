@@ -12,8 +12,6 @@ pub fn get() -> Mode {
       ('k', on_key_k as _),
       ('C', on_key_cap_c as _),
     ]),
-    commands: HashMap::from([]),
-    arg_commands: HashMap::from([]),
   }
 }
 

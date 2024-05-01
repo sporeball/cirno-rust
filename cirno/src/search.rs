@@ -1,5 +1,18 @@
-use crate::{CirnoState, bar, cursor, error::CirnoError, project::{Object, ObjectEnum}};
+use crate::{CirnoState, bar, cursor, error::CirnoError, project::{Object, ObjectEnum}, terminal::{EventResult, backspace, read_line}};
 use crossterm::style::{Color, Colors};
+
+/// Read a search query entered via the bar.
+pub fn read_from_bar(state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
+  bar::message("/".to_string(), state)?;
+  let line = read_line()?;
+  // remove the slash if the search comes back empty
+  if line.eq("") {
+    backspace()?;
+  } else {
+    query(line, state)?;
+  }
+  Ok(EventResult::Drop)
+}
 
 /// Perform a search.
 pub fn query(line: String, state: &mut CirnoState) -> Result<(), anyhow::Error> {
