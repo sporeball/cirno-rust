@@ -118,14 +118,14 @@ pub fn report(state: &mut CirnoState) -> Result<(), anyhow::Error> {
     let Some(region) = object.get_region() else { continue };
     if region.overlapping(&cursor_region) {
       (report, color) = object.report(state)?;
-      (u_char, u_color) = object.get_char().unwrap();
+      (u_char, u_color) = object.get_char(cursor_region.position - region.position).unwrap();
     }
   }
   if wire.is_some() {
     let wire = wire.unwrap();
     report = format!("({}) {}", wire.label, report);
     color = wire.color;
-    (u_char, u_color) = wire.get_char().unwrap();
+    (u_char, u_color) = wire.get_char(Vector2 { x: 0, y: 0 }).unwrap();
   }
   // set state.char_under_cursor
   state.char_under_cursor = (u_char, u_color);

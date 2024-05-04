@@ -2,6 +2,7 @@ use crate::{error::CirnoError, terminal::{assert_is_within_bounds_unchecked, mov
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::io::stdout;
+use std::ops::{Add, Sub};
 use crossterm::{execute, event::{KeyCode, KeyModifiers}, style::{Color, Colors}};
 use enum_dispatch::enum_dispatch;
 
@@ -14,6 +15,26 @@ pub struct Vector2 {
 impl Debug for Vector2 {
   fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
     f.write_fmt(format_args!("\u{1b}[36m({}, {})\u{1b}[0m", self.x, self.y))
+  }
+}
+
+impl Add for Vector2 {
+  type Output = Self;
+  fn add(self, rhs: Self) -> Self {
+    Self {
+      x: self.x + rhs.x,
+      y: self.y + rhs.y,
+    }
+  }
+}
+
+impl Sub for Vector2 {
+  type Output = Self;
+  fn sub(self, rhs: Self) -> Self {
+    Self {
+      x: self.x - rhs.x,
+      y: self.y - rhs.y,
+    }
   }
 }
 
@@ -179,7 +200,7 @@ pub trait Object: Debug {
   fn apply_attribute(&mut self, attribute: Attribute) -> Result<(), CirnoError>;
   fn get_region(&self) -> Option<&Region>;
   fn set_region_size(&mut self, state: &CirnoState) -> Result<(), anyhow::Error>;
-  fn get_char(&self) -> Option<(char, Color)>;
+  fn get_char(&self, position: Vector2) -> Option<(char, Color)>;
   fn verify(&self, state: &CirnoState) -> Result<(), CirnoError>;
   fn render(&self, colors: Colors, state: &CirnoState) -> Result<(), anyhow::Error>;
   fn report(&self, state: &CirnoState) -> Result<(String, Color), anyhow::Error>;
@@ -190,6 +211,7 @@ pub trait Object: Debug {
 pub struct Chip {
   pub t: String,
   pub region: Region,
+  pub pins: Vec<Pin>,
 }
 
 impl Object for Chip {
@@ -210,8 +232,11 @@ impl Object for Chip {
     self.region.size = Vector2 { x: width, y: 3 };
     Ok(())
   }
-  fn get_char(&self) -> Option<(char, Color)> {
-    None
+  fn get_char(&self, position: Vector2) -> Option<(char, Color)> {
+    match position.y {
+      0 | 2 => Some(('.', Color::White)),
+      _ => Some((' ', Color::White)),
+    }
   }
   fn verify(&self, state: &CirnoState) -> Result<(), CirnoError> {
     // chip type
@@ -254,7 +279,7 @@ impl Object for Meta {
   fn set_region_size(&mut self, _state: &CirnoState) -> Result<(), anyhow::Error> {
     Ok(())
   }
-  fn get_char(&self) -> Option<(char, Color)> {
+  fn get_char(&self, _position: Vector2) -> Option<(char, Color)> {
     None
   }
   fn verify(&self, _state: &CirnoState) -> Result<(), CirnoError> {
@@ -323,7 +348,7 @@ impl Object for Net {
     self.region.size = Vector2 { x: state.meta.bounds.x, y: 1 };
     Ok(())
   }
-  fn get_char(&self) -> Option<(char, Color)> {
+  fn get_char(&self, _position: Vector2) -> Option<(char, Color)> {
     match self.t.as_str() {
       "vcc" => Some(('+', Color::Red)),
       "gnd" => Some(('-', Color::Blue)),
@@ -479,7 +504,7 @@ impl Object for Pin {
     self.region.size = Vector2 { x: 1, y: 1 };
     Ok(())
   }
-  fn get_char(&self) -> Option<(char, Color)> {
+  fn get_char(&self, _position: Vector2) -> Option<(char, Color)> {
     Some(('.', Color::White))
   }
   fn verify(&self, state: &CirnoState) -> Result<(), CirnoError> {
@@ -563,7 +588,7 @@ impl Object for Wire {
   fn set_region_size(&mut self, _state: &CirnoState) -> Result<(), anyhow::Error> {
     Ok(())
   }
-  fn get_char(&self) -> Option<(char, Color)> {
+  fn get_char(&self, _position: Vector2) -> Option<(char, Color)> {
     Some((self.label, self.color))
   }
   fn verify(&self, state: &CirnoState) -> Result<(), CirnoError> {

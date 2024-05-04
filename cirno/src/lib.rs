@@ -80,7 +80,7 @@ impl CirnoState {
     let mut types: Vec<&str> = binding
       .iter()
       .filter_map(|x| match x {
-        ObjectEnum::Chip(Chip { t, region: _ }) => Some(t.as_str()),
+        ObjectEnum::Chip(Chip { t, .. }) => Some(t.as_str()),
         _ => None,
       })
       .collect();
