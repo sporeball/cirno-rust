@@ -101,7 +101,7 @@ pub fn render(state: &CirnoState) -> Result<(), anyhow::Error> {
 pub fn report(state: &mut CirnoState) -> Result<(), anyhow::Error> {
   bar::clear(state)?;
   let cursor_region = Region {
-    position: Vector2 { x: state.cursor.x, y: state.cursor.y },
+    position: state.cursor,
     size: Vector2 { x: 1, y: 1 },
   };
   let (mut report, mut color) = (String::new(), Color::White);
@@ -110,7 +110,7 @@ pub fn report(state: &mut CirnoState) -> Result<(), anyhow::Error> {
   let wire = objects
     .iter()
     .filter_map(|x| match x {
-      ObjectEnum::Wire(wire) => Some(wire.to_owned()),
+      ObjectEnum::Wire(wire) => Some(wire),
       _ => None,
     })
     .find(|w| w.is_connected_to(state.cursor));
@@ -139,14 +139,14 @@ pub fn report(state: &mut CirnoState) -> Result<(), anyhow::Error> {
 /// Print information about the object that the cursor is overlapping to the console.
 pub fn debug(state: &CirnoState) -> Result<(), anyhow::Error> {
   let cursor_region = Region {
-    position: Vector2 { x: state.cursor.x, y: state.cursor.y },
+    position: state.cursor,
     size: Vector2 { x: 1, y: 1 },
   };
   let objects = state.objects.borrow();
   let wire = objects
     .iter()
     .filter_map(|x| match x {
-      ObjectEnum::Wire(wire) => Some(wire.to_owned()),
+      ObjectEnum::Wire(wire) => Some(wire),
       _ => None,
     })
     .find(|w| w.is_connected_to(state.cursor));
