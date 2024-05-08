@@ -47,7 +47,7 @@ impl CirnoState {
       columns,
       rows,
       project: None,
-      mode: Modes::Normal,
+      mode: Modes::Empty,
       commands: command::get_all_commands(),
       cursor: Vector2::default(),
       char_under_cursor: (' ', crossterm::style::Color::White),
@@ -64,6 +64,7 @@ impl CirnoState {
   pub fn get_mode(&mut self) -> Mode {
     match self.mode {
       Modes::Console => crate::modes::console::get(),
+      Modes::Empty => crate::modes::empty::get(),
       Modes::Normal => crate::modes::normal::get(),
     }
   }
@@ -370,6 +371,7 @@ pub fn open(path: PathBuf, state: &mut CirnoState) -> Result<(), anyhow::Error> 
   // operate on a new instance of state
   let mut ns = CirnoState::new()?;
 
+  ns.mode = Modes::Normal; // skip the mode set callback
   ns.project = Some(path);
   ns.objects = Rc::new(RefCell::new(parser::parse(&contents)?));
   ns.meta = ns.find_meta()?;

@@ -1,4 +1,4 @@
-use crate::{bar, command::{self, Command, Splash}, cursor, error::{CirnoError, try_to}, project::{Mode, Modes}, search, terminal::{clear_all, read_key_presses, EventResult}, CirnoState};
+use crate::{bar, command, cursor, error::{CirnoError, try_to}, project::{Mode, Modes}, search, terminal::{clear_all, read_key_presses, EventResult}, CirnoState};
 use std::collections::HashMap;
 use crossterm::event::{KeyCode, KeyModifiers};
 
@@ -23,10 +23,6 @@ pub fn get() -> Mode {
 
 fn on_mode_set(state: &mut CirnoState) -> Result<(), anyhow::Error> {
   clear_all()?;
-  if state.project.is_none() {
-    Splash(Vec::new()).execute(state)?;
-    return Ok(())
-  }
   state.verify()?;
   state.render()?;
   Ok(())
@@ -34,7 +30,6 @@ fn on_mode_set(state: &mut CirnoState) -> Result<(), anyhow::Error> {
 
 fn key_event_cb(code: KeyCode, modifiers: KeyModifiers, state: &mut CirnoState) -> Result<EventResult, anyhow::Error> {
   if let KeyCode::Char(c) = code {
-    // Ctrl+C
     if c == 'c' && modifiers.contains(KeyModifiers::CONTROL) {
       bar::message("type  :q  and press <Enter> to exit cirno".to_string(), state)?;
     }
